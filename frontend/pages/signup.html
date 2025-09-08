@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - FinBloom</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  
+</body>
+</html>
+</head>
+<body>
+    <div class="container-sign">
+  <div class="signup-container">
+    
+    <!-- Left side -->
+    <div class="signup-left">
+      <h1 class="logo">FinBloom</h1>
+      <p class="tagline">Invest Smart, Grow Steady</p>
+      
+    </div>
+
+    <!-- Right side -->
+    <div class="signup-right">
+      <h2>Create an Account</h2>
+      <p class="signin-text">
+        Already have an account? 
+        <a href="signin.html">Sign In</a>
+      </p>
+
+      <form action="#" method="post" class="signup-form">
+        <div class="form-group">
+          <input type="text" placeholder="First Name" required>
+          <input type="text" placeholder="Last Name" required>
+        </div>
+
+        <div class="form-group">
+          <input type="email" placeholder="Email Address" required>
+        </div>
+
+        <div class="form-group">
+          <input type="password" placeholder="Enter Password" required>
+        </div>
+        <div class="checkbox">
+  <input type="checkbox" id="terms">
+  <label for="terms">I agree to the <a href="#">Terms & Conditions</a></label>
+</div>
+
+        
+
+        <button type="submit" class="btn-primary">Create Account</button>
+      </form>
+
+      <p class="or">OR</p>
+
+      <div class="social-login">
+        <button class="google">Sign up with Google</button>
+        <button class="apple">Sign up with Apple</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</body>
+<!-- <script src="../assets/js/auth.js"></script> -->
+ <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.signup-form');
+  if (!form) { console.warn('signup-form not found'); return; }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();             // stops POST to signup.html
+    console.log('Sign up intercepted ✅');
+    // quick smoke call so you see a network request:
+    fetch('http://localhost:4000/health').then(r=>r.json()).then(console.log).catch(console.error);
+  });
+});
+</script>
+
+</html>
