@@ -1,32 +1,45 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const dotenv = require("dotenv");
-
+// server.js
+import dotenv from "dotenv";
 dotenv.config();
+import express from "express";
+import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import authRoutes from "./routes/authRoutes.js"; // ✅ add this line!
+
+
+// Test logging envs
+console.log("SMTP ENV CHECK:", {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  user: process.env.SMTP_USER,
+  pass: process.env.SMTP_PASS ? '*' : 'missing',
+});
 
 const app = express();
 
-// Middlewares
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://127.0.0.1:5500", "http://localhost:5500"], // your Live Server
+    origin: "http://127.0.0.1:5500",
     credentials: true,
   })
 );
 
-// Health check
-app.get("/health", (req, res) => res.json({ ok: true }));
+// Routes
+app.use("/api/auth", authRoutes);
 
-// Example route (you can remove later)
-app.post("/api/ping", (req, res) => {
-  res.json({ received: req.body || null, msg: "pong" });
-});
-
-// Start server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
-});
+// Connect DB and start server
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    app.listen(process.env.PORT || 4000, () =>
+      console.log(`🚀 Server running on port ${process.env.PORT || 4000}`)
+    );
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+  });

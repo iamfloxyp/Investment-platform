@@ -68,7 +68,6 @@ function showError(msg) {
     const email     = form.querySelector('input[type="email"]').value.trim().toLowerCase();
     const password  = form.querySelector('input[type="password"]').value;
 
-    // terms checkbox is optional to send, but enforce UI check
     const agree = form.querySelector('#terms');
     if (agree && !agree.checked) {
       showError("Please accept the Terms & Conditions.");
@@ -85,7 +84,7 @@ function showError(msg) {
       const res = await fetch(SIGNUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // so cookie is saved
+        credentials: "include",
         body: JSON.stringify({ firstName, lastName, email, password })
       });
 
@@ -95,12 +94,12 @@ function showError(msg) {
         return;
       }
 
-      // save light user info for UI (token is in httpOnly cookie already)
+      // Save light user info locally
       localStorage.setItem("finbloom_user", JSON.stringify(data.user));
       clearDraft();
 
-      // go to dashboard or login
-      window.location.href = "./login.html"; // or "./dashboard.html"
+      // ✅ Redirect to verify.html with email as query param
+      window.location.href = `./verify.html?email=${encodeURIComponent(email)}`;
     } catch (err) {
       console.error(err);
       showError("Network error. Please try again.");
@@ -110,7 +109,7 @@ function showError(msg) {
   });
 })();
 
-// ====== LOGIN HANDLER (optional, for your login page later) ======
+// ====== LOGIN HANDLER (unchanged) ======
 (function attachLogin() {
   const form = qs(".login-form");
   if (!form) return;
@@ -150,3 +149,18 @@ function showError(msg) {
     }
   });
 })();
+document.querySelectorAll(".password-field").forEach((field) => {
+  const input = field.querySelector("input");
+  const toggle = field.querySelector(".toggle-pass");
+
+  toggle.addEventListener("click", () => {
+    const type = input.getAttribute("type") === "password" ? "text" : "password";
+    input.setAttribute("type", type);
+
+    // Change icon
+    toggle.textContent = type === "password" ? "👁️" : "🙈";
+
+    // Accessibility
+    toggle.setAttribute("aria-pressed", type === "text");
+  });
+});

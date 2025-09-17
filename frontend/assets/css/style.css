@@ -1308,6 +1308,7 @@
   gap: 28px;
   grid-template-columns: 1.2fr 1fr 1fr 1fr;
   align-items: start;
+
 }
 
 /* brand block */
@@ -1443,26 +1444,85 @@
 }
 
 /* responsive */
-@media (max-width: 1024px){
-  .footer-grid{ 
-    grid-template-columns: 1fr 1fr; 
+/* Medium devices (tablets) */
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    text-align: center;
+  }
+
+  .f-news-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .f-news-row input,
+  .f-news .btn1 {
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .f-social {
+    justify-content: center;
   }
 }
-@media (max-width: 600px){
-  .footer-grid{
-     grid-template-columns: 1fr;
-     }
-  .f-news-row{ 
+
+/* Small devices (phones) */
+@media (max-width: 480px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .f-news-row {
     flex-direction: column;
-   }
-  .subfooter-row{ 
-    flex-direction: column; 
-    align-items: flex-start; 
+    gap: 8px;
+  }
+
+  .f-news-row input,
+  .f-news .btn1 {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .subfooter-row {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .f-logo img {
+    margin: 0 auto;
+    width: 120px;
+  }
+
+  .f-col h4 {
+    font-size: 0.95rem;
+  }
+
+  .f-links a {
+    font-size: 0.9rem;
   }
 }
 /* General Reset */
 
+/* sign up page */
+.back-btn {
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0077cc;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
 
+.back-btn:hover {
+  color: #005999;
+  text-decoration: underline;
+}
 .container-sign{
   background: #102630; 
   display: flex;
@@ -1624,4 +1684,423 @@
   box-shadow: 0 8px 24px rgba(0,0,0,.2); 
   z-index: 9999;
    display:none;
+}
+
+/* login paage */
+/* Full-page container */
+.container-login{
+  background: #102630; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Login Container (same size as signup) */
+.login-container {
+  display: flex;
+  width: 80%;
+  max-width: 1000px;
+  background: #1a3445;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 5px 25px rgba(0,0,0,0.3);
+}
+
+/* LEFT Panel (form) — mirrors signup-right */
+.login-left {
+  flex: 1;
+  background: #ffffff;
+  padding: 40px 30px;
+}
+
+.login-left h2 {
+  color: #102630;
+  margin-bottom: 10px;
+}
+
+.signin-text {
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.signin-text a {
+  color: #0077cc;
+  text-decoration: none;
+}
+
+/* Form groups/inputs (same sizing) */
+.login-form .form-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #0077cc;
+}
+
+/* Checkbox row (kept same class name you used) */
+.checkbox {
+  align-items: center; 
+  margin: 15px 0;
+  font-size: 13px;
+}
+
+.checkbox input {
+  position: relative;
+  right: 13rem;
+  top: 1.2rem;
+}
+.checkbox label{
+  margin-left: 25px;
+}
+
+.checkbox a {
+  color: #0077cc;
+  text-decoration: none;
+}
+
+/* Primary button (same name) */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: #102630;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-primary:hover {
+  background: #0b1c25;
+}
+
+/* OR divider */
+.or {
+  text-align: center;
+  margin: 15px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Social Buttons (same size) */
+.social-login {
+  display: flex;
+  gap: 10px;
+}
+
+.social-login button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.google {
+  background: #db4437;
+  color: #fff;
+}
+
+.apple {
+  background: #000;
+  color: #fff;
+}
+
+/* Error toast (same) */
+.form-error{
+  position: fixed; 
+  left: 50%; 
+  transform: translateX(-50%);
+  bottom: 24px; 
+  background: #dc3545; 
+  color: #fff;
+  padding: 10px 16px; 
+  border-radius: 8px; 
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); 
+  z-index: 9999;
+  display:none;
+}
+
+/* RIGHT Panel (image/branding) — mirrors signup-left */
+.login-right {
+  flex: 1;
+  background: url(../images/nature.jpg) no-repeat center/cover; /* your image on the RIGHT */
+  color: #fff;
+  padding: 40px 30px;
+  text-align: center;
+}
+
+.login-right .logo {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.login-right .tagline {
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+/* password icon */
+.password-field { position: relative; }
+.password-field input { padding-right: 40px; }
+.password-field .toggle-pass{
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: 0; font-size: 16px; cursor: pointer; line-height: 1;
+}
+/* Responsiveness for both login and sign up */
+/* Tablet: narrow the cards a bit */
+@media (max-width: 992px){
+  .signup-container,
+  .login-container{
+    width: 90%;
+    max-width: 900px;
+    gap: 20px;
+  }
+  .signup-right,
+  .login-left{ padding: 32px 24px; }
+  .signup-left,
+  .login-right{ padding: 32px 24px; }
+}
+
+/* Phone: stack panels, avoid vertical clipping */
+@media (max-width: 575px){
+
+  /* let page scroll naturally instead of forcing 100vh */
+  .container-sign,
+  .container-login{
+    min-height: 100vh;
+    height: auto;
+    padding: 18px 0;
+  }
+  @media (max-width: 600px) {
+  .back-btn {
+    font-size: 13px;
+    margin-bottom: 15px;
+  }
+}
+
+  /* stack the two panels */
+  .signup-container,
+  .login-container{
+    flex-direction: column;      /* stack */
+    width: 94%;
+    max-width: 520px;
+    background: transparent;     /* keep outer bg clean */
+    box-shadow: none;
+    gap: 14px;
+  }
+
+  /* cards become full width with their own radius/shadow */
+  .signup-left,
+  .signup-right,
+  .login-left,
+  .login-right{
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    padding: 22px 18px;
+  }
+
+  /* put the form first for LOGIN (so users see it immediately) */
+  .login-container{ flex-direction: column; } /* form (left) then image (right) */
+
+  /* shrink headings & spacing */
+  .signup-right h2,
+  .login-left h2{ font-size: 22px; margin-bottom: 8px; }
+  .signin-text{ font-size: 13px; margin-bottom: 14px; }
+
+  /* inputs/buttons fit smaller screens */
+  .signup-form .form-group,
+  .login-form .form-group{ gap: 8px; margin-bottom: 12px; }
+  .signup-form input,
+  .login-form input{ padding: 11px; font-size: 15px; }
+  .btn,
+  .btn-primary{ padding: 11px 12px; font-size: 15px; }
+
+  /* social buttons stack on tiny screens */
+  .social-login{ flex-direction: column; gap: 10px; }
+
+  /* image panels get a fixed min-height so image isn’t cropped awkwardly */
+  .signup-left,
+  .login-right{
+    min-height: 220px;             /* adjust if you want taller image */
+    background-size: cover;
+    background-position: center;
+    text-align: center;
+  }
+  .signup-left .logo,
+  .login-right .logo{ font-size: 24px; }
+  .signup-left .tagline,
+  .login-right .tagline{ font-size: 14px; margin-bottom: 8px; }
+
+  
+    .checkbox {
+  align-items: center; 
+  margin: 15px 0;
+  font-size: 13px;
+}
+
+.checkbox input {
+  position: relative;
+  right: 10rem;
+  top: 1.2rem;
+}
+.checkbox label{
+  margin-left: 25px;
+}
+}
+
+/* Very small phones */
+@media (max-width: 360px){
+  .signup-right h2,
+  .login-left h2{ font-size: 20px; }
+  .btn, .btn-primary{ font-size: 14px; padding: 10px; }
+  .signup-form input, .login-form input{ font-size: 14px; }
+
+
+.checkbox a {
+  color: #0077cc;
+  text-decoration: none;
+}
+}
+
+/* =======================
+   VERIFY PAGE
+   ======================= */
+
+/* Wrapper (re-use your .container-sign if you want)
+   Keeping here for safety – will not conflict */
+.verify-wrap,
+.container-sign.verify {
+  background: #102630;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card container (same dimensions as signup) */
+.verify-container,
+.signup-container.verify {
+  display: flex;
+  width: 80%;
+  max-width: 1000px;
+  background: #1a3445;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 25px rgba(0,0,0,.3);
+}
+
+/* Left – image/branding (reuse your signup-left styles) */
+.verify-left {
+  flex: 1;
+  background: url("../images/nature.jpg") center/cover no-repeat;
+  color: #fff;
+  padding: 40px 30px;
+}
+.verify-left .logo { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
+.verify-left .tagline { font-size: 16px; opacity: .95; }
+
+/* Right – form panel (reuse fonts/buttons from signup) */
+.verify-right {
+  flex: 1;
+  background: #fff;
+  padding: 40px 30px;
+}
+.verify-right h2 { color: #102630; margin-bottom: 8px; }
+.verify-right p { color: #6c757d; margin: 8px 0 18px; }
+
+/* Back button (same style you used) */
+.back-btn{
+  display:inline-block;
+  margin-bottom:12px;
+  color:#0077cc;
+  text-decoration:none;
+  font-weight:600;
+}
+.back-btn:hover{ text-decoration:underline; }
+
+/* Code input (single field) */
+.verify-form .form-group{
+  display:block;
+  margin-bottom:16px;
+}
+.verify-form input[type="text"]{
+  width:100%;
+  padding:12px;
+  border:1px solid #ced4da;
+  border-radius:6px;
+  outline:none;
+  font-size:16px;
+}
+.verify-form input[type="text"]:focus{
+  border-color:#0077cc;
+}
+
+/* Primary/secondary buttons (match your theme) */
+.btn-primary{
+  width:100%;
+  padding:12px;
+  background:#102630;
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  transition:background .25s ease;
+}
+.btn-primary:hover{ background:#0b1c25; }
+
+.btn{
+  display:inline-block;
+  padding:10px 14px;
+  border:1px solid #17a2b8;
+  color:#17a2b8;
+  background:#fff;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:600;
+}
+.btn:hover{ background:#17a2b8; color:#fff; }
+
+/* Resend / OR line */
+.verify-actions{
+  margin-top:14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Small success/error toast (optional) */
+.verify-msg{
+  margin-top:10px;
+  font-size:.95rem;
+}
+.verify-msg.ok{ color:#28a745; }
+.verify-msg.err{ color:#dc3545; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .verify-container,
+  .signup-container.verify{ width: 92%; }
+}
+@media (max-width: 720px){
+  .verify-container,
+  .signup-container.verify{ flex-direction: column; }
+  .verify-left{ min-height: 220px; }
 }

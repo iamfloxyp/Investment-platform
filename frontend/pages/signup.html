@@ -1,79 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Create Account - FinBloom</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  
-</body>
-</html>
+
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
-    <div class="container-sign">
-  <div class="signup-container">
-    
-    <!-- Left side -->
-    <div class="signup-left">
-      <h1 class="logo">FinBloom</h1>
-      <p class="tagline">Invest Smart, Grow Steady</p>
-      
-    </div>
+  <div class="container-sign">
+    <div class="signup-container">
 
-    <!-- Right side -->
-    <div class="signup-right">
-      <h2>Create an Account</h2>
-      <p class="signin-text">
-        Already have an account? 
-        <a href="signin.html">Sign In</a>
-      </p>
+      <!-- LEFT PANEL -->
+      <div class="signup-left">
+        <h1 class="logo">FinBloom</h1>
+        <p class="tagline">Invest Smart, Grow Steady</p>
+      </div>
 
-      <form action="#" method="post" class="signup-form">
-        <div class="form-group">
-          <input type="text" placeholder="First Name" required>
-          <input type="text" placeholder="Last Name" required>
-        </div>
+      <!-- RIGHT PANEL -->
+      <div class="signup-right">
+        <a href="index.html" class="back-btn">← Back to Home</a>
 
-        <div class="form-group">
-          <input type="email" placeholder="Email Address" required>
-        </div>
+        <h2>Create an Account</h2>
+        <p class="signin-text">
+          Already have an account?
+          <a href="login.html">Sign In</a>
+        </p>
 
-        <div class="form-group">
-          <input type="password" placeholder="Enter Password" required>
-        </div>
-        <div class="checkbox">
-  <input type="checkbox" id="terms">
-  <label for="terms">I agree to the <a href="#">Terms & Conditions</a></label>
+        <form id="signupForm" class="signup-form" autocomplete="off"  method="post" action="#" novalidate>
+          <div class="form-group">
+            <input id="firstName" type="text" placeholder="First Name" required />
+            <input id="lastName" type="text" placeholder="Last Name" required />
+          </div>
+
+          <div class="form-group">
+            <input id="email" type="email" placeholder="Email Address" required />
+          </div>
+
+           <div class="form-group password-field">
+  <input
+    id="login-password"
+    name="password"
+    type="password"
+    placeholder="Enter Password"
+    autocomplete="current-password"
+    required
+  />
+  <button
+    type="button"
+    class="toggle-pass"
+    aria-label="Show password"
+    aria-pressed="false"
+  >👁️</button>
 </div>
 
-        
+          <div class="checkbox">
+            <input type="checkbox" id="terms" />
+            <label for="terms">I agree to the <a href="#">Terms &amp; Conditions</a></label>
+          </div>
 
-        <button type="submit" class="btn-primary">Create Account</button>
-      </form>
+          <p id="signupError" class="form-error" style="display:none;"></p>
 
-      <p class="or">OR</p>
-
-      <div class="social-login">
-        <button class="google">Sign up with Google</button>
-        <button class="apple">Sign up with Apple</button>
+          <button type="submit" class="btn-primary">Create Account</button>
+        </form>
       </div>
     </div>
   </div>
-  </div>
+
+  <!-- JS -->
+  <script src="../assets/js/auth.js"></script>
+  
 </body>
-<!-- <script src="../assets/js/auth.js"></script> -->
- <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.signup-form');
-  if (!form) { console.warn('signup-form not found'); return; }
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();             // stops POST to signup.html
-    console.log('Sign up intercepted ✅');
-    // quick smoke call so you see a network request:
-    fetch('http://localhost:4000/health').then(r=>r.json()).then(console.log).catch(console.error);
-  });
-});
-</script>
-
 </html>
