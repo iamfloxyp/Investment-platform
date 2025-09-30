@@ -1,20 +1,26 @@
-// server.js (ESM version)
+// routes/authRoutes.js
 import express from "express";
-// authRoutes.js
-
 import {
   register,
   verifyEmail,
   resendCode,
   login,
-} from "../controllers/authControllers.js";
+  forgotPassword,
+  resetPassword
+} from "../controllers/authcontrollers.js";
 
 const router = express.Router();
 
+// 🔹 Auth routes
 router.post("/register", register);
 router.post("/verify", verifyEmail);
 router.post("/resend", resendCode);
 router.post("/login", login);
 
-// ✅ THIS IS THE FIX
-export default router;
+// 🔹 Password reset flow
+router.post("/forgot-password", forgotPassword);
+
+// ✅ Use query param for token (http://.../reset-password?token=xxx)
+router.post("/reset-password", resetPassword);
+
+export default router;;

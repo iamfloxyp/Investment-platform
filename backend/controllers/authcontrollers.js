@@ -3,13 +3,13 @@ import User from "../models/userModel.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { makeCode, hash } from "../utils/otp.js";
 
-// Sign JWT
+// Helper: Sign JWT
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES || "7d",
   });
 
-// Set cookie
+// Helper: Set cookie
 const setCookie = (res, token) => {
   res.cookie("token", token, {
     httpOnly: true,
@@ -19,7 +19,7 @@ const setCookie = (res, token) => {
   });
 };
 
-// Send verification email
+// Helper: Send verification email
 async function sendVerification(user) {
   const code = makeCode();
   user.verifyCodeHash = hash(code);
@@ -163,5 +163,67 @@ const login = async (req, res) => {
   }
 };
 
-// ✅ ES Module Export
-export { register, verifyEmail, resendCode, login };
+// FORGOT PASSWORD (corrected)
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+
+    // ✅ no extra slash in token param
+    const resetUrl = `http://127.0.0.1:5501/frontend/pages/reset-password.html?token=${resetToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Reset your password",
+      html: `
+        <p>Hi ${user.firstName},</p>
+        <p>Click below to reset your password:</p>
+        <a href="${resetUrl}">${resetUrl}</a>
+        <p>This link expires in 15 minutes.</p>
+      `,
+    });
+
+    return res.json({ message: "Reset link sent to email" });
+  } catch (e) {
+    console.error("Forgot error:", e);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// RESET PASSWORD (no change needed)
+const resetPassword = async (req, res) => {
+  try {
+    const  {token}  = req.query;
+    const { password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: "Token and password required" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.password = password;
+    await user.save();
+
+    return res.json({ message: "Password reset successful" });
+  } catch (e) {
+    console.error("Reset error:", e);
+    return res.status(500).json({ message: "Invalid or expired token" });
+  }
+};
+
+export {
+  register,
+  verifyEmail,
+  resendCode,
+  login,
+  forgotPassword,
+  resetPassword,
+};

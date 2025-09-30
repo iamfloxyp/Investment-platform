@@ -17,9 +17,9 @@ const LS_KEY_SIGNUP = "finbloom_signup_draft";
 function saveDraft(form) {
   if (!form) return;
   const data = {
-    firstName: form.querySelector('input[placeholder="First Name"]')?.value ?? "",
-    lastName:  form.querySelector('input[placeholder="Last Name"]')?.value ?? "",
-    email:     form.querySelector('input[type="email"]')?.value ?? ""
+    firstName: form.querySelector('#firstName')?.value ?? "",
+    lastName:  form.querySelector('#lastName')?.value ?? "",
+    email:     form.querySelector('#email')?.value ?? ""
   };
   localStorage.setItem(LS_KEY_SIGNUP, JSON.stringify(data));
 }
@@ -27,9 +27,9 @@ function loadDraft(form) {
   if (!form) return;
   try {
     const data = JSON.parse(localStorage.getItem(LS_KEY_SIGNUP) || "{}");
-    if (data.firstName) form.querySelector('input[placeholder="First Name"]').value = data.firstName;
-    if (data.lastName)  form.querySelector('input[placeholder="Last Name"]').value  = data.lastName;
-    if (data.email)     form.querySelector('input[type="email"]').value            = data.email;
+    if (data.firstName) form.querySelector('#firstName').value = data.firstName;
+    if (data.lastName)  form.querySelector('#lastName').value  = data.lastName;
+    if (data.email)     form.querySelector('#email').value     = data.email;
   } catch (_) {}
 }
 function clearDraft() {
@@ -63,10 +63,10 @@ function showError(msg) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const firstName = form.querySelector('input[placeholder="First Name"]').value.trim();
-    const lastName  = form.querySelector('input[placeholder="Last Name"]').value.trim();
-    const email     = form.querySelector('input[type="email"]').value.trim().toLowerCase();
-    const password  = form.querySelector('input[type="password"]').value;
+    const firstName = form.querySelector('#firstName').value.trim();
+    const lastName  = form.querySelector('#lastName').value.trim();
+    const email     = form.querySelector('#email').value.trim().toLowerCase();
+    const password  = form.querySelector('#signup-password').value;
 
     const agree = form.querySelector('#terms');
     if (agree && !agree.checked) {
@@ -94,7 +94,7 @@ function showError(msg) {
         return;
       }
 
-      // Save light user info locally
+      // Save user info locally
       localStorage.setItem("finbloom_user", JSON.stringify(data.user));
       clearDraft();
 
@@ -109,7 +109,7 @@ function showError(msg) {
   });
 })();
 
-// ====== LOGIN HANDLER (unchanged) ======
+// ====== LOGIN HANDLER ======
 (function attachLogin() {
   const form = qs(".login-form");
   if (!form) return;
@@ -149,6 +149,8 @@ function showError(msg) {
     }
   });
 })();
+
+// ====== PASSWORD TOGGLE ======
 document.querySelectorAll(".password-field").forEach((field) => {
   const input = field.querySelector("input");
   const toggle = field.querySelector(".toggle-pass");
