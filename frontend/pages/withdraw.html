@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Withdraw</title>
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/withdraw.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  
+  <!-- NAVIGATION BAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo"><a href="dashboard.html">FinBloom</a></div>
+      <nav class="nav-links" id="navLinks">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="add-deposit.html">Add Deposit</a>
+        <a href="withdraw.html" class="active">Withdraw</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="history.html">History</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+
+      <div class="nav-right">
+        <div class="notifications"><span class="bell">🔔</span><span class="badge">3</span></div>
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">User ▾</button>
+          <div class="dropdown" id="dropdownMenu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="../pages/index.html#contact">Support</a>
+            <a href="login.html">Logout</a>
+          </div>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <div class="dashboard-header">
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
+    </div>
+
+    <!-- Withdraw Section -->
+    <section class="withdraw-section">
+
+      <!-- Quick Info (Top Full Width) -->
+      <div class="withdraw-top">
+        <div class="withdraw-card">
+          <h2>Quick Info</h2>
+          <ul class="info-list">
+            <li><strong>Min withdrawal (Crypto):</strong> $2</li>
+            <li><strong>Min withdrawal (Bank):</strong> $10</li>
+            <li><strong>Min withdrawal (PayPal):</strong> $5</li>
+            <li><strong>Withdrawal time:</strong> <span style="color:green;font-weight:600;">Instant</span></li>
+            <li><strong>Pending Withdrawals:</strong> $0.00</li>
+          </ul>
+          <p class="quick-tip">💡 Tip: Always confirm your wallet/account details before requesting withdrawal.</p>
+        </div>
+      </div>
+
+      <!-- Available Balance + Withdraw Funds -->
+      <div class="withdraw-bottom">
+
+        <!-- Available Balance -->
+        <div class="withdraw-card">
+          <h2>Available Balance</h2>
+          <h3>$0.00</h3>
+          <table class="balance-table">
+            <thead>
+              <tr>
+                <th>Processor</th>
+                <th>Available</th>
+                <th>Wallet</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Bitcoin</td>
+                <td>$0.00</td>
+                <td><a href="#" class="set-wallet" data-processor="btc">Set Wallet</a></td>
+              </tr>
+              <tr>
+                <td>USDT</td>
+                <td>$0.00</td>
+                <td><a href="#" class="set-wallet" data-processor="usdt">Set Wallet</a></td>
+              </tr>
+              <tr>
+                <td>Ethereum</td>
+                <td>$0.00</td>
+                <td><a href="#" class="set-wallet" data-processor="eth">Set Wallet</a></td>
+              </tr>
+              <tr>
+                <td>Bank Transfer</td>
+                <td>$0.00</td>
+                <td><a href="#" class="set-wallet" data-processor="bank">Set Account</a></td>
+              </tr>
+              <tr>
+                <td>PayPal</td>
+                <td>$0.00</td>
+                <td><a href="#" class="set-wallet" data-processor="paypal">Set Account</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Withdraw Funds -->
+        <div class="withdraw-card">
+          <h2>Withdraw Funds</h2>
+          <form id="withdrawForm">
+            <label for="processor">Payment Processor</label>
+            <select id="processor" class="withdraw-select">
+              <option value="">Select Processor</option>
+              <option value="btc">Bitcoin</option>
+              <option value="usdt">USDT</option>
+              <option value="eth">Ethereum</option>
+              <option value="bank">Bank Transfer</option>
+              <option value="paypal">PayPal</option>
+            </select>
+
+            <label for="withdrawAmount">Withdrawal Amount</label>
+            <input type="number" id="withdrawAmount" placeholder="Enter amount" class="withdraw-input" />
+
+            <button type="submit" class="btn-primary">Request Withdrawal</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="dashboard.html" class="f-logo"><img src="../assets/images/logo.png" alt="FinBloom" /></a>
+        <p class="f-tag">Smart investing for a brighter future.</p>
+      </div>
+      <div class="f-col">
+        <h4>Quick Links</h4>
+        <ul class="f-links">
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="deposits.html">My Deposits</a></li>
+          <li><a href="withdraw.html">Withdraw</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Legal</h4>
+        <ul class="f-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Contact</h4>
+        <ul class="f-links f-contact">
+          <li><a href="mailto:support@finbloom.com">support@finbloom.com</a></li>
+          <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="subfooter">
+      <div class="container subfooter-row">
+        <p>©️ <span id="year"></span> FinBloom. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Withdraw Wallet/Account Modal -->
+  <div id="withdrawModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Set Wallet / Account</h2>
+      <form id="setWalletForm">
+        <label for="withdrawProcessor">Processor</label>
+        <input type="text" id="withdrawProcessor" readonly />
+
+        <label for="withdrawInput">Wallet Address / Account Number</label>
+        <input type="text" id="withdrawInput" required placeholder="Enter wallet or account number" />
+
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script src="../assets/js/dashboard.js"></script>
+  <script src="../assets/js/withdrawal.js"></script>
+</body>
+</html>
