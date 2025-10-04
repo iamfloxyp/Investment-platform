@@ -39,7 +39,7 @@ function toggleMenu() {
 }
 // Redirect to investment page
 function startInvestment() {
-  window.location.href = "deposit.html"; // or investment.html if you make one
+  window.location.href = "add-deposit.html"; // or investment.html if you make one
 }
 
 // Handle card routing
@@ -147,3 +147,64 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// Demo notification data (only set once if not already in localStorage)
+if (!localStorage.getItem("notifications")) {
+  let notifications = [
+    { text: "Your deposit of $200 is confirmed", date: "2025-10-01", read: false },
+    { text: "Withdrawal request of $50 is pending", date: "2025-09-30", read: false },
+    { text: "Referral bonus earned: $20", date: "2025-09-28", read: true }
+  ];
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+}
+
+// Grab elements by ID
+const bellBtn = document.getElementById("bellBtn");
+const notifDropdown = document.getElementById("notifDropdown");
+const notifList = document.getElementById("notifList");
+const notifBadge = document.getElementById("notifBadge");
+
+// Render notifications
+function renderNotifications() {
+  if (!notifList || !notifBadge) return; // safety guard
+
+  let stored = JSON.parse(localStorage.getItem("notifications")) || [];
+  notifList.innerHTML = "";
+  let unreadCount = 0;
+
+  stored.forEach((n, index) => {
+    if (!n.read) unreadCount++;
+    let li = document.createElement("li");
+    li.innerHTML = `<strong>${n.text}</strong><br><small>${n.date}</small>`;
+    if (!n.read) li.style.fontWeight = "bold";
+
+    // Mark as read on click
+    li.addEventListener("click", () => {
+      stored[index].read = true;
+      localStorage.setItem("notifications", JSON.stringify(stored));
+      renderNotifications();
+    });
+
+    notifList.appendChild(li);
+  });
+
+  notifBadge.textContent = unreadCount > 0 ? unreadCount : "";
+}
+
+// Toggle dropdown on bell click
+if (bellBtn && notifDropdown) {
+  bellBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // prevent immediate close
+    notifDropdown.style.display = notifDropdown.style.display === "flex" ? "none" : "flex";
+  });
+}
+
+// Close dropdown when clicking outside
+window.addEventListener("click", (e) => {
+  if (notifDropdown && !e.target.closest(".notifications")) {
+    notifDropdown.style.display = "none";
+  }
+});
+
+// Initial render
+renderNotifications();

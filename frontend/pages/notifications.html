@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications -Emuntra</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .notifications-page {
+      margin: 20px;
+    }
+    .notifications-page h2 {
+      margin-bottom: 15px;
+    }
+    .notif-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .notif-table th, .notif-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    .notif-table th {
+      background: #f9fafb;
+      font-weight: 600;
+    }
+    .notif-unread {
+      font-weight: bold;
+      background: #f0f7ff;
+    }
+    .notif-table tr:hover {
+      background: #f9f9f9;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION BAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo"><a href="dashboard.html"><img src="../assets/images/Emuntra3.png" alt=""></a></div>
+      <nav class="nav-links" id="navLinks">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="add-deposit.html">Add Deposit</a>
+        <a href="withdraw.html">Withdraw</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="history.html">History</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+      <div class="nav-right">
+        <div class="notifications">
+          <span class="bell" id="bellBtn">🔔</span>
+          <span class="badge" id="notifBadge"></span>
+          <div class="notif-dropdown" id="notifDropdown">
+            <h4>Notifications</h4>
+            <ul id="notifList"></ul>
+            <div class="notif-footer">
+              <a href="notifications.html">See all notifications</a>
+            </div>
+          </div>
+        </div>
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">User ▾</button>
+          <div class="dropdown" id="dropdownMenu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="../pages/index.html#contact">Support</a>
+            <a href="login.html">Logout</a>
+          </div>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="notifications-page">
+    <h2>All Notifications</h2>
+    <table class="notif-table">
+      <thead>
+        <tr>
+          <th>Message</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="notifTableBody">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="dashboard.html" class="f-logo"><img src="../assets/images/Emuntra3.png" alt="FinBloom" /></a>
+        <p class="f-tag">Smart investing for a brighter future.</p>
+      </div>
+      <div class="f-col">
+        <h4>Quick Links</h4>
+        <ul class="f-links">
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="deposits.html">My Deposits</a></li>
+          <li><a href="withdraw.html">Withdraw</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Legal</h4>
+        <ul class="f-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Contact</h4>
+        <ul class="f-links f-contact">
+          <li><a href="mailto:support@Emuntra.com">support@Emuntra.com</a></li>
+          <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="subfooter">
+      <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script src="../assets/js/dashboard.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const notifTableBody = document.getElementById("notifTableBody");
+
+    function loadNotifications() {
+      let stored = JSON.parse(localStorage.getItem("notifications")) || [];
+      notifTableBody.innerHTML = "";
+      stored.forEach((n, i) => {
+        let tr = document.createElement("tr");
+        if (!n.read) tr.classList.add("notif-unread");
+        tr.innerHTML = `
+          <td>${n.text}</td>
+          <td>${n.date}</td>
+          <td>${n.read ? "Read" : "Unread"}</td>
+        `;
+        // Mark as read when clicked
+        tr.addEventListener("click", () => {
+          stored[i].read = true;
+          localStorage.setItem("notifications", JSON.stringify(stored));
+          loadNotifications();
+        });
+        notifTableBody.appendChild(tr);
+      });
+    }
+
+    loadNotifications();
+  </script>
+</body>
+</html>

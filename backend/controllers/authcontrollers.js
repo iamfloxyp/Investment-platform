@@ -28,7 +28,7 @@ async function sendVerification(user) {
 
   await sendEmail({
     to: user.email,
-    subject: "Verify your FinBloom account",
+    subject: "Verify your MoneTrust account",
     html: `
       <p>Hi ${user.firstName},</p>
       <p>Your verification code is:</p>

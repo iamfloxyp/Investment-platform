@@ -30,8 +30,8 @@
   }
   
   .logo-img {
-    height: 250px;
-    width: 200px;
+    height: 160px;
+    width: 160px;
   }
   .nav-wrapper{
     display: flex;
@@ -1297,7 +1297,7 @@
    FOOTER
    ======================= */
 .site-footer{
-  background:  #111111 ;
+  background:  #000000 ;
   color: #f8f9fa;
   padding-top: 50px;
 }
@@ -1316,7 +1316,7 @@
   width: 160px;
   height: auto;
   display: block;
-  filter: brightness(1.05) saturate(1.02);
+  filter: brightness(0) invert(1);
 }
 .f-tag{ 
   margin: 10px 0 16px; 
