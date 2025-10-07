@@ -6,6 +6,9 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
+import depositRoutes from "./routes/depositRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -31,6 +34,9 @@ app.use(
 
 // ===== ROUTES =====
 app.use("/api/auth", authRoutes);
+app.use("/api/deposits", depositRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ===== TEST ROUTE =====
 app.get("/api/auth/test", (req, res) => {

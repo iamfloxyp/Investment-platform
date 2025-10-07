@@ -92,11 +92,12 @@ body {
 /* User Dropdown */
 .user-menu {
   position: relative;
+  left: 1rem;
 }
 .user-btn {
   background: none;
   border: none;
-  color: #fff;
+  color: #132936;
   font-size: 18px;
   cursor: pointer;
 }
@@ -175,6 +176,7 @@ body {
 
   .menu-toggle {
     display: block;
+    margin-left: 20px;
   }
   .invest-btn {
   background: #2563eb; 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Email Verification — MoneTrust</title>
+  <title>Email Verification — Emuntra</title>
   <link rel="stylesheet" href="../assets/css/style.css"/>
 </head>
 <body class="container-sign verify">
@@ -11,7 +11,7 @@
   <div class="signup-container verify">
     <!-- LEFT PANEL -->
     <div class="verify-left">
-      <h1 class="logo">MoneTrust</h1>
+      <h1 class="logo">Emuntra</h1>
       <p class="tagline">Invest Smart. Grow Steady. Verify Securely.</p>
     </div>
 
@@ -49,7 +49,7 @@
   </div>
 
   <script>
-    const API = "http://localhost:4000/api/auth";
+    const API = "http://localhost:4000/api/auth"; // Change when deployed
 
     function getEmailFromQuery(){
       const q = new URLSearchParams(location.search);
@@ -80,7 +80,7 @@
       const res = await fetch(url, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        credentials: "include",
+        credentials: "include", // ✅ required for cookie
         body: JSON.stringify(data)
       });
       const out = await res.json().catch(()=> ({}));
@@ -101,13 +101,25 @@
 
       btnEl.disabled = true; btnEl.textContent = "Verifying…";
       try {
-        await postJSON(API + "/verify", { email, code }); // ✅ FIXED HERE
+        await postJSON(API + "/verify", { email, code });
+
+        // ✅ check if the cookie is now valid
+        const me = await fetch(API + "/me", {
+          credentials: "include"
+        });
+
+        if (!me.ok) {
+          setMsg("Verification succeeded, but login session failed. Try logging in manually.", "err");
+          return;
+        }
+
         setMsg("Email verified! Redirecting…", "ok");
-        setTimeout(()=> location.href = "dashboard.html", 1000); // Redirect
+        setTimeout(() => location.href = "dashboard.html", 1000);
       } catch(err){
         setMsg(err.message, "err");
       } finally {
-        btnEl.disabled = false; btnEl.textContent = "Verify & Continue";
+        btnEl.disabled = false;
+        btnEl.textContent = "Verify & Continue";
       }
     });
 
@@ -134,7 +146,7 @@
     resend.addEventListener("click", async ()=>{
       if (!email) return setMsg("Missing email. Go back to Sign Up.", "err");
       try{
-        await postJSON(API + "/resend", { email }); // ✅ This works already
+        await postJSON(API + "/resend", { email });
         setMsg(`New code sent to ${email}`, "ok");
         startCooldown(30);
       }catch(err){
@@ -144,6 +156,5 @@
 
     startCooldown(0); // Ready immediately
   </script>
-
 </body>
 </html>

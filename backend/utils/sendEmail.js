@@ -4,10 +4,11 @@ dotenv.config();
 
 import nodemailer from 'nodemailer';
 
-const host = process.env.SMTP_HOST;
-const port = process.env.SMTP_PORT;
-const user = process.env.SMTP_USER;
-const pass = process.env.SMTP_PASS;
+// ✅ Use your updated .env keys:
+const host = process.env.EMAIL_HOST;
+const port = process.env.EMAIL_PORT;
+const user = process.env.EMAIL_USER;
+const pass = process.env.EMAIL_PASS;
 
 console.log("✅ SMTP ENV CHECK:", {
   host,
@@ -22,7 +23,7 @@ if (host && port && user && pass) {
   transporter = nodemailer.createTransport({
     host,
     port: +port,
-    secure: false,
+    secure: false, // Brevo uses TLS on 587
     auth: {
       user,
       pass,
@@ -46,7 +47,7 @@ export const sendEmail = async ({ to, subject, html }) => {
 
   try {
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || `FinBloom <${user}>`,
+      from: process.env.EMAIL_FROM || `Emuntra Platform <${user}>`, // ✅ changed to Emuntra
       to,
       subject,
       html

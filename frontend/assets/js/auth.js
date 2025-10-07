@@ -1,45 +1,25 @@
 // ====== CONFIG ======
-const API_BASE = "http://localhost:4000"; // backend server
+const API_BASE = "http://localhost:4000"; // Change on deployment
 const SIGNUP_URL = `${API_BASE}/api/auth/register`;
 const LOGIN_URL  = `${API_BASE}/api/auth/login`;
+const ME_URL     = `${API_BASE}/api/auth/me`;
 
 // ====== HELPERS ======
-function qs(sel, root = document) { return root.querySelector(sel); }
-function qsa(sel, root = document) { return [...root.querySelectorAll(sel)]; }
+function qs(sel, root = document) {
+  return root.querySelector(sel);
+}
+function qsa(sel, root = document) {
+  return [...root.querySelectorAll(sel)];
+}
 function setLoading(btn, isLoading, text = "Create Account") {
   if (!btn) return;
   btn.disabled = isLoading;
-  btn.textContent = isLoading ? "Creating..." : text;
+  btn.textContent = isLoading ? "Processing..." : text;
 }
-
-// Persist form values so user doesn't lose them on error
-const LS_KEY_SIGNUP = "finbloom_signup_draft";
-function saveDraft(form) {
-  if (!form) return;
-  const data = {
-    firstName: form.querySelector('#firstName')?.value ?? "",
-    lastName:  form.querySelector('#lastName')?.value ?? "",
-    email:     form.querySelector('#email')?.value ?? ""
-  };
-  localStorage.setItem(LS_KEY_SIGNUP, JSON.stringify(data));
-}
-function loadDraft(form) {
-  if (!form) return;
-  try {
-    const data = JSON.parse(localStorage.getItem(LS_KEY_SIGNUP) || "{}");
-    if (data.firstName) form.querySelector('#firstName').value = data.firstName;
-    if (data.lastName)  form.querySelector('#lastName').value  = data.lastName;
-    if (data.email)     form.querySelector('#email').value     = data.email;
-  } catch (_) {}
-}
-function clearDraft() {
-  localStorage.removeItem(LS_KEY_SIGNUP);
-}
-
 function showError(msg) {
   let el = qs(".form-error");
   if (!el) {
-    el = document.createElement("div");
+    el = document.createElement("p");
     el.className = "form-error";
     document.body.appendChild(el);
   }
@@ -53,23 +33,18 @@ function showError(msg) {
   const form = qs(".signup-form");
   if (!form) return;
 
-  // try to restore previous values
-  loadDraft(form);
-
   const submitBtn = form.querySelector('button[type="submit"], .btn');
-
-  form.addEventListener("input", () => saveDraft(form));
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const firstName = form.querySelector('#firstName').value.trim();
-    const lastName  = form.querySelector('#lastName').value.trim();
-    const email     = form.querySelector('#email').value.trim().toLowerCase();
-    const password  = form.querySelector('#signup-password').value;
+    const firstName = qs("#firstName").value.trim();
+    const lastName  = qs("#lastName").value.trim();
+    const email     = qs("#email").value.trim().toLowerCase();
+    const password  = qs("#signup-password").value;
+    const agree     = qs("#terms");
 
-    const agree = form.querySelector('#terms');
-    if (agree && !agree.checked) {
+    if (!agree?.checked) {
       showError("Please accept the Terms & Conditions.");
       return;
     }
@@ -85,20 +60,16 @@ function showError(msg) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ firstName, lastName, email, password })
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
       const data = await res.json();
+
       if (!res.ok) {
-        showError(data?.message || "Sign up failed.");
+        showError(data?.message || "Signup failed.");
         return;
       }
 
-      // Save user info locally
-      localStorage.setItem("finbloom_user", JSON.stringify(data.user));
-      clearDraft();
-
-      // ✅ Redirect to verify.html with email as query param
       window.location.href = `./verify.html?email=${encodeURIComponent(email)}`;
     } catch (err) {
       console.error(err);
@@ -118,32 +89,49 @@ function showError(msg) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email    = form.querySelector('input[type="email"]').value.trim().toLowerCase();
-    const password = form.querySelector('input[type="password"]').value;
+
+    const email = qs("#login-email").value.trim().toLowerCase();
+    const password = qs("#login-password").value;
 
     if (!email || !password) {
-      showError("Email and password are required.");
+      showError("Please enter email and password.");
       return;
     }
 
     try {
       setLoading(submitBtn, true, "Signing In...");
-      const res = await fetch(LOGIN_URL, {
+
+      const loginRes = await fetch(LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        showError(data?.message || "Login failed.");
+
+      const loginData = await loginRes.json();
+      if (!loginRes.ok) {
+        showError(loginData?.message || "Login failed.");
         return;
       }
-      localStorage.setItem("finbloom_user", JSON.stringify(data.user));
+
+      // ✅ Fetch user from /me
+      const userRes = await fetch(ME_URL, {
+        credentials: "include",
+      });
+
+      const userData = await userRes.json();
+      if (!userRes.ok || !userData?.id) {
+        showError("Failed to fetch user session.");
+        return;
+      }
+
+      // Only save user ID for now (optional)
+      localStorage.setItem("userId", userData.id);
+
       window.location.href = "./dashboard.html";
     } catch (err) {
       console.error(err);
-      showError("Network error.");
+      showError("Something went wrong. Try again.");
     } finally {
       setLoading(submitBtn, false, "Sign In");
     }
@@ -159,10 +147,7 @@ document.querySelectorAll(".password-field").forEach((field) => {
     const type = input.getAttribute("type") === "password" ? "text" : "password";
     input.setAttribute("type", type);
 
-    // Change icon
     toggle.textContent = type === "password" ? "👁️" : "🙈";
-
-    // Accessibility
     toggle.setAttribute("aria-pressed", type === "text");
   });
 });

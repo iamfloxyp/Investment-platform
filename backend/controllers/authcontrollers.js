@@ -3,32 +3,34 @@ import User from "../models/userModel.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { makeCode, hash } from "../utils/otp.js";
 
-// Helper: Sign JWT
+// 🔐 Sign JWT Token
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES || "7d",
   });
 
-// Helper: Set cookie
+// 🍪 Set Auth Cookie
 const setCookie = (res, token) => {
-  res.cookie("token", token, {
+  const isProd = process.env.NODE_ENV === "production";
+
+  res.cookie("emuntra_token", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: isProd,
+    sameSite: "Strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
 
-// Helper: Send verification email
+// 📩 Send Email Verification Code
 async function sendVerification(user) {
   const code = makeCode();
   user.verifyCodeHash = hash(code);
-  user.verifyCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+  user.verifyCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
   await user.save({ validateBeforeSave: false });
 
   await sendEmail({
     to: user.email,
-    subject: "Verify your MoneTrust account",
+    subject: "Verify your Emuntra account",
     html: `
       <p>Hi ${user.firstName},</p>
       <p>Your verification code is:</p>
@@ -38,7 +40,7 @@ async function sendVerification(user) {
   });
 }
 
-// REGISTER
+// 📝 Register
 const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -53,8 +55,8 @@ const register = async (req, res) => {
 
     try {
       await sendVerification(user);
-    } catch (mailErr) {
-      console.error("Email send failed:", mailErr.message);
+    } catch (err) {
+      console.error("Email send failed:", err.message);
     }
 
     return res.status(201).json({
@@ -62,44 +64,59 @@ const register = async (req, res) => {
       needVerify: true,
       email: user.email,
     });
-  } catch (e) {
-    console.error("Register error:", e);
+  } catch (err) {
+    console.error("Register error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// VERIFY EMAIL
+// ✅ Verify Email
+// ✅ Verify Email
 const verifyEmail = async (req, res) => {
   try {
     const { email, code } = req.body;
-    if (!email || !code) {
-      return res.status(400).json({ message: "Email and code are required" });
-    }
+    if (!email || !code)
+      return res.status(400).json({ message: "Email and code required" });
 
     const user = await User.findOne({ email }).select("+verifyCodeHash +verifyCodeExpires");
-    if (!user) return res.status(400).json({ message: "Invalid email/code" });
+    if (!user)
+      return res.status(400).json({ message: "Invalid email/code" });
 
+    // Check if code expired
     if (
       !user.verifyCodeHash ||
       !user.verifyCodeExpires ||
-      user.verifyCodeExpires.getTime() < Date.now()
+      user.verifyCodeExpires < Date.now()
     ) {
       return res.status(400).json({ message: "Code expired, request a new one" });
     }
 
+    // Check if code matches
     if (user.verifyCodeHash !== hash(code)) {
       return res.status(400).json({ message: "Code is incorrect" });
     }
 
+    // ✅ Mark verified and clear code data
     user.isVerified = true;
     user.verifyCodeHash = undefined;
     user.verifyCodeExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    const token = signToken(user);
-    setCookie(res, token);
+    // ✅ Create JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    return res.json({
+    // ✅ Set cookie with relaxed policy for local dev
+    res.cookie("emuntra_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // false locally, true in prod
+      sameSite: "Lax", // "Strict" can block cookies in redirects
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // ✅ Respond to frontend
+    return res.status(200).json({
       message: "Email verified",
       user: {
         id: user._id,
@@ -108,13 +125,13 @@ const verifyEmail = async (req, res) => {
         lastName: user.lastName,
       },
     });
-  } catch (e) {
-    console.error("Verify error:", e);
+  } catch (err) {
+    console.error("Verify error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// RESEND CODE
+// 🔁 Resend Verification Code
 const resendCode = async (req, res) => {
   try {
     const { email } = req.body;
@@ -126,16 +143,17 @@ const resendCode = async (req, res) => {
 
     await sendVerification(user);
     return res.json({ message: "Verification code resent" });
-  } catch (e) {
-    console.error("Resend error:", e);
+  } catch (err) {
+    console.error("Resend error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// LOGIN
+// 🔐 Login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await User.findOne({ email }).select("+password");
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -149,6 +167,7 @@ const login = async (req, res) => {
     setCookie(res, token);
 
     return res.json({
+      message: "Login successful",
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -157,13 +176,23 @@ const login = async (req, res) => {
         role: user.role,
       },
     });
-  } catch (e) {
-    console.error("Login error:", e);
+  } catch (err) {
+    console.error("Login error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// FORGOT PASSWORD (corrected)
+// 🔓 Logout
+const logout = (req, res) => {
+  res.clearCookie("emuntra_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  });
+  res.json({ message: "Logged out successfully" });
+};
+
+// 🔑 Forgot Password
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -174,8 +203,8 @@ const forgotPassword = async (req, res) => {
 
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
 
-    // ✅ no extra slash in token param
     const resetUrl = `http://127.0.0.1:5501/frontend/pages/reset-password.html?token=${resetToken}`;
+    // 🔁 Replace with frontend URL before deployment
 
     await sendEmail({
       to: user.email,
@@ -189,16 +218,16 @@ const forgotPassword = async (req, res) => {
     });
 
     return res.json({ message: "Reset link sent to email" });
-  } catch (e) {
-    console.error("Forgot error:", e);
+  } catch (err) {
+    console.error("Forgot error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// RESET PASSWORD (no change needed)
+// 🔐 Reset Password
 const resetPassword = async (req, res) => {
   try {
-    const  {token}  = req.query;
+    const { token } = req.query;
     const { password } = req.body;
 
     if (!token || !password) {
@@ -213,17 +242,37 @@ const resetPassword = async (req, res) => {
     await user.save();
 
     return res.json({ message: "Password reset successful" });
-  } catch (e) {
-    console.error("Reset error:", e);
+  } catch (err) {
+    console.error("Reset error:", err);
     return res.status(500).json({ message: "Invalid or expired token" });
   }
 };
+
+// 🧠 Get Logged In User
+const getMe = async (req, res) => {
+  try {
+    const user = req.user;
+    res.json({
+      id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    });
+  } catch (err) {
+    console.error("GetMe error:", err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 
 export {
   register,
   verifyEmail,
   resendCode,
   login,
+  logout,
   forgotPassword,
   resetPassword,
+  getMe,
 };
