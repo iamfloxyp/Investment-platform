@@ -65,6 +65,7 @@
               <th>Amount</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="transactionsTable">
@@ -95,6 +96,11 @@
           <option value="deposit">Deposit</option>
           <option value="withdraw">Withdraw</option>
         </select>
+        <label for="transactionType">Payment Method:</label>
+<select id="transactionMethod">
+  <option value="bank">Bank</option>
+  <option value="crypto">Crypto</option>
+</select>
 
         <label>Amount</label>
         <input type="number" id="transactionAmount" required>

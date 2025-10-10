@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["user", "admin"], default: "user" },
     isVerified: { type: Boolean, default: false },
 
+    balance: { type: Number, default: 0 }, // user balance
     // email verification
     verifyCodeHash: { type: String, select: false },
     verifyCodeExpires: { type: Date, select: false },

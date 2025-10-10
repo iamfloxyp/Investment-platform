@@ -1,215 +1,174 @@
-// -------------------------
-// Protect admin dashboard
-// -------------------------
-let currentAdmin = JSON.parse(localStorage.getItem("currentAdmin")) || null;
-if (!currentAdmin) {
-  window.location.href = "admin-login.html";
+// const API_BASE = "http://127.0.0.1:4000";
+// or your Render URL in production
+
+// ✅ Popup message utility
+function showPopup(message, type = "success") {
+  const popup = document.createElement("div");
+  popup.textContent = message;
+  popup.style.position = "fixed";
+  popup.style.bottom = "30px";
+  popup.style.right = "30px";
+  popup.style.padding = "12px 18px";
+  popup.style.background = type === "error" ? "#c0392b" : "#102630";
+  popup.style.color = "#fff";
+  popup.style.borderRadius = "6px";
+  popup.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
+  popup.style.zIndex = "9999";
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 3000);
 }
 
-// Mock data (in real use, this will come from API)
-let users = JSON.parse(localStorage.getItem("users")) || [
-  { id: 1, name: "John Doe", email: "john@example.com", active: true, balance: 200 },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", active: true, balance: 500 },
-];
-
-let transactions = JSON.parse(localStorage.getItem("transactions")) || [
-  { id: 1, userId: 1, type: "deposit", amount: 200, status: "completed", paymentProcess: "USDT" },
-  { id: 2, userId: 2, type: "withdrawal", amount: 50, status: "pending", paymentProcess: "Bank Transfer" },
-];
-
-let investments = JSON.parse(localStorage.getItem("investments")) || [
-  { id: 1, userId: 2, amount: 300, status: "active" },
-];
-
-// ✅ Upgrade existing transactions
-transactions = transactions.map(t => ({
-  ...t,
-  userName: t.userName || (users.find(u => u.id === t.userId)?.name || "Unknown User"),
-  status: t.status || "pending",
-  paymentProcess: t.paymentProcess || "Unknown", // 👈 BTC, USDT, Bank Transfer, PayPal
-  performedBy: t.performedBy || currentAdmin?.name || "System",
-  date: t.date || new Date().toISOString().slice(0,10)
-}));
-
-localStorage.setItem("transactions", JSON.stringify(transactions));
-
-function saveData() {
-  localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-  localStorage.setItem("investments", JSON.stringify(investments));
-}
-
-// -------------------------
-// 1. Update Dashboard Stats
-// -------------------------
-function updateDashboard() {
-  document.querySelector("#totalUsers").innerText = users.length;
-
-  let deposits = transactions
-    .filter(t => t.type === "deposit" && t.status === "completed")
-    .reduce((sum, t) => sum + t.amount, 0);
-  document.querySelector("#totalDeposits").innerText = `$${deposits}`;
-
-  let pendingWithdrawals = transactions
-    .filter(t => t.type === "withdrawal" && t.status === "pending")
-    .reduce((sum, t) => sum + t.amount, 0);
-  document.querySelector("#pendingWithdrawals").innerText = `$${pendingWithdrawals}`;
-
-  let activeInvestments = investments
-    .filter(i => i.status === "active")
-    .reduce((sum, i) => sum + i.amount, 0);
-  document.querySelector("#activeInvestments").innerText = `$${activeInvestments}`;
-}
-
-// -------------------------
-// 2. Render Recent Transactions (for dashboard preview)
-// -------------------------
-function renderRecentTransactions(limit = 3) {
-  const tableBody = document.getElementById("transactionsTable");
-  if (!tableBody) return;
-
-  tableBody.innerHTML = "";
-
-  // Show only latest N transactions on dashboard
-  let recent = [...transactions].slice(-limit).reverse();
-
-  recent.forEach(t => {
-    let userName = t.userName || (users.find(u => u.id === t.userId)?.name || "Unknown User");
-    let status = t.status || "pending";
-    let paymentProcess = t.paymentProcess || "Unknown";
-    let performedBy = t.performedBy || currentAdmin?.name || "Unknown Admin";
-    let date = t.date || new Date().toISOString().slice(0,10);
-
-    let row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${userName}</td>
-      <td>$${t.amount}</td>
-      <td>${t.type}</td>
-      <td><span class="status ${status}">${status}</span></td>
-      <td>${paymentProcess}</td>
-      <td>${performedBy}</td>
-      <td>${date}</td>
-    `;
-    tableBody.appendChild(row);
-  });
-}
-
-// -------------------------
-// 3. Search Functionality (for Users Management, not dashboard)
-// -------------------------
-function setupSearch() {
-  const searchBox = document.querySelector(".search-box input");
-  if (!searchBox) return;
-
-  searchBox.addEventListener("keyup", function () {
-    let searchTerm = searchBox.value.toLowerCase();
-    let rows = document.querySelectorAll(".users-table tbody tr");
-
-    rows.forEach(row => {
-      let name = row.querySelector("td:nth-child(1)")?.innerText.toLowerCase() || "";
-      let email = row.querySelector("td:nth-child(2)")?.innerText.toLowerCase() || "";
-
-      if (name.includes(searchTerm) || email.includes(searchTerm)) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
+// ✅ Load Admin Stats (for dashboard cards + recent transactions)
+async function loadAdminStats() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/stats`, {
+      credentials: "include",
     });
-  });
+
+    if (!res.ok) throw new Error("Failed to load stats");
+
+    const data = await res.json();
+
+    // ✅ Update dashboard cards
+    const totalUsersEl = document.getElementById("totalUsers");
+    const totalDepositsEl = document.getElementById("totalDeposits");
+    const pendingWithdrawalsEl = document.getElementById("pendingWithdrawals");
+    const activeInvestmentsEl = document.getElementById("activeInvestments");
+
+    if (totalUsersEl) totalUsersEl.textContent = data.totalUsers || 0;
+    if (totalDepositsEl)
+      totalDepositsEl.textContent = `$${(data.totalDeposits || 0).toFixed(2)}`;
+    if (pendingWithdrawalsEl)
+      pendingWithdrawalsEl.textContent = `$${data.pendingWithdrawals || 0}`;
+    if (activeInvestmentsEl)
+      activeInvestmentsEl.textContent = `$${data.activeInvestments || 0}`;
+
+    // ✅ Populate recent transactions
+    const tableBody = document.getElementById("transactionsTable");
+    if (tableBody && data.recentTransactions) {
+      tableBody.innerHTML = "";
+
+      data.recentTransactions.forEach((tx) => {
+        const statusClass =
+          tx.status === "approved"
+            ? "status-approved"
+            : tx.status === "pending"
+            ? "status-pending"
+            : "status-rejected";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${tx.user || "Unknown"}</td>
+          <td>$${tx.amount}</td>
+          <td>${tx.type}</td>
+          <td class="${statusClass}">${tx.status}</td>
+          <td>${tx.paymentProcess}</td>
+          <td>${tx.performedBy}</td>
+          <td>${new Date(tx.date).toLocaleDateString()}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      if (data.recentTransactions.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; color:#888;">
+              No recent transactions
+            </td>
+          </tr>
+        `;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    showPopup("Error loading admin stats", "error");
+  }
 }
 
-// -------------------------
-// 4. Profile Dropdown
-// -------------------------
-document.addEventListener("DOMContentLoaded", () => {
+// ✅ Load Users (for user management page)
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Failed to load users");
+
+    const users = await res.json();
+
+    const tableBody = document.querySelector("#usersTable tbody");
+    if (tableBody) {
+      tableBody.innerHTML = users
+        .map(
+          (user) => `
+        <tr>
+          <td>${user.firstName} ${user.lastName}</td>
+          <td>${user.email}</td>
+          <td>${user.role}</td>
+          <td>$${(user.balance || 0).toFixed(2)}</td>
+          <td>${user.isVerified ? "✅" : "❌"}</td>
+        </tr>
+      `
+        )
+        .join("");
+    }
+  } catch (err) {
+    console.error(err);
+    showPopup("Failed to load users", "error");
+  }
+}
+
+// ✅ Sidebar + Profile Dropdown Controls
+function setupUIControls() {
+  const sidebar = document.querySelector(".sidebar");
+  const hamburgerBtn = document.getElementById("hamburgerBtn");
+  const closeSidebar = document.getElementById("closeSidebar");
   const profileIcon = document.getElementById("profileIcon");
   const profileDropdown = document.getElementById("profileDropdown");
 
-  if (profileIcon) {
-    profileIcon.addEventListener("click", () => {
-      profileDropdown.style.display =
-        profileDropdown.style.display === "block" ? "none" : "block";
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
-        profileDropdown.style.display = "none";
-      }
+  // ✅ Sidebar toggle (use .active to match your CSS)
+  if (hamburgerBtn && sidebar) {
+    hamburgerBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle("active");
     });
   }
 
-  const profileModal = document.getElementById("profileModal");
-  const closeProfile = document.getElementById("closeProfile");
-
-  if (document.querySelector("#profileDropdown ul li:nth-child(1)")) {
-    document.querySelector("#profileDropdown ul li:nth-child(1)").addEventListener("click", () => {
-      document.getElementById("adminName").innerText = currentAdmin.name;
-      document.getElementById("adminEmail").innerText = currentAdmin.email;
-      profileModal.style.display = "flex";
+  // ✅ Close sidebar (X button)
+  if (closeSidebar && sidebar) {
+    closeSidebar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sidebar.classList.remove("active");
     });
   }
 
-  if (closeProfile) {
-    closeProfile.addEventListener("click", () => {
-      profileModal.style.display = "none";
+  // ✅ Profile dropdown toggle
+  if (profileIcon && profileDropdown) {
+    profileIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle("show");
     });
   }
 
-  if (document.querySelector("#profileDropdown ul li:nth-child(2)")) {
-    document.querySelector("#profileDropdown ul li:nth-child(2)").addEventListener("click", () => {
-      document.getElementById("settingsSection").classList.remove("hidden");
-      profileDropdown.style.display = "none";
-    });
-  }
-
-  if (document.getElementById("changePasswordForm")) {
-    document.getElementById("changePasswordForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      let newPass = document.getElementById("newPassword").value;
-      alert(`Password updated to: ${newPass} (saved in DB later)`);
-      e.target.reset();
-    });
-  }
-
-  if (document.querySelector("#profileDropdown ul li:nth-child(3)")) {
-    document.querySelector("#profileDropdown ul li:nth-child(3)").addEventListener("click", () => {
-      localStorage.removeItem("currentAdmin");
-      window.location.href = "admin-login.html";
-    });
-  }
-
-  // Initialize
-  updateDashboard();
-  renderRecentTransactions(); // only few items on dashboard
-  setupSearch();
-});
-// Sidebar toggle
-const hamburgerBtn = document.getElementById("hamburgerBtn");
-const closeSidebar = document.getElementById("closeSidebar");
-const sidebar = document.querySelector(".sidebar");
-
-// Toggle with hamburger
-hamburgerBtn.addEventListener("click", () => {
-  sidebar.classList.toggle("active");
-
-  // Toggle icon inside hamburger
-  const icon = hamburgerBtn.querySelector("i");
-  if (sidebar.classList.contains("active")) {
-    icon.classList.remove("fa-bars");
-  } else {
-    icon.classList.remove("fa-xmark");
-    icon.classList.add("fa-bars");
-  }
-});
-
-// Close with X inside sidebar
-if (closeSidebar) {
-  closeSidebar.addEventListener("click", () => {
-    sidebar.classList.remove("active");
-
-    // Reset hamburger icon
-    const icon = hamburgerBtn.querySelector("i");
-    icon.classList.remove("fa-xmark");
-    icon.classList.add("fa-bars");
+  // ✅ Close dropdown & sidebar when clicking outside
+  window.addEventListener("click", (e) => {
+    if (profileDropdown && !e.target.closest("#profileIcon")) {
+      profileDropdown.classList.remove("show");
+    }
+    if (sidebar && !e.target.closest(".sidebar") && !e.target.closest("#hamburgerBtn")) {
+      sidebar.classList.remove("active");
+    }
   });
 }
+// ✅ Initialize page logic
+document.addEventListener("DOMContentLoaded", () => {
+  setupUIControls();
+
+  if (document.getElementById("totalUsers")) {
+    // We’re on the Admin Dashboard
+    loadAdminStats();
+  } else if (document.querySelector("#usersTable")) {
+    // We’re on the User Management page
+    loadUsers();
+  }
+});

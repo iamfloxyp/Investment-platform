@@ -169,7 +169,9 @@ body {
   min-width: 150px;
   z-index: 100;
 }
-
+.dropdown.show{
+    display: block;
+}
 .dropdown ul {
   list-style: none;
   margin: 0;
@@ -476,9 +478,12 @@ body {
   border: 1px solid #ccc;
   font-size: 14px;
   font-weight: 500;
-  background: #f9fafc;
+  background: #3498db;
+  color: white;
   cursor: pointer;
   transition: border 0.3s, box-shadow 0.3s;
+  position: relative;
+  left: 20rem;
 }
 
 .actions-top select:hover {
@@ -657,12 +662,18 @@ body {
 
   .btn-add,
   .actions-top select {
-    width: 100%;
+    width: 50%;
   }
 
   .users-table th,
   .users-table td {
     font-size: 13px;
+  }
+  .actions-top select{
+    position: relative;
+    left: 1rem;
+    top: 1.2rem;
+    width: 100px;
   }
 }
 
@@ -988,4 +999,87 @@ body.dark-mode .btn-save {
 
 body.dark-mode .btn-save:hover {
   background: #777;
+}
+
+.status-approved {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.status-pending {
+  color: #f1c40f;
+  font-weight: 600;
+}
+
+.status-rejected {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.approve-btn,
+.reject-btn,
+.delete-btn {
+  border: none;
+  padding: 6px 10px;
+  margin: 2px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* APPROVE (Green) */
+.approve-btn {
+  background-color: #2ecc71; /* emerald green */
+}
+.approve-btn:hover {
+  background-color: #27ae60;
+  transform: scale(1.05);
+}
+
+/* REJECT (Orange/Red) */
+.reject-btn {
+  background-color: #e67e22; /* bright orange */
+}
+.reject-btn:hover {
+  background-color: #d35400;
+  transform: scale(1.05);
+}
+
+/* DELETE (Red) */
+.delete-btn {
+  background-color: #c0392b; /* classic red */
+}
+.delete-btn:hover {
+  background-color: #992d22;
+  transform: scale(1.05);
+}
+
+/* Align buttons horizontally inside table cell */
+td button {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Make table cleaner */
+.transactions-table td {
+  padding: 10px 12px;
+  text-align: center;
+}
+
+/* Status labels (for quick visual cues) */
+.status.approved {
+  color: #27ae60;
+  font-weight: 600;
+}
+.status.pending {
+  color: #f39c12;
+  font-weight: 600;
+}
+.status.rejected {
+  color: #c0392b;
+  font-weight: 600;
 }

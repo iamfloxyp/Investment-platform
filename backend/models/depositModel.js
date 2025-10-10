@@ -14,13 +14,18 @@ const depositSchema = new mongoose.Schema(
     },
     method: {
       type: String,
-      enum: ["bank", "crypto", "paypal", "other"],
+      enum: ["bank", "crypto", ],
       default: "bank",
     },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
+    },
+    type: {
+      type: String,
+      enum: ["deposit", "withdraw"],
+      default: "deposit", required:false
     },
     note: {
       type: String,

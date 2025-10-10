@@ -9,15 +9,14 @@ const signToken = (user) =>
     expiresIn: process.env.JWT_EXPIRES || "7d",
   });
 
-// 🍪 Set Auth Cookie
+// 🍪 Set Auth Cookie (universal fix)
 const setCookie = (res, token) => {
   const isProd = process.env.NODE_ENV === "production";
-
   res.cookie("emuntra_token", token, {
     httpOnly: true,
-    secure: isProd,
-    sameSite: "Strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: isProd, // ✅ true in prod (https), false locally
+    sameSite: isProd ? "none" : "lax", // ✅ allows cross-site cookies in prod, local cookies in dev
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
@@ -44,9 +43,8 @@ async function sendVerification(user) {
 const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
-    }
 
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ message: "Email already used" });
@@ -82,42 +80,26 @@ const verifyEmail = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "Invalid email/code" });
 
-    // Check if code expired
-    if (
-      !user.verifyCodeHash ||
-      !user.verifyCodeExpires ||
-      user.verifyCodeExpires < Date.now()
-    ) {
+    if (!user.verifyCodeHash || !user.verifyCodeExpires || user.verifyCodeExpires < Date.now())
       return res.status(400).json({ message: "Code expired, request a new one" });
-    }
 
-    // Check if code matches
-    if (user.verifyCodeHash !== hash(code)) {
+    if (user.verifyCodeHash !== hash(code))
       return res.status(400).json({ message: "Code is incorrect" });
-    }
 
-    // ✅ Mark verified and clear code data
+    // ✅ Mark verified
     user.isVerified = true;
     user.verifyCodeHash = undefined;
     user.verifyCodeExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    // ✅ Create JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    // ✅ Create JWT and set cookie
+    const token = signToken(user);
+    setCookie(res, token);
 
-    // ✅ Set cookie with relaxed policy for local dev
-    res.cookie("emuntra_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // false locally, true in prod
-      sameSite: "Lax", // "Strict" can block cookies in redirects
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    // ✅ Respond to frontend
+    // ✅ Explicitly confirm cookie delivery with JSON response
     return res.status(200).json({
-      message: "Email verified",
+      success: true,
+      message: "Email verified successfully",
       user: {
         id: user._id,
         email: user.email,
@@ -153,15 +135,13 @@ const resendCode = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
 
-    if (!user.isVerified) {
+    if (!user || !(await user.matchPassword(password)))
+      return res.status(401).json({ message: "Invalid credentials" });
+
+    if (!user.isVerified)
       return res.status(403).json({ message: "Please verify your email first" });
-    }
 
     const token = signToken(user);
     setCookie(res, token);
@@ -187,7 +167,7 @@ const logout = (req, res) => {
   res.clearCookie("emuntra_token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
   res.json({ message: "Logged out successfully" });
 };
@@ -203,8 +183,8 @@ const forgotPassword = async (req, res) => {
 
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
 
+    // TODO: replace before deployment
     const resetUrl = `http://127.0.0.1:5501/frontend/pages/reset-password.html?token=${resetToken}`;
-    // 🔁 Replace with frontend URL before deployment
 
     await sendEmail({
       to: user.email,
@@ -230,9 +210,8 @@ const resetPassword = async (req, res) => {
     const { token } = req.query;
     const { password } = req.body;
 
-    if (!token || !password) {
+    if (!token || !password)
       return res.status(400).json({ message: "Token and password required" });
-    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
@@ -263,8 +242,7 @@ const getMe = async (req, res) => {
     console.error("GetMe error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-}
-
+};
 
 export {
   register,

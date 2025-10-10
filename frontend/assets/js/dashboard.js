@@ -7,10 +7,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const notifBadge = document.getElementById("notifBadge");
   const notifList = document.getElementById("notifList");
 
+  // ====== CONFIG ======
+  const isLocal = window.location.hostname.includes("127.0.0.1") || window.location.hostname.includes("localhost");
+  const API_BASE = isLocal
+    ? "http://127.0.0.1:4000"
+    : "https://investment-platform-1-qjx8.onrender.com";
+
   // ✅ Fetch user from backend via cookie
   try {
-    const res = await fetch("https://your-backend-domain.com/api/auth/me", {
-      credentials: "include"
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      credentials: "include",
     });
 
     if (!res.ok) throw new Error("Not authenticated");
@@ -21,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
     if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
 
-    // Optional: Store ID if needed for notifications
+    // Optional: Store ID for notifications
     localStorage.setItem("userId", user.id);
   } catch (err) {
     console.warn("User not logged in. Redirecting to login...");
@@ -29,20 +35,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ✅ DEMO Notifications from localStorage
+  // ✅ Demo Notifications (until backend connection)
   const sampleNotifs = [
     { id: 1, message: "Deposit of $100 successful", read: false },
     { id: 2, message: "Your withdrawal has been processed", read: false },
-    { id: 3, message: "New investment plan added", read: true }
+    { id: 3, message: "New investment plan added", read: true },
   ];
 
-  // Save to localStorage only once
   if (!localStorage.getItem("notifications")) {
     localStorage.setItem("notifications", JSON.stringify(sampleNotifs));
   }
 
   const notifs = JSON.parse(localStorage.getItem("notifications")) || [];
-  const unread = notifs.filter(n => !n.read);
+  const unread = notifs.filter((n) => !n.read);
 
   if (notifBadge) {
     notifBadge.textContent = unread.length;
@@ -50,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   if (notifList) {
-    notifList.innerHTML = notifs.map(n => `<li>${n.message}</li>`).join("");
+    notifList.innerHTML = notifs.map((n) => `<li>${n.message}</li>`).join("");
   }
 
   // Toggle user menu
@@ -71,16 +76,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Close dropdowns if click outside
   window.addEventListener("click", (e) => {
-    if (!e.target.closest(".user-menu")) {
-      dropdownMenu.classList.remove("show");
-    }
-    if (!e.target.closest(".notifications")) {
-      notifDropdown.classList.remove("show");
-    }
+    if (!e.target.closest(".user-menu")) dropdownMenu.classList.remove("show");
+    if (!e.target.closest(".notifications")) notifDropdown.classList.remove("show");
   });
 });
 
-// ✅ Investment calculator (unchanged)
+// ====== Investment calculator (unchanged) ======
 function calculateReturn() {
   const amount = parseFloat(document.getElementById("amount").value);
   const plan = document.getElementById("plan").value;
@@ -106,19 +107,24 @@ function resetCalc() {
   document.getElementById("calcResult").textContent = "";
   document.getElementById("okBtn").style.display = "none";
 }
-// Logout button click
+
+// ====== Logout button click ======
 const logoutBtn = document.querySelector(".logout-btn");
 
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
+    const isLocal = window.location.hostname.includes("127.0.0.1") || window.location.hostname.includes("localhost");
+    const API_BASE = isLocal
+      ? "http://localhost:4000"
+      : "https://investment-platform-1-qjx8.onrender.com";
+
     try {
-      const res = await fetch("http://localhost:4000/api/auth/logout", {
+      const res = await fetch(`${API_BASE}/api/auth/logout`, {
         method: "POST",
-        credentials: "include"
+        credentials: "include", // ✅ clear cookie properly
       });
 
       if (res.ok) {
-        // Optional: Clear userId from localStorage
         localStorage.removeItem("userId");
         window.location.href = "./login.html";
       } else {

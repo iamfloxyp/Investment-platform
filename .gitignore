@@ -1,0 +1,25 @@
+# Node modules (both frontend and backend)
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+backend/.env
+frontend/.env
+
+# Logs
+*.log
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Build outputs
+dist/
+build/
+
+# Misc
+npm-debug.log*

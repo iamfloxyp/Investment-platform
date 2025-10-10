@@ -6,13 +6,69 @@
   <title>User Management - Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="./assets/css/admin.css">
+
+  <!-- ✅ Popup Message -->
+  <div id="popupMessage" style="
+    position:fixed;
+    top:20px;
+    right:30px;
+    background:#102630;
+    color:#fff;
+    padding:12px 18px;
+    border-radius:6px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.25);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .4s,transform .4s;
+    transform:translateY(-10px);
+    z-index:1000;
+  "></div>
+
+  <!-- ✅ View User Modal -->
+  <div id="viewUserModal" style="
+    display:none;
+    position:fixed;
+    z-index:2000;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.5);
+  ">
+    <div style="
+      background:#fff;
+      margin:10% auto;
+      padding:20px 25px;
+      border-radius:10px;
+      max-width:400px;
+      text-align:left;
+      color:#102630;
+    ">
+      <h3 style="text-align:center;margin-bottom:15px;">User Details</h3>
+      <p><strong>Name:</strong> <span id="viewName">-</span></p>
+      <p><strong>Email:</strong> <span id="viewEmail">-</span></p>
+      <p><strong>Status:</strong> <span id="viewStatus">-</span></p>
+      <p><strong>Role:</strong> <span id="viewRole">-</span></p>
+      <button id="closeViewModal" style="
+        display:block;
+        margin:15px auto 0;
+        padding:8px 16px;
+        background:#102630;
+        color:#fff;
+        border:none;
+        border-radius:5px;
+        cursor:pointer;
+      ">Close</button>
+    </div>
+  </div>
 </head>
+
 <body>
   <!-- Sidebar -->
-  <aside class="sidebar" >
-    <h2><i class="fa-solid fa-shield-halved"></i> USER NANAGEMENT</h2>
+  <aside class="sidebar">
+    <h2><i class="fa-solid fa-shield-halved"></i> USER MANAGEMENT</h2>
     <div class="close-btn" id="closeSidebar">
-        <i class="fa-solid fa-xmark"></i>
+      <i class="fa-solid fa-xmark"></i>
     </div>
     <ul>
       <li><a href="admin.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
@@ -26,17 +82,14 @@
   <div class="main-content">
     <!-- Top Bar -->
     <header class="topbar">
-      <!-- Hamburger -->
       <div class="hamburger" id="hamburgerBtn">
-  <i class="fa-solid fa-bars"></i>
-</div>
-      <!-- Search -->
+        <i class="fa-solid fa-bars"></i>
+      </div>
       <div class="search-box">
         <input type="text" placeholder="Search users..." id="userSearch">
         <i class="fa-solid fa-magnifying-glass"></i>
       </div>
-      
-      <!-- Profile -->
+
       <div class="profile">
         <i class="fa-solid fa-user-circle" id="profileIcon"></i>
         <div class="dropdown" id="profileDropdown">
@@ -81,30 +134,55 @@
           </tbody>
         </table>
       </div>
-
-      <!-- Pagination -->
-      <div class="pagination">
-        <button id="prevPage">Previous</button>
-        <span id="pageNumbers"></span>
-        <button id="nextPage">Next</button>
-      </div>
     </section>
   </div>
 
-  <!-- Add User Modal -->
-  <div id="addUserModal" class="modal">
-    <div class="modal-content">
-      <h3>Add User</h3>
+  <!-- ✅ Add User Modal -->
+  <div id="addUserModal" class="modal" style="
+    display:none;
+    position:fixed;
+    left:0;top:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.6);
+    justify-content:center;
+    align-items:center;
+    z-index:1500;
+  ">
+    <div class="modal-content" style="
+      background:#fff;
+      padding:20px 25px;
+      border-radius:10px;
+      width:350px;
+      color:#102630;
+    ">
+      <h3 style="text-align:center;margin-bottom:10px;">Add User</h3>
       <form id="addUserForm">
-        <input type="text" id="newName" placeholder="Full Name" required>
+        <input type="text" id="newFirstName" placeholder="First Name" required>
+        <input type="text" id="newLastName" placeholder="Last Name" required>
         <input type="email" id="newEmail" placeholder="Email" required>
-        <input type="number" id="newBalance" placeholder="Balance" required>
-        <select id="newStatus" required>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+        <input type="password" id="newPassword" placeholder="Password" required>
+        <select id="newRole" required>
+          <option value="user" selected>User</option>
+          <option value="admin">Admin</option>
         </select>
-        <button type="submit">Submit</button>
-        <button type="button" id="closeAddUser">Cancel</button>
+        <div style="text-align:center;margin-top:10px;">
+          <button type="submit" style="
+            background:#102630;
+            color:#fff;
+            border:none;
+            padding:8px 14px;
+            border-radius:5px;
+            cursor:pointer;
+          ">Add User</button>
+          <button type="button" id="closeAddUser" style="
+            background:#c0392b;
+            color:#fff;
+            border:none;
+            padding:8px 14px;
+            border-radius:5px;
+            cursor:pointer;
+            margin-left:10px;
+          ">Cancel</button>
+        </div>
       </form>
     </div>
   </div>
@@ -120,18 +198,9 @@
     </div>
   </div>
 
-  <!-- Settings Section -->
-  <section id="settingsSection" class="settings hidden">
-    <h3>Admin Settings</h3>
-    <form id="changePasswordForm">
-      <label>Change Password</label>
-      <input type="password" id="newPassword" placeholder="Enter new password" required>
-      <button type="submit">Save</button>
-    </form>
-  </section>
-
   <!-- JS -->
-  <script src="./assets/js/users.js"></script>
+   <script src="./assets/js/config.js"></script>
   <script src="./assets/js/admin.js"></script>
+  <script src="./assets/js/users.js"></script>
 </body>
 </html>

@@ -1,5 +1,12 @@
-// ====== CONFIG ======
-const API_BASE = "http://localhost:4000"; // Change on deployment
+/// ====== CONFIG ======
+const isLocal = window.location.hostname.includes("127.0.0.1") || window.location.hostname.includes("localhost");
+
+// 🧠 Automatically switch API base depending on environment
+const API_BASE = isLocal
+  ? "http://127.0.0.1:4000" // local backend
+  : "https://investment-platform-1-qjx8.onrender.com"; // deployed backend on Render
+
+// Endpoints
 const SIGNUP_URL = `${API_BASE}/api/auth/register`;
 const LOGIN_URL  = `${API_BASE}/api/auth/login`;
 const ME_URL     = `${API_BASE}/api/auth/me`;
@@ -59,7 +66,7 @@ function showError(msg) {
       const res = await fetch(SIGNUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // ✅ cookies enabled
         body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
@@ -104,7 +111,7 @@ function showError(msg) {
       const loginRes = await fetch(LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // ✅ cookies enabled
         body: JSON.stringify({ email, password }),
       });
 
@@ -114,18 +121,16 @@ function showError(msg) {
         return;
       }
 
-      // ✅ Fetch user from /me
-      const userRes = await fetch(ME_URL, {
-        credentials: "include",
-      });
-
+      // ✅ Check session immediately after login
+      const userRes = await fetch(ME_URL, { credentials: "include" });
       const userData = await userRes.json();
+
       if (!userRes.ok || !userData?.id) {
         showError("Failed to fetch user session.");
         return;
       }
 
-      // Only save user ID for now (optional)
+      // Save minimal info if needed
       localStorage.setItem("userId", userData.id);
 
       window.location.href = "./dashboard.html";
@@ -146,7 +151,6 @@ document.querySelectorAll(".password-field").forEach((field) => {
   toggle.addEventListener("click", () => {
     const type = input.getAttribute("type") === "password" ? "text" : "password";
     input.setAttribute("type", type);
-
     toggle.textContent = type === "password" ? "👁️" : "🙈";
     toggle.setAttribute("aria-pressed", type === "text");
   });
