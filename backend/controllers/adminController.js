@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import Deposit from "../models/depositModel.js"; // ✅ added for dashboard stats
+import Withdraw from "../models/withdrawModel.js"
 
 
 // ✅ Fetch all users (with balances)
@@ -91,59 +92,77 @@ export const createUser = async (req, res) => {
 // ✅ Admin Dashboard Stats (with pending withdrawals + clean structure)
 export const getAdminStats = async (req, res) => {
   try {
-    // ✅ 1. Total users
+    // ✅ 1. Total Users
     const totalUsers = await User.countDocuments();
 
-    // ✅ 2. Total Approved Deposits
+    // ✅ 2. Total Deposits (approved + completed)
     const totalDepositsData = await Deposit.aggregate([
-      { $match: { status: "approved", type: "deposit" } },
+      {
+        $match: {
+          type: "deposit",
+          status: { $in: ["approved", "completed"] },
+        },
+      },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const totalDeposits = totalDepositsData[0]?.total || 0;
 
-    // ✅ 3. Total Approved Withdrawals
-    const totalWithdrawalsData = await Deposit.aggregate([
-      { $match: { status: "approved", type: "withdraw" } },
+    // ✅ 3. Total Withdrawals (approved + completed)
+    const totalWithdrawalsData = await Withdraw.aggregate([
+      {
+        $match: {
+          status: { $in: ["approved", "completed"] },
+        },
+      },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const totalWithdrawals = totalWithdrawalsData[0]?.total || 0;
 
-    // ✅ 4. Pending Withdrawals (amount)
-    const pendingWithdrawalsData = await Deposit.aggregate([
-      { $match: { status: "pending", type: "withdraw" } },
+    // ✅ 4. Pending Withdrawals (still pending)
+    const pendingWithdrawalsData = await Withdraw.aggregate([
+      { $match: { status: "pending" } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const pendingWithdrawals = pendingWithdrawalsData[0]?.total || 0;
 
-    // ✅ 5. Net Deposits (total inflow - total outflow)
+    // ✅ 5. Net Deposits (inflow - outflow)
     const netDeposits = totalDeposits - totalWithdrawals;
 
-    // ✅ 6. Active Investments (placeholder for future Investment model)
-    const activeInvestments = 0; 
+    // ✅ 6. Active Investments (you can replace logic later)
+    const activeInvestments = totalDeposits - totalWithdrawals - pendingWithdrawals;
 
-    // ✅ 7. Recent Transactions (latest 5)
-    const recentTransactions = await Deposit.find()
+    // ✅ 7. Recent Transactions (latest 5 deposits + withdrawals)
+    const recentDeposits = await Deposit.find()
       .populate("user", "firstName lastName email")
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(3);
 
-    // ✅ 8. Format transactions for the frontend
+    const recentWithdrawals = await Withdraw.find()
+      .populate("user", "firstName lastName email")
+      .sort({ createdAt: -1 })
+      .limit(2);
+
+    const recentTransactions = [...recentDeposits, ...recentWithdrawals].sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
+
+    // ✅ 8. Format transactions for frontend
     const formattedTransactions = recentTransactions.map((tx) => ({
       user: tx.user ? `${tx.user.firstName} ${tx.user.lastName}` : "Unknown User",
       amount: tx.amount,
-      type: tx.type === "withdraw" ? "Withdraw" : "Deposit",
+      type: tx.processor ? "Withdraw" : "Deposit",
       status: tx.status,
-      paymentProcess: tx.method || "Bank",
+      paymentProcess: tx.processor || tx.method || "N/A",
       performedBy: "Admin",
       date: tx.createdAt,
     }));
 
-    // ✅ 9. Send all metrics to frontend
+    // ✅ 9. Send all stats to frontend
     res.status(200).json({
       totalUsers,
       totalDeposits,
       totalWithdrawals,
-      pendingWithdrawals,  // 👈 now added and correct
+      pendingWithdrawals,
       netDeposits,
       activeInvestments,
       recentTransactions: formattedTransactions,
@@ -151,5 +170,19 @@ export const getAdminStats = async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching admin stats:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ✅ List all withdrawals for admin transactions page
+export const getAllWithdrawals = async (req, res) => {
+  try {
+    const withdrawals = await Withdraw.find()
+      .populate("user", "firstName lastName email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(withdrawals);
+  } catch (err) {
+    console.error("❌ getAllWithdrawals error:", err);
+    res.status(500).json({ message: "Server error fetching withdrawals" });
   }
 };

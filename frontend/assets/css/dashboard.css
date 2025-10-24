@@ -161,7 +161,7 @@ body {
     width: 100%;
     padding: 10px;
   }
-  .nav-links.show {
+  .nav-links.active {
     display: flex;
   }
   .logo a img{
@@ -945,7 +945,53 @@ calcForm button,
   border-radius: 5px;
   border-left: 4px solid #2563eb;
 }
+/* ====== FIX: Withdraw Funds Layout ====== */
+.withdraw-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
 
+.withdraw-card label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #102630;
+}
+
+.withdraw-card select,
+.withdraw-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.withdraw-card select:focus,
+.withdraw-card input:focus {
+  border-color: #1d75de;
+  box-shadow: 0 0 3px rgba(29, 117, 222, 0.4);
+}
+
+.withdraw-card .btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  border: none;
+  border-radius: 6px;
+  background-color: #1d75de;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.withdraw-card .btn-primary:hover {
+  background-color: #155bb5;
+}
 /* Responsive */
 @media (max-width: 768px) {
   .withdraw-top {
@@ -1475,4 +1521,120 @@ calcForm button,
     grid-template-columns: 1fr;
   }
 }
+/* 🔔 Notification Bell */
+.notifications {
+  position: relative;
+  display: inline-block;
+}
 
+/* Bell Button */
+.bell-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Badge Count */
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  font-size: 10px;
+  padding: 2px 5px;
+  display: none;
+  z-index: 10;
+}
+
+/* Dropdown */
+.notif-dropdown {
+  display: none;
+  position: absolute;
+  top: 35px;
+  right: 0;
+  background: white;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  width: 250px;
+  z-index: 9999;
+}
+
+/* Dropdown Visible */
+.notif-dropdown.show {
+  display: block;
+}
+
+/* Dropdown List */
+.notif-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notif-dropdown li {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.notif-dropdown li.unread {
+  font-weight: 600;
+  background: #f5f7ff;
+}
+
+/* Footer link */
+.notif-footer {
+  text-align: center;
+  padding: 8px;
+}
+
+.notif-footer a {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+/* add deposit modal crypto */
+/* 🔹 Modern select dropdown inside modal */
+#cryptoSelect {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 15px;
+  color: #102630;
+  background-color: #f9f9f9;
+  border: 1.5px solid #8dbbf0;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23102630' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+/* 🔹 Hover & focus effects */
+#cryptoSelect:hover,
+#cryptoSelect:focus {
+  border-color: #4a90e2;
+  background-color: #fff;
+  box-shadow: 0 0 4px rgba(16, 38, 48, 0.15);
+}
+
+/* 🔹 Label above select for balance */
+.deposit-form label[for="cryptoSelect"] {
+  font-weight: 600;
+  font-size: 14px;
+  color: #102630;
+  display: block;
+  margin-bottom: 5px;
+}

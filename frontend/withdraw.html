@@ -1,21 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Withdraw</title>
-  <!-- Link CSS -->
-  <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/dashboard.css">
-  <link rel="stylesheet" href="./assets/css/withdraw.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./assets/css/style.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+  <link rel="stylesheet" href="./assets/css/withdraw.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+  /* Only used when we portal the dropdown to <body> */
+  #notifDropdown.portal {
+    position: fixed !important;   /* escape all ancestors */
+    display: block !important;    /* we control visibility in JS */
+    width: 260px;                 /* same width you use elsewhere */
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+    z-index: 999999 !important;   /* above everything */
+  }
+</style>
 </head>
 <body>
-  
-  <!-- NAVIGATION BAR -->
+
+  <!-- NAVBAR -->
   <header class="navbar">
     <div class="nav-container">
-      <div class="logo"><a href="dashboard.html"><img src="./assets/images/Emuntra3.png" alt=""></a></div>
+      <div class="logo">
+        <a href="dashboard.html"><img src="./assets/images/Emuntra3.png" alt="Emuntra" /></a>
+      </div>
       <nav class="nav-links" id="navLinks">
         <a href="dashboard.html">Dashboard</a>
         <a href="add-deposit.html">Add Deposit</a>
@@ -29,20 +43,15 @@
 
       <div class="nav-right">
         <div class="notifications">
-  <span class="bell" id="bellBtn">🔔</span>
-  <span class="badge" id="notifBadge">3</span>
+          <button id="bellBtn" class="bell-btn">🔔</button>
+          <span id="notifBadge" class="notif-badge">0</span>
+          <div class="notif-dropdown" id="notifDropdown">
+            <h4>Notifications</h4>
+            <ul id="notifList"></ul>
+            <div class="notif-footer"><a href="notifications.html">See all notifications</a></div>
+          </div>
+        </div>
 
-  <!-- Dropdown -->
-  <div class="notif-dropdown" id="notifDropdown">
-    <h4>Notifications</h4>
-    <ul id="notifList">
-      <!-- Notifications will be injected here -->
-    </ul>
-    <div class="notif-footer">
-      <a href="notifications.html">See all notifications</a>
-    </div>
-  </div>
-</div>
         <div class="user-menu">
           <button class="user-btn" id="userBtn">User ▾</button>
           <div class="dropdown" id="dropdownMenu">
@@ -58,94 +67,66 @@
 
   <!-- MAIN -->
   <main>
-      <div class="dashboard-header">
-      <h1><span id="welcomeName">User</span> 👋</h1>
+    <div class="dashboard-header">
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
     </div>
 
     <!-- Withdraw Section -->
     <section class="withdraw-section">
 
-      <!-- Quick Info (Top Full Width) -->
+      <!-- Info -->
       <div class="withdraw-top">
         <div class="withdraw-card">
           <h2>Quick Info</h2>
           <ul class="info-list">
-            <li><strong>Min withdrawal (Crypto):</strong> $2</li>
-            <li><strong>Min withdrawal (Bank):</strong> $10</li>
-            <li><strong>Min withdrawal (PayPal):</strong> $5</li>
-            <li><strong>Withdrawal time:</strong> <span style="color:green;font-weight:600;">Instant</span></li>
-            <li><strong>Pending Withdrawals:</strong> $0.00</li>
+            <li><strong>Min Withdrawal:</strong> $2 (Crypto)</li>
+            <li><strong>Withdrawal Time:</strong> <span style="color:green;font-weight:600;">Instant</span></li>
+            <li><strong>Pending Withdrawals:</strong> <span id="pendingAmount">$0.00</span></li>
           </ul>
-          <p class="quick-tip">💡 Tip: Always confirm your wallet/account details before requesting withdrawal.</p>
+          <p class="quick-tip">💡 Always confirm your wallet before withdrawal.</p>
         </div>
       </div>
 
-      <!-- Available Balance + Withdraw Funds -->
+      <!-- Balance + Form -->
       <div class="withdraw-bottom">
 
-        <!-- Available Balance -->
+        <!-- Wallets Table -->
         <div class="withdraw-card">
-          <h2>Available Balance</h2>
-          <h3>$0.00</h3>
+          <h2>Available Balances</h2>
           <table class="balance-table">
             <thead>
-              <tr>
-                <th>Processor</th>
-                <th>Available</th>
-                <th>Wallet</th>
-              </tr>
+              <tr><th>Crypto</th><th>Available</th><th>Wallet</th></tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Bitcoin</td>
-                <td>$0.00</td>
-                <td><a href="#" class="set-wallet" data-processor="btc">Set Wallet</a></td>
-              </tr>
-              <tr>
-                <td>USDT</td>
-                <td>$0.00</td>
-                <td><a href="#" class="set-wallet" data-processor="usdt">Set Wallet</a></td>
-              </tr>
-              <tr>
-                <td>Ethereum</td>
-                <td>$0.00</td>
-                <td><a href="#" class="set-wallet" data-processor="eth">Set Wallet</a></td>
-              </tr>
-              <tr>
-                <td>Bank Transfer</td>
-                <td>$0.00</td>
-                <td><a href="#" class="set-wallet" data-processor="bank">Set Account</a></td>
-              </tr>
-              <tr>
-                <td>PayPal</td>
-                <td>$0.00</td>
-                <td><a href="#" class="set-wallet" data-processor="paypal">Set Account</a></td>
-              </tr>
+            <tbody id="walletTableBody">
+              <!-- Injected dynamically -->
             </tbody>
           </table>
         </div>
 
         <!-- Withdraw Funds -->
-        <div class="withdraw-card">
-          <h2>Withdraw Funds</h2>
-          <form id="withdrawForm">
-            <label for="processor">Payment Processor</label>
-            <select id="processor" class="withdraw-select">
-              <option value="">Select Processor</option>
-              <option value="btc">Bitcoin</option>
-              <option value="usdt">USDT</option>
-              <option value="eth">Ethereum</option>
-              <option value="bank">Bank Transfer</option>
-              <option value="paypal">PayPal</option>
-            </select>
+<div class="withdraw-card">
+  <h2>Withdraw Funds</h2>
+  <form id="withdrawForm">
+    <label for="processor">Select Crypto</label>
+    <select id="processor" required>
+      <option value="">-- Select --</option>
+      <option value="btc">Bitcoin (BTC)</option>
+      <option value="eth">Ethereum (ETH)</option>
+      <option value="usdt">Tether (USDT)</option>
+      <option value="bnb">Binance Coin (BNB)</option>
+      <option value="tron">Tron (TRX)</option>
+      <option value="bch">Bitcoin Cash (BCH)</option>
+      <option value="ltc">Litecoin (LTC)</option>
+      <option value="xrp">Ripple (XRP)</option>
+      <option value="doge">Dogecoin (DOGE)</option>
+    </select>
 
-            <label for="withdrawAmount">Withdrawal Amount</label>
-            <input type="number" id="withdrawAmount" placeholder="Enter amount" class="withdraw-input" />
+    <label for="withdrawAmount">Amount</label>
+    <input type="number" id="withdrawAmount" placeholder="Enter amount" required />
 
-            <button type="submit" class="btn-primary">Request Withdrawal</button>
-          </form>
-        </div>
-      </div>
+    <button type="submit" class="btn-primary">Request Withdrawal</button>
+  </form>
+</div>
     </section>
   </main>
 
@@ -153,7 +134,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="f-brand">
-        <a href="dashboard.html" class="f-logo"><img src="./assets/images/Emuntra3.png" alt="FinBloom" /></a>
+        <a href="dashboard.html" class="f-logo"><img src="./assets/images/Emuntra3.png" alt="Emuntra" /></a>
         <p class="f-tag">Smart investing for a brighter future.</p>
       </div>
       <div class="f-col">
@@ -170,7 +151,6 @@
         <ul class="f-links">
           <li><a href="#">Privacy Policy</a></li>
           <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Security</a></li>
         </ul>
       </div>
       <div class="f-col">
@@ -182,34 +162,88 @@
       </div>
     </div>
     <div class="subfooter">
-      <div class="container subfooter-row">
-        <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
-      </div>
+      <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
     </div>
   </footer>
 
-  <!-- Withdraw Wallet/Account Modal -->
+  <!-- Modal -->
   <div id="withdrawModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h2>Set Wallet / Account</h2>
+      <h2>Set Wallet</h2>
       <form id="setWalletForm">
-        <label for="withdrawProcessor">Processor</label>
+        <label>Crypto</label>
         <input type="text" id="withdrawProcessor" readonly />
-
-        <label for="withdrawInput">Wallet Address / Account Number</label>
-        <input type="text" id="withdrawInput" required placeholder="Enter wallet or account number" />
-
+        <label>Wallet Address</label>
+        <input type="text" id="withdrawInput" required placeholder="Enter wallet address" />
         <button type="submit" class="btn-primary">Save</button>
       </form>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
   <script src="./assets/js/dashboard.js"></script>
   <script src="./assets/js/withdrawal.js"></script>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const bellBtn = document.getElementById("bellBtn");
+  const notifDropdown = document.getElementById("notifDropdown");
+
+  if (!bellBtn || !notifDropdown) {
+    console.warn("⚠️ Notification bell or dropdown not found.");
+    return;
+  }
+
+  let isOpen = false;
+
+  // ✅ Function to open dropdown
+  function openDropdown() {
+    notifDropdown.style.display = "block";
+    notifDropdown.style.opacity = "1";
+    notifDropdown.style.transform = "translateY(0)";
+    notifDropdown.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+    isOpen = true;
+  }
+
+  // ✅ Function to close dropdown
+  function closeDropdown() {
+    notifDropdown.style.opacity = "0";
+    notifDropdown.style.transform = "translateY(-5px)";
+    setTimeout(() => {
+      notifDropdown.style.display = "none";
+    }, 150);
+    isOpen = false;
+  }
+
+  // ✅ Toggle on bell click
+  bellBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (isOpen) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  });
+
+  // ✅ Detect clicks outside the dropdown and bell
+  document.addEventListener("click", (e) => {
+    if (
+      isOpen &&
+      !notifDropdown.contains(e.target) &&
+      e.target !== bellBtn &&
+      !bellBtn.contains(e.target)
+    ) {
+      closeDropdown();
+    }
+  });
+
+  // ✅ Optional: close on ESC key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen) {
+      closeDropdown();
+    }
+  });
+});
+</script>
 </body>
 </html>

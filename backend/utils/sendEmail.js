@@ -1,12 +1,11 @@
-// sendEmail.js
-import dotenv from 'dotenv';
+// utils/sendEmail.js
+import dotenv from "dotenv";
 dotenv.config();
 
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
-// ✅ Use your updated .env keys:
 const host = process.env.EMAIL_HOST;
-const port = process.env.EMAIL_PORT;
+const port = Number(process.env.EMAIL_PORT);
 const user = process.env.EMAIL_USER;
 const pass = process.env.EMAIL_PASS;
 
@@ -14,7 +13,7 @@ console.log("✅ SMTP ENV CHECK:", {
   host,
   port,
   user,
-  pass: pass ? "✓" : "missing"
+  pass: pass ? "✓" : "missing",
 });
 
 let transporter = null;
@@ -22,24 +21,23 @@ let transporter = null;
 if (host && port && user && pass) {
   transporter = nodemailer.createTransport({
     host,
-    port: +port,
-    secure: false, // Brevo uses TLS on 587
-    auth: {
-      user,
-      pass,
-    },
+    port,              // 587 for TLS, 465 for SSL
+    secure: false,     // set true only if you use port 465
+    auth: { user, pass },
     logger: true,
     debug: true,
   });
 
-  transporter.verify()
+  transporter
+    .verify()
     .then(() => console.log("✅ SMTP ready"))
-    .catch(err => console.error("❌ SMTP verify failed:", err));
+    .catch((err) => console.error("❌ SMTP verify failed:", err));
 } else {
   console.warn("⚠️ SMTP not fully configured, skipping transporter setup.");
 }
 
-export const sendEmail = async ({ to, subject, html }) => {
+// ---- Export as BOTH named and default ----
+export async function sendEmail({ to, subject, html }) {
   if (!transporter) {
     console.warn("❌ Email not sent: Transporter not configured.");
     return;
@@ -47,10 +45,10 @@ export const sendEmail = async ({ to, subject, html }) => {
 
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || `Emuntra Platform <${user}>`, // ✅ changed to Emuntra
+      from: process.env.EMAIL_FROM || `Emuntra Platform <${user}>`,
       to,
       subject,
-      html
+      html,
     });
     console.log("📧 Mail sent:", info.messageId);
     return info;
@@ -58,4 +56,6 @@ export const sendEmail = async ({ to, subject, html }) => {
     console.error("❌ Email sending failed:", error);
     throw error;
   }
-};
+}
+
+export default sendEmail;

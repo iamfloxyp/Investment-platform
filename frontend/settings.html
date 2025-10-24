@@ -131,7 +131,7 @@
   <!-- MAIN -->
   <main>
       <div class="dashboard-header">
-      <h1><span id="welcomeName">User</span> 👋</h1>
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
     </div>
 
     <div class="settings-container">
@@ -225,135 +225,8 @@
   </footer>
 
   
-    <script>
-  document.getElementById("year").textContent = new Date().getFullYear();
-
-  document.addEventListener("DOMContentLoaded", () => {
-    let user = JSON.parse(localStorage.getItem("user")) || {
-      name: "User",
-      email: "user@example.com",
-      regDate: new Date().toLocaleString(),
-      avatar: "",
-      wallets: { btc: "", eth: "", usdt: "", bank: "", paypal: "" }
-    };
-
-    // ✅ Pull saved wallets from localStorage keys if they exist
-    if (localStorage.getItem("wallets")) {
-      user.wallets = JSON.parse(localStorage.getItem("wallets"));
-    }
-
-    // save defaults if new
-    if (!localStorage.getItem("user")) {
-      localStorage.setItem("user", JSON.stringify(user));
-    }
-
-    // === Populate UI ===
-    document.getElementById("welcomeName").textContent = user.name;
-    document.getElementById("userName").textContent = user.name;
-    document.getElementById("userEmail").textContent = user.email;
-    document.getElementById("regDate").textContent = "Registration: " + user.regDate;
-
-    document.getElementById("fullName").value = user.name;
-    document.getElementById("email").value = user.email;
-
-    // Populate Payment Details from withdraw keys
-document.getElementById("btcWallet").value   = localStorage.getItem("withdraw_btc")   || "";
-document.getElementById("ethWallet").value   = localStorage.getItem("withdraw_eth")   || "";
-document.getElementById("usdtWallet").value  = localStorage.getItem("withdraw_usdt")  || "";
-document.getElementById("bankAccount").value = localStorage.getItem("withdraw_bank")  || "";
-document.getElementById("paypalAccount").value = localStorage.getItem("withdraw_paypal") || "";
-
-// Save Payment Details back to withdraw keys
-if(section === "payment"){
-  localStorage.setItem("withdraw_btc",   document.getElementById("btcWallet").value);
-  localStorage.setItem("withdraw_eth",   document.getElementById("ethWallet").value);
-  localStorage.setItem("withdraw_usdt",  document.getElementById("usdtWallet").value);
-  localStorage.setItem("withdraw_bank",  document.getElementById("bankAccount").value);
-  localStorage.setItem("withdraw_paypal",document.getElementById("paypalAccount").value);
-
-  document.getElementById("paymentMsg").style.display = "block";
-  document.getElementById("savePayment").style.display = "none";
-  ["btcWallet","ethWallet","usdtWallet","bankAccount","paypalAccount"].forEach(id=>{
-    document.getElementById(id).disabled = true;
-  });
-}
-    if (user.avatar) {
-      document.getElementById("userAvatar").src = user.avatar;
-      document.getElementById("userAvatar").style.display = "block";
-      document.getElementById("avatarIcon").style.display = "none";
-    } else {
-      document.getElementById("userAvatar").style.display = "none";
-      document.getElementById("avatarIcon").style.display = "block";
-    }
-
-    // Avatar upload
-    document.getElementById("avatarUpload").addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          user.avatar = ev.target.result;
-          localStorage.setItem("user", JSON.stringify(user));
-          document.getElementById("userAvatar").src = ev.target.result;
-          document.getElementById("userAvatar").style.display = "block";
-          document.getElementById("avatarIcon").style.display = "none";
-          document.getElementById("avatarMsg").style.display = "block";
-          setTimeout(() => document.getElementById("avatarMsg").style.display = "none", 10000);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  });
-
-  function editSection(section) {
-    if (section === "personal") {
-      ["fullName", "email", "newPassword", "rePassword"].forEach(id => {
-        document.getElementById(id).disabled = false;
-      });
-      document.getElementById("savePersonal").style.display = "inline-block";
-    }
-    if (section === "payment") {
-      ["btcWallet", "ethWallet", "usdtWallet", "bankAccount", "paypalAccount"].forEach(id => {
-        document.getElementById(id).disabled = false;
-      });
-      document.getElementById("savePayment").style.display = "inline-block";
-    }
-  }
-
-  function saveSection(section) {
-    let user = JSON.parse(localStorage.getItem("user"));
-    if (section === "personal") {
-      user.name = document.getElementById("fullName").value;
-      user.email = document.getElementById("email").value;
-      localStorage.setItem("user", JSON.stringify(user));
-      document.getElementById("personalMsg").style.display = "block";
-      setTimeout(() => document.getElementById("personalMsg").style.display = "none", 10000);
-      document.getElementById("savePersonal").style.display = "none";
-      ["fullName", "email", "newPassword", "rePassword"].forEach(id => {
-        document.getElementById(id).disabled = true;
-      });
-    }
-    if (section === "payment") {
-      user.wallets = {
-        btc: document.getElementById("btcWallet").value,
-        eth: document.getElementById("ethWallet").value,
-        usdt: document.getElementById("usdtWallet").value,
-        bank: document.getElementById("bankAccount").value,
-        paypal: document.getElementById("paypalAccount").value
-      };
-      localStorage.setItem("user", JSON.stringify(user));
-      // ✅ Also store wallets separately so withdraw page can read it
-      localStorage.setItem("wallets", JSON.stringify(user.wallets));
-      document.getElementById("paymentMsg").style.display = "block";
-      setTimeout(() => document.getElementById("paymentMsg").style.display = "none", 10000);
-      document.getElementById("savePayment").style.display = "none";
-      ["btcWallet", "ethWallet", "usdtWallet", "bankAccount", "paypalAccount"].forEach(id => {
-        document.getElementById(id).disabled = true;
-      });
-    }
-  }
-
-  </script>
+    
   <script src="./assets/js/dashboard.js"></script>
+  <script src="./assets/js/settings.js"></script>
 </body>
 </html>

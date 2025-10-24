@@ -6,13 +6,15 @@ import {
   createUser,
   toggleUserStatus,
   deleteUser,
-  getAdminStats, // ✅ added for dashboard totals
+  getAdminStats, 
+  getAllWithdrawals// ✅ added for dashboard totals
 } from "../controllers/adminController.js";
 
 const router = express.Router();
 
 // ✅ Admin Dashboard Stats (totals + recent transactions)
 router.get("/stats", protect, adminOnly, getAdminStats);
+router.get("/withdrawals", protect,adminOnly,getAllWithdrawals);
 
 // ✅ Fetch all users (display in admin user management)
 router.get("/users", protect, adminOnly, getAllUsers);

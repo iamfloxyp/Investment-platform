@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notifications -Emuntra</title>
+  <title>Notifications - Emuntra</title>
   <!-- CSS -->
   <link rel="stylesheet" href="./assets/css/style.css">
   <link rel="stylesheet" href="./assets/css/dashboard.css">
@@ -104,7 +104,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="f-brand">
-        <a href="dashboard.html" class="f-logo"><img src="./assets/images/Emuntra3.png" alt="FinBloom" /></a>
+        <a href="dashboard.html" class="f-logo"><img src="./assets/images/Emuntra3.png" alt="Emuntra" /></a>
         <p class="f-tag">Smart investing for a brighter future.</p>
       </div>
       <div class="f-col">
@@ -139,33 +139,55 @@
 
   <!-- JS -->
   <script src="./assets/js/dashboard.js"></script>
+
+  <!-- ✅ FIXED SCRIPT -->
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    const notifTableBody = document.getElementById("notifTableBody");
+    document.addEventListener("DOMContentLoaded", async () => {
+      const notifTableBody = document.getElementById("notifTableBody");
 
-    function loadNotifications() {
-      let stored = JSON.parse(localStorage.getItem("notifications")) || [];
-      notifTableBody.innerHTML = "";
-      stored.forEach((n, i) => {
-        let tr = document.createElement("tr");
-        if (!n.read) tr.classList.add("notif-unread");
-        tr.innerHTML = `
-          <td>${n.text}</td>
-          <td>${n.date}</td>
-          <td>${n.read ? "Read" : "Unread"}</td>
-        `;
-        // Mark as read when clicked
-        tr.addEventListener("click", () => {
-          stored[i].read = true;
-          localStorage.setItem("notifications", JSON.stringify(stored));
-          loadNotifications();
+      const isLocal =
+        window.location.hostname.includes("127.0.0.1") ||
+        window.location.hostname.includes("localhost");
+      const API_BASE = isLocal
+        ? "http://127.0.0.1:4000"
+        : "https://investment-platform-1-qjx8.onrender.com";
+
+      try {
+        const res = await fetch(`${API_BASE}/api/notifications`, {
+          credentials: "include",
         });
-        notifTableBody.appendChild(tr);
-      });
-    }
+        if (!res.ok) throw new Error("Failed to fetch notifications");
 
-    loadNotifications();
+        const notifications = await res.json();
+
+        if (!notifications.length) {
+          notifTableBody.innerHTML = `
+            <tr><td colspan="3" style="text-align:center; color:#777;">No notifications yet</td></tr>`;
+          return;
+        }
+
+        notifTableBody.innerHTML = notifications
+          .map((n) => {
+            const date = n.createdAt
+              ? new Date(n.createdAt).toLocaleDateString()
+              : "-";
+            const status = n.read ? "Read" : "Unread";
+            return `
+              <tr class="${!n.read ? "notif-unread" : ""}">
+                <td>${n.message || "No message"}</td>
+                <td>${date}</td>
+                <td>${status}</td>
+              </tr>`;
+          })
+          .join("");
+      } catch (err) {
+        console.error("❌ Error loading notifications:", err);
+        notifTableBody.innerHTML = `
+          <tr><td colspan="3" style="text-align:center; color:red;">Error loading notifications</td></tr>`;
+      }
+    });
   </script>
 </body>
 </html>

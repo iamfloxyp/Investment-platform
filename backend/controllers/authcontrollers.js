@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { makeCode, hash } from "../utils/otp.js";
@@ -39,18 +39,37 @@ async function sendVerification(user) {
   });
 }
 
-// 📝 Register
+/// 📝 Register (updated version with referral fix)
 const register = async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, refCode } = req.body;
     if (!firstName || !lastName || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ message: "Email already used" });
 
-    const user = await User.create({ firstName, lastName, email, password });
+    // ✅ Handle referral logic
+    let referredByUser = null;
+    if (refCode) {
+      referredByUser = await User.findOne({ referralCode: refCode });
+    }
 
+    // ✅ Generate referralCode BEFORE creating user
+    const referralCode = `${firstName.slice(0, 3).toUpperCase()}${Math.floor(
+      1000 + Math.random() * 9000
+    )}`;
+
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password,
+      referralCode, // ✅ save here
+      referredBy: referredByUser ? referredByUser._id : null,
+    });
+
+    // ✅ Send verification email
     try {
       await sendVerification(user);
     } catch (err) {
@@ -66,9 +85,8 @@ const register = async (req, res) => {
     console.error("Register error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-};
+}; 
 
-// ✅ Verify Email
 // ✅ Verify Email
 const verifyEmail = async (req, res) => {
   try {
@@ -76,12 +94,19 @@ const verifyEmail = async (req, res) => {
     if (!email || !code)
       return res.status(400).json({ message: "Email and code required" });
 
-    const user = await User.findOne({ email }).select("+verifyCodeHash +verifyCodeExpires");
-    if (!user)
-      return res.status(400).json({ message: "Invalid email/code" });
+    const user = await User.findOne({ email }).select(
+      "+verifyCodeHash +verifyCodeExpires"
+    );
+    if (!user) return res.status(400).json({ message: "Invalid email/code" });
 
-    if (!user.verifyCodeHash || !user.verifyCodeExpires || user.verifyCodeExpires < Date.now())
-      return res.status(400).json({ message: "Code expired, request a new one" });
+    if (
+      !user.verifyCodeHash ||
+      !user.verifyCodeExpires ||
+      user.verifyCodeExpires < Date.now()
+    )
+      return res
+        .status(400)
+        .json({ message: "Code expired, request a new one" });
 
     if (user.verifyCodeHash !== hash(code))
       return res.status(400).json({ message: "Code is incorrect" });
@@ -121,7 +146,8 @@ const resendCode = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Email not found" });
-    if (user.isVerified) return res.status(400).json({ message: "Already verified" });
+    if (user.isVerified)
+      return res.status(400).json({ message: "Already verified" });
 
     await sendVerification(user);
     return res.json({ message: "Verification code resent" });
@@ -141,7 +167,9 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
 
     if (!user.isVerified)
-      return res.status(403).json({ message: "Please verify your email first" });
+      return res
+        .status(403)
+        .json({ message: "Please verify your email first" });
 
     const token = signToken(user);
     setCookie(res, token);
@@ -181,7 +209,9 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     // TODO: replace before deployment
     const resetUrl = `http://127.0.0.1:5501/frontend/pages/reset-password.html?token=${resetToken}`;
@@ -211,7 +241,9 @@ const resetPassword = async (req, res) => {
     const { password } = req.body;
 
     if (!token || !password)
-      return res.status(400).json({ message: "Token and password required" });
+      return res
+        .status(400)
+        .json({ message: "Token and password required" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
@@ -230,17 +262,52 @@ const resetPassword = async (req, res) => {
 // 🧠 Get Logged In User
 const getMe = async (req, res) => {
   try {
-    const user = req.user;
+    // Fetch fresh user data from DB to ensure latest fields (wallets, etc.)
+    const user = await User.findById(req.user._id).select(
+      "firstName lastName email role balance wallets walletAddresses referralCode referredBy"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // ✅ Auto-generate referral code for old users who don’t have one
+    if (!user.referralCode) {
+      const prefix = (user.firstName || "USR").slice(0, 3).toUpperCase();
+      const code = prefix + Math.floor(1000 + Math.random() * 9000);
+      user.referralCode = code;
+      await user.save();
+      console.log("✅ Auto referralCode created for ${user.email}: ${code}");
+    }
+
+
+    // ✅ Ensure wallets always exist
+    if (!user.wallets) {
+      user.wallets = {
+        btc: 0,
+        eth: 0,
+        usdt: 0,
+        bnb: 0,
+        tron: 0,
+      };
+      await user.save(); // save only if we just added wallets
+    }
+
+    // ✅ Respond with user data
     res.json({
       id: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
+      balance: user.balance || 0,
+      wallets: user.wallets,
+      walletAddresses: user.walletAddresses || {},
+      referralCode: user.referralCode || null,
+      referredBy: user.referredBy || null,
     });
   } catch (err) {
-    console.error("GetMe error:", err);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("❌ getMe error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

@@ -4,7 +4,7 @@ import Notification from "../models/notificationModel.js";
 // Fetch user notifications
 export const getUserNotifications = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.userId ||req.user._id;
     const notifications = await Notification.find({ user: userId }).sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (error) {

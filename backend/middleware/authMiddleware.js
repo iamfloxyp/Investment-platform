@@ -19,8 +19,11 @@ export const protect = async (req, res, next) => {
     // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ Find user in database
-    const user = await User.findById(decoded.id).select("-password");
+    // ✅ Find user in database (include wallets!)
+    const user = await User.findById(decoded.id).select(
+      "firstName lastName email role balance wallets"
+    );
+
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }

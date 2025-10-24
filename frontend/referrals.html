@@ -56,14 +56,14 @@
   <!-- MAIN CONTENT -->
   <main>
      <div class="dashboard-header">
-      <h1><span id="welcomeName">User</span> 👋</h1>
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
     </div>
     <section class="referral-section">
       <!-- Left: Referral URL + Earn Box -->
       <div class="referral-card">
         <h2>Your Referral URL</h2>
         <div class="referral-box">
-          <input type="text" id="referralLink" value="https://Emuntra.com/?ref=tata" readonly>
+          <input type="text" id="referralLink" value="" readonly>
           <button class="btn-copy" id="copyBtn" onclick="copyReferral()">Copy</button>
           <span class="copy-message" id="copyMessage">Copied!</span>
         </div>
@@ -131,28 +131,8 @@
   </footer>
 
   <!-- JS -->
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    function copyReferral() {
-      const referralInput = document.getElementById("referralLink");
-      const copyMessage = document.getElementById("copyMessage");
-      const copyBtn = document.getElementById("copyBtn");
-
-      referralInput.select();
-      referralInput.setSelectionRange(0, 99999);
-      document.execCommand("copy");
-
-      // Show "Copied!" message
-      copyMessage.style.display = "inline";
-      copyBtn.textContent = "Copied!";
-
-      setTimeout(() => {
-        copyMessage.style.display = "none";
-        copyBtn.textContent = "Copy";
-      }, 2000);
-    }
-  </script>
+  
   <script src="./assets/js/dashboard.js"></script>
+  <script src="./assets/js/referral.js"></script>
 </body>
 </html>

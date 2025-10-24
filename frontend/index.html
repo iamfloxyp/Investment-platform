@@ -669,10 +669,10 @@
       <div class="f-col">
         <h4>Legal</h4>
         <ul class="f-links">
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-          <li><a href="#">Disclosures</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="cookies.html">Cookie Policy</a></li>
+          <li><a href="disclosures.html">Disclosures</a></li>
         </ul>
   
         <h4>Contact</h4>
@@ -772,13 +772,43 @@
     });
   }, true);
 
-  const cForm = document.getElementById('contactForm');
-  const cMsg  = document.getElementById('cf-msg');
-  cForm?.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    cMsg.textContent = 'Message sent (demo). We’ll connect this to email later.';
-    cMsg.style.color = '#2ecc71';
-  });
+  
+const cForm = document.getElementById('contactForm');
+const cMsg  = document.getElementById('cf-msg');
+
+cForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = {
+    name: document.getElementById('cf-name').value,
+    email: document.getElementById('cf-email').value,
+    subject: document.getElementById('cf-subject').value,
+    message: document.getElementById('cf-message').value,
+  };
+
+  try {
+    const res = await fetch("https://yourdomain.com/api/contact/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      cMsg.textContent = "✅ Message sent successfully!";
+      cMsg.style.color = "#2ecc71";
+      cForm.reset();
+    } else {
+      cMsg.textContent = data.msg || "❌ Failed to send message.";
+      cMsg.style.color = "red";
+    }
+  } catch (err) {
+    console.error(err);
+    cMsg.textContent = "⚠️ Network error, please try again later.";
+    cMsg.style.color = "orange";
+  }
+}); 
 
   // dynamic year
   document.getElementById('year').textContent = new Date().getFullYear();
@@ -790,6 +820,18 @@
     e.preventDefault();
     nMsg.textContent = 'Thanks for subscribing! (demo)';
   });
+  <!-- ✅ Permanent Referral Tracking (MongoDB Safe) -->
+
+  // Extract ?ref=CODE from the URL
+  const params = new URLSearchParams(window.location.search);
+  const refCode = params.get("ref");
+
+  // If referral code exists, save it permanently as a cookie (no expiration)
+  if (refCode) {
+    document.cookie = `refCode=${refCode}; path=/; SameSite=Lax`;
+    console.log("Referral code detected and saved permanently:", refCode);
+  }
+
 
   </script>
 

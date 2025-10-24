@@ -1,58 +1,115 @@
 // controllers/depositController.js
+import mongoose from "mongoose";
+import axios from "axios";
 import Deposit from "../models/depositModel.js";
 import User from "../models/userModel.js";
 import Notification from "../models/notificationModel.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
 /* ============================================================
-   ✅ ADMIN ADDS A DEPOSIT FOR A USER (can be pending or approved)
+   ✅ ADMIN CREATES DEPOSIT FOR USER (NOWPAYMENTS + EXISTING LOGIC)
 ============================================================ */
 export const addDepositForUser = async (req, res) => {
   try {
-    const { userId, amount, method, note, status } = req.body;
+    console.log("🟢 Deposit request received:", req.body);
+
+    let { userId, amount, method, plan, note, status, currency } = req.body;
+
+    // ✅ Validate amount
+    amount = Number(amount);
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ msg: "Invalid amount" });
+    }
+
+    // ✅ Normalize plan
+    if (plan) {
+      plan = plan.replace(/plan/i, "").trim().toLowerCase();
+      const allowedPlans = ["bronze", "silver", "gold", "diamond", "platinum"];
+      if (!allowedPlans.includes(plan)) {
+        return res.status(400).json({ msg: `Invalid plan name: ${plan}` });
+      }
+      plan = plan.charAt(0).toUpperCase() + plan.slice(1);
+    }
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    // Status defaults to 'pending' if not set
-    const depositStatus = status || "pending";
+    /* ============================================================
+       ✅ CREATE PAYMENT LINK WITH NOWPAYMENTS
+    ============================================================ */
+    const paymentResponse = await axios.post(
+      "https://api.nowpayments.io/v1/invoice",
+      {
+        price_amount: amount,
+        price_currency: currency || "usd", // can also use 'ngn' if preferred
+        pay_currency: method || "btc", // user’s chosen coin
+        order_id: `emuntra_${Date.now()}`,
+        order_description: `Deposit for ${plan} plan by ${user.firstName}`,
+      },
+      {
+        headers: {
+          "x-api-key": process.env.NOWPAYMENTS_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
+    const paymentLink = paymentResponse.data.invoice_url;
+    console.log("✅ Payment link generated:", paymentLink);
+
+    /* ============================================================
+       ✅ SAVE DEPOSIT AS PENDING
+    ============================================================ */
+    const depositStatus = status || "pending";
     const deposit = new Deposit({
       user: userId,
       amount,
       method,
+      plan,
       note,
       status: depositStatus,
       type: "deposit",
+      paymentLink,
     });
 
     await deposit.save();
+    console.log("✅ Deposit saved successfully:", deposit._id);
 
-    // Only update balance if the deposit is approved immediately
-    if (depositStatus === "approved") {
-      user.balance = (user.balance || 0) + Number(amount);
-      await user.save();
+    /* ============================================================
+       ✅ SEND EMAIL CONFIRMATION
+    ============================================================ */
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Deposit Initiated 💳",
+        html: `
+          <div style="font-family: Arial, sans-serif;">
+            <h2>Deposit Created</h2>
+            <p>Hi ${user.firstName},</p>
+            <p>Your deposit of <strong>$${amount}</strong> for the <strong>${plan}</strong> plan has been created.</p>
+            <p>Please complete your payment using this link:</p>
+            <p><a href="${paymentLink}" style="color:#2ecc71;">Complete Payment</a></p>
+            <p>Status: <strong>${depositStatus.toUpperCase()}</strong></p>
+          </div>
+        `,
+      });
+    } catch (emailErr) {
+      console.warn("⚠️ Email send failed:", emailErr.message);
     }
 
-    // 🔔 Create notification
-    await Notification.create({
-      user: userId,
-      type: "deposit",
-      message:
-        depositStatus === "approved"
-          ? `A deposit of $${amount} has been added to your account.`
-          : `A deposit of $${amount} is pending approval.`,
+    return res.status(201).json({
+      msg: "Deposit created. Complete payment using the provided link.",
+      deposit,
+      paymentLink,
     });
-
-    res.status(201).json({ msg: "Deposit created", deposit });
   } catch (err) {
-    console.error("❌ addDepositForUser error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("❌ addDepositForUser error:", err.message);
+    return res.status(500).json({ msg: "Server error while creating deposit" });
   }
 };
 
 /* ============================================================
-   ✅ GET ALL DEPOSITS (Admin)
+   ✅ GET ALL DEPOSITS (ADMIN)
 ============================================================ */
 export const getAllDeposits = async (req, res) => {
   try {
@@ -61,6 +118,7 @@ export const getAllDeposits = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(deposits);
   } catch (err) {
+    console.error("❌ getAllDeposits error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
@@ -73,124 +131,107 @@ export const updateDepositStatus = async (req, res) => {
     const { depositId } = req.params;
     const { status } = req.body;
 
+    if (!mongoose.isValidObjectId(depositId)) {
+      return res.status(400).json({ msg: "Invalid deposit ID" });
+    }
+
     const deposit = await Deposit.findById(depositId).populate("user");
     if (!deposit) return res.status(404).json({ msg: "Deposit not found" });
+
+    if (deposit.status === status) {
+      return res.json({ msg: `Deposit already ${status}` });
+    }
 
     deposit.status = status;
     await deposit.save();
 
-    // Handle balance change if approved
+    const user = deposit.user;
+
     if (status === "approved") {
-      deposit.user.balance = (deposit.user.balance || 0) + deposit.amount;
-      await deposit.user.save();
+      const method = deposit.method || "btc";
+
+      if (!user.wallets) user.wallets = {};
+      user.balance = (user.balance || 0) + Number(deposit.amount);
+      user.wallets[method] = (user.wallets[method] || 0) + Number(deposit.amount);
+      await user.save();
 
       await Notification.create({
-        user: deposit.user._id,
+        user: user._id,
         type: "deposit",
-        message: `Your deposit of $${deposit.amount} has been approved.`,
+        message: `✅ Your ${method.toUpperCase()} deposit of $${deposit.amount} under ${deposit.plan} plan has been approved.`,
       });
+
+      if (user.referredBy && mongoose.isValidObjectId(user.referredBy)) {
+        try {
+          const referrer = await User.findById(user.referredBy);
+          if (referrer) {
+            const commissionRate = 0.07;
+            const commission = Number(deposit.amount) * commissionRate;
+
+            referrer.referralEarnings = (referrer.referralEarnings || 0) + commission;
+            referrer.balance = (referrer.balance || 0) + commission;
+            await referrer.save();
+
+            await Notification.create({
+              user: referrer._id,
+              type: "referral",
+              message: `🎉 You earned $${commission.toFixed(
+                2
+              )} from ${user.firstName}'s deposit!`,
+            });
+
+            console.log(
+              `💰 Referral commission of $${commission.toFixed(2)} sent to ${referrer.email}`
+            );
+          }
+        } catch (refErr) {
+          console.error("⚠️ Referral error during approval:", refErr.message);
+        }
+      }
     }
 
-    // Handle rejected
     if (status === "rejected") {
       await Notification.create({
-        user: deposit.user._id,
+        user: user._id,
         type: "deposit",
-        message: `Your deposit of $${deposit.amount} was rejected by admin.`,
+        message: `❌ Your deposit of $${deposit.amount} under ${deposit.plan} plan was rejected.`,
       });
     }
 
-    res.json({ msg: "Deposit status updated", deposit });
+    res.json({ msg: `Deposit ${status} successfully`, deposit });
   } catch (err) {
-    console.error("❌ updateDepositStatus error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("❌ updateDepositStatus error:", err.message);
+    res.status(500).json({ msg: "Server error updating deposit" });
   }
 };
 
 /* ============================================================
-   ✅ USER VIEWS THEIR DEPOSITS
+   ✅ USER VIEWS THEIR OWN DEPOSITS
 ============================================================ */
 export const getUserDeposits = async (req, res) => {
   try {
     const { userId } = req.params;
-    const deposits = await Deposit.find({ user: userId }).sort({ createdAt: -1 });
+    const deposits = await Deposit.find({ user: userId }).sort({
+      createdAt: -1,
+    });
     res.json(deposits);
   } catch (err) {
-    res.status(500).json({ msg: "Server error" });
+    console.error("❌ getUserDeposits error:", err);
+    res.status(500).json({ msg: "Server error fetching deposits" });
   }
 };
 
 /* ============================================================
-   ✅ DELETE DEPOSIT (Admin)
+   ✅ DELETE A DEPOSIT (ADMIN)
 ============================================================ */
 export const deleteDeposit = async (req, res) => {
   try {
     const { depositId } = req.params;
     const deleted = await Deposit.findByIdAndDelete(depositId);
     if (!deleted) return res.status(404).json({ msg: "Deposit not found" });
-
     res.json({ msg: "Deposit deleted successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Server error" });
-  }
-};
-
-/* ============================================================
-   ✅ ADMIN INITIATES WITHDRAWAL FOR USER (Pending / Approved)
-============================================================ */
-export const withdrawFromUser = async (req, res) => {
-  try {
-    const { userId, amount, method, note, status } = req.body;
-    console.log("🟢 withdraw body:", req.body);
-
-    if (!userId || !amount || isNaN(amount)) {
-      return res.status(400).json({ msg: "Invalid withdrawal data." });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ msg: "User not found" });
-
-    const withdrawAmount = Number(amount);
-    if (withdrawAmount <= 0) {
-      return res.status(400).json({ msg: "Withdrawal amount must be greater than zero." });
-    }
-
-    if (user.balance < withdrawAmount) {
-      return res.status(400).json({ msg: "Insufficient balance." });
-    }
-
-    const withdrawStatus = status || "pending";
-
-    const withdraw = new Deposit({
-      user: userId,
-      amount: withdrawAmount,
-      method,
-      note,
-      status: withdrawStatus,
-      type: "withdraw",
-    });
-
-    await withdraw.save();
-
-    // Balance only deducted after approval
-    if (withdrawStatus === "approved") {
-      user.balance -= withdrawAmount;
-      await user.save();
-    }
-
-    await Notification.create({
-      user: userId,
-      type: "withdraw",
-      message:
-        withdrawStatus === "approved"
-          ? `A withdrawal of $${withdrawAmount} was processed successfully.`
-          : `Your withdrawal of $${withdrawAmount} is pending admin approval.`,
-    });
-
-    res.status(201).json({ msg: "Withdrawal created", withdraw });
-  } catch (err) {
-    console.error("❌ Withdraw error:", err);
-    res.status(500).json({ msg: "Server error while processing withdrawal." });
+    console.error("❌ deleteDeposit error:", err);
+    res.status(500).json({ msg: "Server error deleting deposit" });
   }
 };

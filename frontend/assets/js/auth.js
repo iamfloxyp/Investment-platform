@@ -42,14 +42,21 @@ function showError(msg) {
 
   const submitBtn = form.querySelector('button[type="submit"], .btn');
 
+  // ✅ Helper to read referral cookie
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const firstName = qs("#firstName").value.trim();
-    const lastName  = qs("#lastName").value.trim();
-    const email     = qs("#email").value.trim().toLowerCase();
-    const password  = qs("#signup-password").value;
-    const agree     = qs("#terms");
+    const lastName = qs("#lastName").value.trim();
+    const email = qs("#email").value.trim().toLowerCase();
+    const password = qs("#signup-password").value;
+    const agree = qs("#terms");
 
     if (!agree?.checked) {
       showError("Please accept the Terms & Conditions.");
@@ -63,11 +70,16 @@ function showError(msg) {
 
     try {
       setLoading(submitBtn, true);
+
+      // ✅ Get referral code from cookie (if any)
+      const refCode = getCookie("refCode") || null;
+
+      // ✅ Include referral code in signup payload
       const res = await fetch(SIGNUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // ✅ cookies enabled
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password, refCode }),
       });
 
       const data = await res.json();
@@ -77,6 +89,10 @@ function showError(msg) {
         return;
       }
 
+      // ✅ Optional cleanup — clear referral cookie after successful signup
+      document.cookie = "refCode=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+      // ✅ Redirect to verify page
       window.location.href = `./verify.html?email=${encodeURIComponent(email)}`;
     } catch (err) {
       console.error(err);
@@ -86,7 +102,6 @@ function showError(msg) {
     }
   });
 })();
-
 // ====== LOGIN HANDLER ======
 (function attachLogin() {
   const form = qs(".login-form");

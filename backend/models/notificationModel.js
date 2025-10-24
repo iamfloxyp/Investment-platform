@@ -8,7 +8,7 @@ const notificationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    type: { type: String, enum: ["deposit", "withdraw", "message"] },
+    type: { type: String, enum: ["deposit", "withdraw", "message","referral"] },
     message: { type: String, required: true },
     read: { type: Boolean, default: false },
   },

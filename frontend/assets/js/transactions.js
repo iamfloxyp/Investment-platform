@@ -27,7 +27,7 @@ const perPage = 10;
 ======================================================= */
 async function loadDeposits() {
   try {
-    const res = await fetch(`${API_BASE}/api/deposits/admin`, {
+    const res = await fetch(`${API_BASE}/api/deposits/admin/all`, {
       credentials: "include",
     });
     if (!res.ok) throw new Error("Failed to load transactions");
@@ -35,6 +35,36 @@ async function loadDeposits() {
     transactions = await res.json();
     filteredTransactions = transactions;
     renderTransactions();
+    // ✅ ADD THIS BELOW loadDeposits()
+    // Fetch withdrawals and merge with deposits
+    const withdrawRes = await fetch(`${API_BASE}/api/admin/withdrawals`, {
+      credentials: "include",
+    });
+
+    if (withdrawRes.ok) {
+      const withdrawals = await withdrawRes.json();
+
+      // ✅ Tag them with type = 'withdraw' for clarity
+      const formattedWithdrawals = withdrawals.map((w) => ({
+        ...w,
+        type: "withdraw",
+      }));
+
+      // ✅ Merge both deposits + withdrawals
+      transactions = [...transactions, ...formattedWithdrawals];
+
+      // ✅ Optional: sort newest first
+      transactions.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      filteredTransactions = transactions;
+      renderTransactions();
+
+      console.log("✅ Combined Deposits + Withdrawals:", transactions);
+    } else {
+      console.warn("⚠️ Could not load withdrawals");
+    }
   } catch (err) {
     console.error(err);
     showPopup("Error loading transactions", "error");
@@ -194,12 +224,28 @@ function renderPagination(totalPages) {
    ✅ APPROVE / REJECT TRANSACTION
 ======================================================= */
 document.addEventListener("click", async (e) => {
-  if (e.target.classList.contains("approve-btn") || e.target.classList.contains("reject-btn")) {
+  if (
+    e.target.classList.contains("approve-btn") ||
+    e.target.classList.contains("reject-btn")
+  ) {
     const id = e.target.dataset.id;
-    const status = e.target.classList.contains("approve-btn") ? "approved" : "rejected";
+    const status = e.target.classList.contains("approve-btn")
+      ? "approved"
+      : "rejected";
 
     try {
-      const res = await fetch(`${API_BASE}/api/deposits/admin/${id}`, {
+      // ✅ Determine whether this is a deposit or a withdrawal
+      const txRow = e.target.closest("tr");
+      const typeCell = txRow?.querySelector("td:nth-child(3)")?.textContent?.toLowerCase();
+
+      // ✅ Choose correct endpoint based on transaction type
+      const endpoint =
+        typeCell === "withdraw"
+          ? `${API_BASE}/api/admin/withdrawals/${id}`
+          : `${API_BASE}/api/deposits/admin/update/${id}`;
+
+      // ✅ Send PATCH request to the correct route
+      const res = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -207,6 +253,7 @@ document.addEventListener("click", async (e) => {
       });
 
       if (!res.ok) throw new Error("Failed to update transaction");
+
       showPopup(`Transaction ${status} successfully!`);
       await loadDeposits();
     } catch (err) {
@@ -225,7 +272,7 @@ document.addEventListener("click", async (e) => {
     if (!confirm("Are you sure you want to delete this transaction?")) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/deposits/admin/${id}`, {
+      const res = await fetch(`${API_BASE}/api/deposits/admin/delete/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -313,43 +360,53 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   addTransactionForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const userId = document.getElementById("transactionUser").value;
-    const type = document.getElementById("transactionType").value;
-    const amount = parseFloat(document.getElementById("transactionAmount").value);
-    const method = document.getElementById("transactionMethod").value;
-    const status = document.getElementById("transactionStatus").value;
-    const note = "Admin initiated transaction";
+  const userId = document.getElementById("transactionUser").value;
+  const selectedUser = users.find((u) => u._id === userId);
+  const email = selectedUser ? selectedUser.email : null;
+  const type = document.getElementById("transactionType").value;
+  const amount = parseFloat(document.getElementById("transactionAmount").value);
+  const method = document.getElementById("transactionMethod").value;
+  const status = document.getElementById("transactionStatus").value;
+  const note = "Admin initiated transaction";
 
-    try {
-      if (type === "deposit") {
-        const res = await fetch(`${API_BASE}/api/deposits/admin`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ userId, amount, method, note, status }),
-        });
-        if (!res.ok) throw new Error("Deposit failed");
-        showPopup("Deposit added successfully!");
-      } else if (type === "withdraw") {
-        const res = await fetch(`${API_BASE}/api/deposits/admin/withdraw`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ userId, amount, method, note, status }),
-        });
-        if (!res.ok) throw new Error("Withdraw failed");
-        showPopup("Withdrawal added successfully!");
-      }
-      addTransactionModal.style.display = "none";
-      addTransactionForm.reset();
-      await loadDeposits();
-    } catch (err) {
-      console.error("❌ Transaction Error:", err);
-      showPopup("Error adding transaction", "error");
+  try {
+    if (type === "deposit") {
+      const res = await fetch(`${API_BASE}/api/deposits/admin/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId, amount, method, note, status }),
+      });
+      if (!res.ok) throw new Error("Deposit failed");
+      showPopup("Deposit added successfully!");
+    } else if (type === "withdraw") {
+      console.log("🧾 Withdrawal payload being sent:", {
+  userId,
+  amount,
+  method,
+  note,
+  status
+});
+      const res = await fetch(`${API_BASE}/api/deposits/admin/withdraw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId, email, amount, method, note, status }),
+      });
+      if (!res.ok) throw new Error("Withdraw failed");
+      showPopup("Withdrawal added successfully!");
     }
-  });
+
+    addTransactionModal.style.display = "none";
+    addTransactionForm.reset();
+    await loadDeposits();
+  } catch (err) {
+    console.error("❌ Transaction Error:", err);
+    showPopup("Error adding transaction", "error");
+  }
+});
 });
 
 /* =======================================================
