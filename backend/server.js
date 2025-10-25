@@ -17,7 +17,7 @@ import Withdraw from "./models/withdrawModel.js"; // ✅ Added import for withdr
 import referralRoutes from "./routes/referralRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
 import paymentRoutes from "./routes/paymentRoutes.js";
-
+import testEmailRoute from "./routes/testEmail.js"
 const app = express();
 
 // ===== MIDDLEWARE =====
@@ -57,6 +57,7 @@ app.use("/api/", withdrawRoutes);
 app.use("/api/referrals", referralRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/payments", paymentRoutes);
+app.use("/api", testEmailRoute)
 
 // ===== TEST ROUTE =====
 app.get("/api/auth/test", (req, res) => {
