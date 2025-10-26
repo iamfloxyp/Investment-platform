@@ -250,43 +250,53 @@ const forgotPassword = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-// ✅ FINAL resetPassword route – production safe
+// ✅ FINAL WORKING resetPassword controller
 const resetPassword = async (req, res) => {
   try {
     const token = req.query.token;
     const { password } = req.body;
 
     if (!token) {
-      return res.status(400).json({ message: "Missing reset token" });
+      console.log("❌ Missing token");
+      return res.status(400).json({ message: "Invalid or missing token" });
     }
+
     if (!password) {
+      console.log("❌ Missing password");
       return res.status(400).json({ message: "Password is required" });
     }
 
-    // verify JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // ✅ Decode the token safely
+    let decoded;
+    try {
+      decoded = jwt.verify(token.trim(), process.env.JWT_SECRET.trim());
+    } catch (err) {
+      console.error("❌ Token verification failed:", err.message);
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
 
-    // find user by ID
+    console.log("✅ Decoded token:", decoded);
+
+    // ✅ Find the user
     const user = await User.findById(decoded.id);
     if (!user) {
+      console.log("❌ User not found");
       return res.status(404).json({ message: "User not found" });
     }
 
-    // update password and save
+    // ✅ Save new password
     user.password = password;
     await user.save();
 
-    console.log("✅ Password reset successful for", user.email);
+    console.log(`✅ Password reset successful for ${user.email}`);
     return res.json({ message: "Password reset successful" });
-  } catch (err) {
-    console.error("❌ Reset Password Error:", err);
-    if (err.name === "TokenExpiredError") {
-      return res.status(400).json({ message: "Reset link expired" });
-    }
-    if (err.name === "JsonWebTokenError") {
-      return res.status(400).json({ message: "Invalid reset token" });
-    }
-    return res.status(500).json({ message: "Server error", error: err.message });
+
+  } catch (error) {
+    console.error("❌ Reset Password Error:", error.message);
+    return res.status(500).json({
+      message: "Server error during password reset",
+      error: error.message,
+    });
   }
 };
 
