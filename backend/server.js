@@ -27,8 +27,6 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// ====== FIXED CORS ======
-import cors from "cors";
 
 // ✅ Allowed origins
 const allowedOrigins = [
