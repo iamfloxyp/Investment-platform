@@ -1,41 +1,44 @@
 // utils/sendEmail.js
 import dotenv from "dotenv";
 dotenv.config();
-
 import fetch from "node-fetch";
 
-const API_KEY = process.env.BREVO_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || "hello@emuntra.com";
-
 export async function sendEmail({ to, subject, html }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const sender = process.env.EMAIL_FROM;
+
+  if (!apiKey || !sender) {
+    console.error("❌ Missing Brevo API key or sender email");
+    return;
+  }
+
+  const payload = {
+    sender: { email: sender, name: "Emuntra Investment" },
+    to: [{ email: to }],
+    subject,
+    htmlContent: html,
+  };
+
   try {
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "accept": "application/json",
         "content-type": "application/json",
-        "api-key": API_KEY,
+        "api-key": apiKey,
       },
-      body: JSON.stringify({
-        sender: { name: "Emuntra Investment", email: EMAIL_FROM },
-        to: [{ email: to }],
-        subject,
-        htmlContent: html,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
       console.error("❌ Email send failed:", data);
-      throw new Error(data.message || "Brevo API email send failed");
+    } else {
+      console.log("📧 Email sent successfully:", data);
     }
-
-    console.log("✅ Email sent via Brevo API:", data.messageId || data);
-    return data;
   } catch (error) {
     console.error("❌ Error sending email:", error);
-    throw error;
   }
 }
 
