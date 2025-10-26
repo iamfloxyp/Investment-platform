@@ -1,62 +1,41 @@
 // utils/sendEmail.js
 import dotenv from "dotenv";
 dotenv.config();
-import nodemailer from "nodemailer";
 
-const host = process.env.EMAIL_HOST;
-const port = Number(process.env.EMAIL_PORT);
-const user = process.env.EMAIL_USER;
-const pass = process.env.EMAIL_PASS;
+import fetch from "node-fetch";
 
-console.log("✅ SMTP ENV CHECK:", {
-  host,
-  port,
-  user,
-  pass: pass ? "✓" : "missing",
-});
+const API_KEY = process.env.BREVO_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || "hello@emuntra.com";
 
-let transporter = null;
-
-if (host && port && user && pass) {
-  transporter = nodemailer.createTransport({
-    host,
-    port, // 587 for TLS
-    secure: port === 465, // true only if using SSL (465)
-    auth: { user, pass },
-    tls: {
-      rejectUnauthorized: false, // ✅ prevents Render SSL handshake issues
-    },
-    logger: true,
-    debug: true,
-  });
-
-  // Verify connection on start
-  transporter
-    .verify()
-    .then(() => console.log("✅ SMTP connection established successfully."))
-    .catch((err) => console.error("❌ SMTP verify failed:", err.message));
-} else {
-  console.warn("⚠️ SMTP not fully configured — skipping transporter setup.");
-}
-
-// ---- Export sendEmail ----
 export async function sendEmail({ to, subject, html }) {
-  if (!transporter) {
-    console.warn("❌ Email not sent: transporter not initialized.");
-    return;
-  }
-
   try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || `Emuntra Investment <${user}>`,
-      to,
-      subject,
-      html,
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": API_KEY,
+      },
+      body: JSON.stringify({
+        sender: { name: "Emuntra Investment", email: EMAIL_FROM },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
     });
-    console.log("📧 Mail sent successfully:", info.messageId);
-    return info;
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("❌ Email send failed:", data);
+      throw new Error(data.message || "Brevo API email send failed");
+    }
+
+    console.log("✅ Email sent via Brevo API:", data.messageId || data);
+    return data;
   } catch (error) {
-    console.error("❌ Email sending failed:", error.message);
+    console.error("❌ Error sending email:", error);
+    throw error;
   }
 }
 
