@@ -200,7 +200,7 @@ const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-// ✅ FINAL FIXED VERSION – works both locally & on Render
+// ✅ FINAL FIXED VERSION – No CLIENT_URL= in email, works both locally & on Render
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -216,7 +216,7 @@ const forgotPassword = async (req, res) => {
     // ✅ Always prefer Render’s environment value
     let frontendBaseUrl = process.env.CLIENT_URL;
 
-    // fallback logic
+    // ✅ Fallback logic for local testing or empty env
     if (!frontendBaseUrl || frontendBaseUrl.includes("127.0.0.1")) {
       if (process.env.NODE_ENV === "production") {
         frontendBaseUrl = "https://emuntra-q35s.vercel.app";
@@ -225,9 +225,12 @@ const forgotPassword = async (req, res) => {
       }
     }
 
-    const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken}`;
+    // ✅ Make sure there’s NO 'CLIENT_URL=' in the final string
+    const cleanBaseUrl = frontendBaseUrl.replace("CLIENT_URL=", "").trim();
 
-    console.log("🌍 Using FRONTEND:", frontendBaseUrl);
+    const resetUrl = `${cleanBaseUrl}/user/reset-password.html?token=${resetToken}`;
+
+    console.log("🌍 Using FRONTEND:", cleanBaseUrl);
     console.log("🔗 Final Reset Link:", resetUrl);
 
     await sendEmail({
