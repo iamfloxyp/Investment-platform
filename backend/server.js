@@ -1,6 +1,9 @@
 // server.js
 import dotenv from "dotenv";
-dotenv.config();
+// Load .env only outside production
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
