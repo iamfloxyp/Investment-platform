@@ -1,51 +1,59 @@
 // server.js
 import dotenv from "dotenv";
-// Load .env only outside production
-if (process.env.NODE_ENV !== "production") {
-  dotenv.config();
-}
 import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
+// ===== LOAD ENV =====
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+
+// ===== IMPORT ROUTES =====
 import authRoutes from "./routes/authRoutes.js";
 import depositRoutes from "./routes/depositRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import Deposit from "./models/depositModel.js";
 import externalRoutes from "./routes/externalRoutes.js";
 import withdrawRoutes from "./routes/withdrawRoutes.js";
-import Withdraw from "./models/withdrawModel.js"; // ✅ Added import for withdrawal fix
-import referralRoutes from "./routes/referralRoutes.js"
-import userRoutes from "./routes/userRoutes.js"
+import referralRoutes from "./routes/referralRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
-import testEmailRoute from "./routes/testEmail.js"
+import testEmailRoute from "./routes/testEmail.js";
+
+// ===== IMPORT MODELS =====
+import Deposit from "./models/depositModel.js";
+import Withdraw from "./models/withdrawModel.js";
+
 const app = express();
 
 // ===== MIDDLEWARE =====
 app.use(express.json());
 app.use(cookieParser());
 
-
-// ✅ Allowed origins
+// ===== FIXED CORS =====
+// ===== FIXED CORS CONFIGURATION =====
 const allowedOrigins = [
   "http://127.0.0.1:5500",
+  "http://127.0.0.1:5501",
   "http://localhost:5500",
-  "https://emuntra-q35s.vercel.app"
+  "http://localhost:5501",
+  "https://emuntra-q35s.vercel.app",
+  "https://api.emuntra.com"
 ];
 
-// ✅ Use CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // ✅ allow cookies
+    credentials: true, // ✅ enable cookies
   })
 );
 // ===== ROUTES =====
@@ -54,18 +62,21 @@ app.use("/api/deposits", depositRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/external", externalRoutes);
-app.use("/api/", withdrawRoutes);
-app.use("/api/referrals", referralRoutes)
-app.use("/api/users", userRoutes)
+app.use("/api/withdrawals", withdrawRoutes); // ✅ clearer path
+app.use("/api/referrals", referralRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api", testEmailRoute)
+app.use("/api", testEmailRoute);
 
 // ===== TEST ROUTE =====
-app.get("/api/auth/test", (req, res) => {
-  res.json({ msg: "✅ Backend is working and CORS is configured correctly!" });
+app.get("/api/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "✅ Backend working and CORS configured correctly!",
+  });
 });
 
-// ===== DB CONNECTION =====
+// ===== DATABASE CONNECTION =====
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -74,32 +85,26 @@ mongoose
   .then(async () => {
     console.log("✅ MongoDB connected");
 
-    // 🧹 ONE-TIME FIX 1: convert old "withdrawal" -> "withdraw" in Deposit
+    // 🧹 Data migration (safe)
     try {
-      const result = await Deposit.updateMany(
+      const result1 = await Deposit.updateMany(
         { type: "withdrawal" },
         { $set: { type: "withdraw" } }
       );
-      console.log(`✅ Fixed old withdrawal records: ${result.modifiedCount} updated`);
+      console.log(`✅ Updated deposits: ${result1.modifiedCount}`);
+
+      const result2 = await Withdraw.updateMany(
+        { userId: { $exists: true } },
+        [
+          { $set: { user: "$userId" } },
+          { $unset: "userId" },
+        ]
+      );
+      console.log(`✅ Updated withdrawals: ${result2.modifiedCount}`);
     } catch (e) {
       console.error("⚠️ Migration error:", e.message);
     }
 
-    // 🧹 ONE-TIME FIX 2: Convert old "userId" → "user" in Withdraw collection
-    try {
-      const result = await Withdraw.updateMany(
-        { userId: { $exists: true } },
-        [
-          { $set: { user: "$userId" } }, // copy userId → user
-          { $unset: "userId" }, // remove old field
-        ]
-      );
-      console.log(`✅ Renamed userId → user in ${result.modifiedCount} withdrawal records`);
-    } catch (err) {
-      console.error("❌ Error migrating withdrawals:", err);
-    }
-
-    // Start server AFTER migrations
     const PORT = process.env.PORT || 4000;
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })

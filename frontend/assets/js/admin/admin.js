@@ -1,4 +1,4 @@
-const API_BASE = window.API_BASE;
+
 // or your Render URL in production
 
 // ✅ Popup message utility

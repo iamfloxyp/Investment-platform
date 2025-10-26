@@ -13,11 +13,11 @@ const signToken = (user) =>
 const setCookie = (res, token) => {
   const isProd = process.env.NODE_ENV === "production";
   res.cookie("emuntra_token", token, {
-    httpOnly: true,
-    secure: isProd, // ✅ true in prod (https), false locally
-    sameSite: isProd ? "none" : "lax", // ✅ allows cross-site cookies in prod, local cookies in dev
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",  // important for https
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
 };
 
 // 📩 Send Email Verification Code

@@ -1,4 +1,4 @@
-const API_BASE = window.API_BASE;
+
  // or your Render URL later
 
 let loadedUsers = []; // store users fetched from MongoDB

@@ -1,4 +1,4 @@
-const API_BASE = window.API_BASE;
+
 
 // ✅ Popup utility
 function showPopup(message, type = "success") {
