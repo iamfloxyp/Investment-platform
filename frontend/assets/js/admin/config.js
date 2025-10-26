@@ -2,4 +2,4 @@ const isLocal = window.location.hostname === "127.0.0.1" || window.location.host
 
 window.API_BASE = isLocal
   ? "http://127.0.0.1:4000"
-  : "https://api.emuntra.com"; // your Render backend;
+  : "https://investment-platform-1-qjx8.onrender.com/"; // your Render backend;
