@@ -200,7 +200,7 @@ const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-// 🔑 Forgot Password
+// ✅ FINAL STABLE FORGOT PASSWORD FUNCTION
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -213,20 +213,27 @@ const forgotPassword = async (req, res) => {
       expiresIn: "15m",
     });
 
-   // ✅ Final production-safe version
-const frontendBaseUrl =
-  process.env.NODE_ENV === "production"
-    ? process.env.CLIENT_URL || "https://emuntra-q35s.vercel.app"
-    : "http://127.0.0.1:5500/frontend";
+    // ✅ Smart link selector (auto works for both local + production)
+    const frontendBaseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.CLIENT_URL || "https://emuntra-q35s.vercel.app"
+        : "http://127.0.0.1:5500/frontend";
 
-const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken}`;
+    const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken}`;
+
+    // ✅ Debugging log (you can remove later)
+    console.log("🟢 NODE_ENV:", process.env.NODE_ENV);
+    console.log("🌍 CLIENT_URL:", process.env.CLIENT_URL);
+    console.log("🔗 Reset URL:", resetUrl);
+
+    // ✅ Send the email
     await sendEmail({
       to: user.email,
       subject: "Reset your password",
       html: `
         <p>Hi ${user.firstName},</p>
         <p>Click below to reset your password:</p>
-        <a href="${resetUrl}">${resetUrl}</a>
+        <a href="${resetUrl}" style="color:#0a84ff;">${resetUrl}</a>
         <p>This link expires in 15 minutes.</p>
       `,
     });
@@ -237,7 +244,6 @@ const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 // 🔐 Reset Password
 const resetPassword = async (req, res) => {
   try {
