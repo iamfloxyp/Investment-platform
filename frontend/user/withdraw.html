@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Withdraw</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../assets/css/withdraw.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+  /* Only used when we portal the dropdown to <body> */
+  #notifDropdown.portal {
+    position: fixed !important;   /* escape all ancestors */
+    display: block !important;    /* we control visibility in JS */
+    width: 260px;                 /* same width you use elsewhere */
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+    z-index: 999999 !important;   /* above everything */
+  }
+</style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <a href="dashboard.html"><img src="../assets/images/Emuntra3.png" alt="Emuntra" /></a>
+      </div>
+      <nav class="nav-links" id="navLinks">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="add-deposit.html">Add Deposit</a>
+        <a href="withdraw.html" class="active">Withdraw</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="history.html">History</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+
+      <div class="nav-right">
+        <div class="notifications">
+          <button id="bellBtn" class="bell-btn">🔔</button>
+          <span id="notifBadge" class="notif-badge">0</span>
+          <div class="notif-dropdown" id="notifDropdown">
+            <h4>Notifications</h4>
+            <ul id="notifList"></ul>
+            <div class="notif-footer"><a href="notifications.html">See all notifications</a></div>
+          </div>
+        </div>
+
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">User ▾</button>
+          <div class="dropdown" id="dropdownMenu">
+            <a href="dashboard.html">Dashboard</a>
+             <a href="https://emuntra.com#contact">Support</a>
+            <a href="login.html">Logout</a>
+          </div>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <div class="dashboard-header">
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
+    </div>
+
+    <!-- Withdraw Section -->
+    <section class="withdraw-section">
+
+      <!-- Info -->
+      <div class="withdraw-top">
+        <div class="withdraw-card">
+          <h2>Quick Info</h2>
+          <ul class="info-list">
+            <li><strong>Min Withdrawal:</strong> $2 (Crypto)</li>
+            <li><strong>Withdrawal Time:</strong> <span style="color:green;font-weight:600;">Instant</span></li>
+            <li><strong>Pending Withdrawals:</strong> <span id="pendingAmount">$0.00</span></li>
+          </ul>
+          <p class="quick-tip">💡 Always confirm your wallet before withdrawal.</p>
+        </div>
+      </div>
+
+      <!-- Balance + Form -->
+      <div class="withdraw-bottom">
+
+        <!-- Wallets Table -->
+        <div class="withdraw-card">
+          <h2>Available Balances</h2>
+          <table class="balance-table">
+            <thead>
+              <tr><th>Crypto</th><th>Available</th><th>Wallet</th></tr>
+            </thead>
+            <tbody id="walletTableBody">
+              <!-- Injected dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Withdraw Funds -->
+<div class="withdraw-card">
+  <h2>Withdraw Funds</h2>
+  <form id="withdrawForm">
+    <label for="processor">Select Crypto</label>
+    <select id="processor" required>
+      <option value="">-- Select --</option>
+      <option value="btc">Bitcoin (BTC)</option>
+      <option value="eth">Ethereum (ETH)</option>
+      <option value="usdt">Tether (USDT)</option>
+      <option value="bnb">Binance Coin (BNB)</option>
+      <option value="tron">Tron (TRX)</option>
+      <option value="bch">Bitcoin Cash (BCH)</option>
+      <option value="ltc">Litecoin (LTC)</option>
+      <option value="xrp">Ripple (XRP)</option>
+      <option value="doge">Dogecoin (DOGE)</option>
+    </select>
+
+    <label for="withdrawAmount">Amount</label>
+    <input type="number" id="withdrawAmount" placeholder="Enter amount" required />
+
+    <button type="submit" class="btn-primary">Request Withdrawal</button>
+  </form>
+</div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="dashboard.html" class="f-logo"><img src="../assets/images/Emuntra3.png" alt="Emuntra" /></a>
+        <p class="f-tag">Smart investing for a brighter future.</p>
+      </div>
+      <div class="f-col">
+        <h4>Quick Links</h4>
+        <ul class="f-links">
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="deposits.html">My Deposits</a></li>
+          <li><a href="withdraw.html">Withdraw</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Legal</h4>
+        <ul class="f-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Contact</h4>
+        <ul class="f-links f-contact">
+          <li><a href="mailto:support@Emuntra.com">support@Emuntra.com</a></li>
+          <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="subfooter">
+      <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Modal -->
+  <div id="withdrawModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Set Wallet</h2>
+      <form id="setWalletForm">
+        <label>Crypto</label>
+        <input type="text" id="withdrawProcessor" readonly />
+        <label>Wallet Address</label>
+        <input type="text" id="withdrawInput" required placeholder="Enter wallet address" />
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="../assets/js/user/config.js"></script>
+  <script src="../assets/js/user/dashboard.js"></script>
+  <script src="../assets/js/user/withdrawal.js"></script>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const bellBtn = document.getElementById("bellBtn");
+  const notifDropdown = document.getElementById("notifDropdown");
+
+  if (!bellBtn || !notifDropdown) {
+    console.warn("⚠️ Notification bell or dropdown not found.");
+    return;
+  }
+
+  let isOpen = false;
+
+  // ✅ Function to open dropdown
+  function openDropdown() {
+    notifDropdown.style.display = "block";
+    notifDropdown.style.opacity = "1";
+    notifDropdown.style.transform = "translateY(0)";
+    notifDropdown.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+    isOpen = true;
+  }
+
+  // ✅ Function to close dropdown
+  function closeDropdown() {
+    notifDropdown.style.opacity = "0";
+    notifDropdown.style.transform = "translateY(-5px)";
+    setTimeout(() => {
+      notifDropdown.style.display = "none";
+    }, 150);
+    isOpen = false;
+  }
+
+  // ✅ Toggle on bell click
+  bellBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (isOpen) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  });
+
+  // ✅ Detect clicks outside the dropdown and bell
+  document.addEventListener("click", (e) => {
+    if (
+      isOpen &&
+      !notifDropdown.contains(e.target) &&
+      e.target !== bellBtn &&
+      !bellBtn.contains(e.target)
+    ) {
+      closeDropdown();
+    }
+  });
+
+  // ✅ Optional: close on ESC key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen) {
+      closeDropdown();
+    }
+  });
+});
+</script>
+</body>
+</html>

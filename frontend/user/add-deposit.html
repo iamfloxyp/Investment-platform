@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add deposit</title>
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  
+  <!-- NAVIGATION BAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <!-- Logo -->
+      <div class="logo">
+        <a href="dashboard.html"><img src="../assets/images/Emuntra3.png" alt=""></a>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="nav-links" id="navLinks">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="add-deposit.html" class="active">Add Deposit</a>
+        <a href="withdraw.html">Withdraw</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="history.html">History</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+
+      <!-- Right Side: Notifications + User -->
+      <div class="nav-right">
+        <div class="notifications">
+          <span class="bell" id="bellBtn">🔔</span>
+          <span class="badge" id="notifBadge">3</span>
+
+          <!-- Dropdown -->
+          <div class="notif-dropdown" id="notifDropdown">
+            <h4>Notifications</h4>
+            <ul id="notifList">
+              <!-- Notifications will be injected here -->
+            </ul>
+            <div class="notif-footer">
+              <a href="notifications.html">See all notifications</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Dropdown -->
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">Tata ▾</button>
+          <div class="dropdown" id="dropdownMenu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="https://emuntra.com#contact">Support</a>
+            <a href="login.html">Logout</a>
+          </div>
+        </div>
+
+        <!-- Mobile Toggle -->
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="dashboard-header">
+      <h1><span id="welcomeName">User</span> 👋</h1>
+    </div>
+
+    <section class="deposit-section">
+      <!-- Left side -->
+      <div class="deposit-left">
+        <!-- Available Balance -->
+        <div class="deposit-card">
+          <h2>Available <span>Balance</span></h2>
+          <div class="balance">
+            <h3>$0.00</h3>
+            <p>Account Balance</p>
+          </div>
+          <ul class="crypto-list">
+            <li data-coin="btc"><i class="fa-brands fa-bitcoin"></i> Bitcoin (BTC) <span>$0.00</span></li>
+            <li data-coin="eth"><i class="fa-brands fa-ethereum"></i> Ethereum (ETH) <span>$0.00</span></li>
+            <li data-coin="usdt"><i class="fa-solid fa-dollar-sign"></i> Tether (USDT) <span>$0.00</span></li>
+            <li data-coin="bnb"><i class="fa-solid fa-coins"></i> Binance Coin (BNB) <span>$0.00</span></li>
+            <li data-coin="tron"><i class="fa-solid fa-circle-nodes"></i> Tron (TRX) <span>$0.00</span></li>
+            <li data-coin="bch"><i class="fa-solid fa-money-bill-trend-up"></i> Bitcoin Cash (BCH) <span>$0.00</span></li>
+            <li data-coin="ltc"><i class="fa-solid fa-l"></i> Litecoin (LTC) <span>$0.00</span></li>
+            <li data-coin="xrp"><i class="fa-solid fa-x"></i> Ripple (XRP) <span>$0.00</span></li>
+            <li data-coin="doge"><i class="fa-solid fa-dog"></i> Dogecoin (DOGE) <span>$0.00</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right side -->
+      <div class="investment-plans">
+        <h2>Investment Plans</h2>
+        <div class="plans-container">
+          <div class="plans-grid">
+
+            <!-- Bronze -->
+            <div class="plan-card" data-name="Bronze Plan" data-rate="4" data-min="50" data-max="599">
+              <h3>Bronze Plan</h3>
+              <p><strong>4%</strong> Daily Profit</p>
+              <p>Minimum: $50 </p>
+              <p>Maximum: $599</p>
+              <a href="#" class="calc-link">Calculate your profit >></a>
+              <button class="btn-plan" type="button">Select Plan</button>
+            </div>
+
+            <!-- Silver -->
+            <div class="plan-card" data-name="Silver Plan" data-rate="8" data-min="600" data-max="1899">
+              <h3>Silver Plan</h3>
+              <p><strong>8%</strong> Daily Profit</p>
+              <p>Minimum: $600</p>
+              <p>Maximum: $1899</p>
+              <a href="#" class="calc-link">Calculate your profit >></a>
+              <button class="btn-plan" type="button">Select Plan</button>
+            </div>
+
+            <!-- Gold -->
+            <div class="plan-card" data-name="Gold Plan" data-rate="18" data-min="1900" data-max="5000">
+              <h3>Gold Plan</h3>
+              <p><strong>18%</strong> Daily Profit</p>
+              <p>Minimum: $1900 </p>
+              <p>Maximum: $5000</p>
+              <a href="#" class="calc-link">Calculate your profit >></a>
+              <button class="btn-plan" type="button">Select Plan</button>
+            </div>
+
+            <!-- Diamond -->
+            <div class="plan-card" data-name="Diamond Plan" data-rate="24" data-min="5001" data-max="6999">
+              <h3>Diamond Plan</h3>
+              <p><strong>24%</strong> Daily Profit</p>
+              <p>Minimum: $5001 </p>
+              <p>Maximum: $6999</p>
+              <a href="#" class="calc-link">Calculate your profit >></a>
+              <button class="btn-plan" type="button">Select Plan</button>
+            </div>
+
+            <!-- Platinum -->
+            <div class="plan-card" data-name="Platinum Plan" data-rate="40" data-min="7000" data-max="100000">
+              <h3>Platinum Plan</h3>
+              <p><strong>40%</strong> Daily Profit</p>
+              <p>Minimum: $7000  </p>
+              <p>Maximum: $100000</p>
+              <a href="#" class="calc-link">Calculate your profit >></a>
+              <button class="btn-plan" type="button">Select Plan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Calculator Modal -->
+  <div id="calcModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close" id="closeCalc" role="button" aria-label="Close">&times;</span>
+      <h2>Investment Calculator</h2>
+      <form id="calcForm">
+        <label for="calcPlan">Plan</label>
+        <input id="calcPlan" type="text" readonly />
+        <label for="calcAmount">Amount</label>
+        <input id="calcAmount" type="number" placeholder="Enter amount" />
+        <button type="submit" class="btn-primary">Calculate</button>
+      </form>
+      <div id="calcResult"></div>
+      <button id="calcOkBtn" type="button" class="btn-secondary">OK</button>
+    </div>
+  </div>
+
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeDeposit">&times;</span>
+      <h2>Make a Deposit</h2>
+      <form id="depositForm">
+        <label for="depositPlan">Plan</label>
+        <input id="depositPlan" type="text" readonly />
+        <label for="depositAmount">Amount ($)</label>
+        <input id="depositAmount" type="number" placeholder="Enter amount" />
+        <label for="cryptoSelect">Choose Crypto</label>
+        <select id="cryptoSelect" required>
+          <option value="">-- Select --</option>
+          <option value="btc">Bitcoin (BTC)</option>
+          <option value="eth">Ethereum (ETH)</option>
+          <option value="usdt">Tether (USDT)</option>
+          <option value="bnb">Binance Coin (BNB)</option>
+          <option value="tron">Tron (TRX)</option>
+          <option value="bch">Bitcoin Cash (BCH)</option>
+          <option value="ltc">Litecoin (LTC)</option>
+          <option value="xrp">Ripple (XRP)</option>
+          <option value="doge">Dogecoin (DOGE)</option>
+        </select>
+        <button type="submit" class="btn-primary">Confirm Deposit</button>
+      </form>
+
+      <div id="cryptoAddressSection" style="display:none; margin-top:15px;">
+        <h4>Send your crypto to this address:</h4>
+        <p id="cryptoAddress" style="word-break:break-all; background:#f4f4f4; padding:10px; border-radius:5px;"></p>
+        <button id="copyAddressBtn" type="button" class="btn-secondary" style="margin-top:10px;">Copy Address</button>
+      </div>
+
+      <button id="depositOkBtn" type="button" class="btn-secondary">OK</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="dashboard.html" class="f-logo">
+          <img src="../assets/images/Emuntra3.png" alt="Emutra2" />
+        </a>
+        <p class="f-tag">Smart investing for a brighter future.</p>
+      </div> 
+
+      <div class="f-col">
+        <h4>Quick Links</h4>
+        <ul class="f-links">
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="deposits.html">My Deposits</a></li>
+          <li><a href="withdraw.html">Withdraw</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </div>
+
+      <div class="f-col">
+        <h4>Legal</h4>
+        <ul class="f-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+
+      <div class="f-col">
+        <h4>Contact</h4>
+        <ul class="f-links f-contact">
+          <li><a href="mailto:support@Emuntra.com">support@Emuntra.com</a></li>
+          <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="subfooter">
+      <div class="container subfooter-row">
+        <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script src="../assets/js/user/config.js"></script>
+  <script src="../assets/js/user/dashboard.js"></script>
+  <script src="../assets/js/user/add-deposit.js"></script>
+</body>
+</html>

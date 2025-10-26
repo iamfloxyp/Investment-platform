@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referrals - Emuntra</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- NAVIGATION BAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo"><a href="dashboard.html"><img src="../assets/images/Emuntra3.png" alt=""></a></div>
+      <nav class="nav-links" id="navLinks">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="add-deposit.html">Add Deposit</a>
+        <a href="withdraw.html">Withdraw</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="history.html">History</a>
+        <a href="referrals.html" class="active">Referrals</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+      <div class="nav-right">
+       <div class="notifications">
+  <span class="bell" id="bellBtn">🔔</span>
+  <span class="badge" id="notifBadge">3</span>
+
+  <!-- Dropdown -->
+  <div class="notif-dropdown" id="notifDropdown">
+    <h4>Notifications</h4>
+    <ul id="notifList">
+      <!-- Notifications will be injected here -->
+    </ul>
+    <div class="notif-footer">
+      <a href="notifications.html">See all notifications</a>
+    </div>
+  </div>
+</div>
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">Tata ▾</button>
+          <div class="dropdown" id="dropdownMenu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="https://emuntra.com#contact">Support</a>
+            <a href="login.html">Logout</a>
+          </div>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main>
+     <div class="dashboard-header">
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
+    </div>
+    <section class="referral-section">
+      <!-- Left: Referral URL + Earn Box -->
+      <div class="referral-card">
+        <h2>Your Referral URL</h2>
+        <div class="referral-box">
+          <input type="text" id="referralLink" value="" readonly>
+          <button class="btn-copy" id="copyBtn" onclick="copyReferral()">Copy</button>
+          <span class="copy-message" id="copyMessage">Copied!</span>
+        </div>
+
+        <div class="earn-box">
+          YOU HAVE EARNED $0.00 FROM REFERRALS SO FAR
+        </div>
+
+        <p>Each participant of the program invites investors using their referral link.</p>
+        <p>Your personal referral link: <span style="color:#2563eb;">https://-Emuntra.com/?ref=tata</span></p>
+        <p>When opening an investment deposit by invited participant you get 7% of additional income from each deposit of invited participant.</p>
+      </div>
+
+      <!-- Right: Referral Stats -->
+      <div class="referral-stats">
+        <h2>Your Referral Stats</h2>
+        <table class="referral-table">
+          <tr><td>Your status</td><td>Client</td></tr>
+          <tr><td>Your upline</td><td>None</td></tr>
+          <tr><td>Referrals</td><td>0</td></tr>
+          <tr><td>Active referrals</td><td>0</td></tr>
+          <tr><td>Total commission</td><td>$0.00</td></tr>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="dashboard.html" class="f-logo"><img src="../assets/images/Emuntra3.png" alt="FinBloom" /></a>
+        <p class="f-tag">Smart investing for a brighter future.</p>
+      </div>
+      <div class="f-col">
+        <h4>Quick Links</h4>
+        <ul class="f-links">
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="deposits.html">My Deposits</a></li>
+          <li><a href="withdraw.html">Withdraw</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Legal</h4>
+        <ul class="f-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+      <div class="f-col">
+        <h4>Contact</h4>
+        <ul class="f-links f-contact">
+          <li><a href="mailto:support@Emuntra.com">support@Emuntra.com</a></li>
+          <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="subfooter">
+      <div class="container subfooter-row">
+        <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JS -->
+   <script src="../assets/js/user/config.js"></script>
+  <script src="../assets/js/user/dashboard.js"></script>
+  <script src="../assets/js/user/referral.js"></script>
+</body>
+</html>

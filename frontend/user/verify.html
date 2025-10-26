@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Verification — Emuntra</title>
+  <link rel="stylesheet" href="../assets/css/style.css"/>
+</head>
+<body class="container-sign verify">
+
+  <div class="signup-container verify">
+    <!-- LEFT PANEL -->
+    <div class="verify-left">
+      <h1 class="logo">Emuntra</h1>
+      <p class="tagline">Invest Smart. Grow Steady. Verify Securely.</p>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="verify-right">
+      <a href="signup.html" class="back-btn">← Back to Home</a>
+      <h2>Verify Your Email</h2>
+      <p id="verifySub">We’ve sent a 6-digit verification code to your email address. Please enter it below.</p>
+
+      <form id="verifyForm" class="verify-form" autocomplete="off" novalidate>
+        <div class="form-group">
+          <input
+            id="code"
+            name="code"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="6"
+            placeholder="Enter 6-digit code"
+            required
+            autofocus
+          />
+        </div>
+
+        <button id="verifyBtn" type="submit" class="btn-primary">Verify & Continue</button>
+
+        <div class="verify-actions">
+          <button id="resendBtn" type="button" class="btn">Resend Code</button>
+          <span id="timer" style="font-size:.9rem; color:#6c757d; margin-left:6px;"></span>
+        </div>
+
+        <div id="verifyMsg" class="verify-msg" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+  <script src="../assets/js/user/config.js"></script>
+  <script>
+    const API = `${window.API_BASE}/api/auth`; // Change when deployed
+
+    function getEmailFromQuery(){
+      const q = new URLSearchParams(location.search);
+      return (q.get("email") || "").trim().toLowerCase();
+    }
+
+    const email = getEmailFromQuery();
+    const subEl  = document.getElementById("verifySub");
+    const form   = document.getElementById("verifyForm");
+    const codeEl = document.getElementById("code");
+    const msgEl  = document.getElementById("verifyMsg");
+    const btnEl  = document.getElementById("verifyBtn");
+    const resend = document.getElementById("resendBtn");
+    const timer  = document.getElementById("timer");
+
+    if (!email) {
+      subEl.textContent = "We need your email to verify. Please return to Sign Up and try again.";
+    } else {
+      subEl.textContent = `We’ve sent a 6-digit verification code to ${email}. Enter it below.`;
+    }
+
+    function setMsg(text, type="ok"){
+      msgEl.textContent = text;
+      msgEl.className = "verify-msg " + (type === "ok" ? "ok" : "err");
+    }
+
+    async function postJSON(url, data){
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        credentials: "include", // ✅ required for cookie
+        body: JSON.stringify(data)
+      });
+      const out = await res.json().catch(()=> ({}));
+      if(!res.ok) throw new Error(out.message || "Error");
+      return out;
+    }
+
+    codeEl.addEventListener("input", () => {
+      codeEl.value = codeEl.value.replace(/\D+/g, "").slice(0, 6);
+    });
+
+    form.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      if (!email) return setMsg("Missing email. Go back to Sign Up.", "err");
+
+      const code = codeEl.value.trim();
+      if (code.length !== 6) return setMsg("Enter a valid 6-digit code", "err");
+
+      btnEl.disabled = true; btnEl.textContent = "Verifying…";
+      try {
+        await postJSON(API + "/verify", { email, code });
+
+        // ✅ check if the cookie is now valid
+        const me = await fetch(API + "/me", {
+          credentials: "include"
+        });
+
+        if (!me.ok) {
+          setMsg("Verification succeeded, but login session failed. Try logging in manually.", "err");
+          return;
+        }
+
+        setMsg("Email verified! Redirecting…", "ok");
+        setTimeout(() => location.href = "dashboard.html", 1000);
+      } catch(err){
+        setMsg(err.message, "err");
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = "Verify & Continue";
+      }
+    });
+
+    // ---- resend with cooldown ----
+    let cooldown = 0, interval = null;
+    function startCooldown(sec=30){
+      cooldown = sec;
+      resend.disabled = sec > 0;
+      timer.textContent = sec ? `Resend available in ${cooldown}s` : "";
+      if (interval) clearInterval(interval);
+      if (!sec) return;
+      interval = setInterval(()=>{
+        cooldown--;
+        if (cooldown <= 0){
+          clearInterval(interval);
+          resend.disabled = false;
+          timer.textContent = "";
+        } else {
+          timer.textContent = `Resend available in ${cooldown}s`;
+        }
+      }, 1000);
+    }
+
+    resend.addEventListener("click", async ()=>{
+      if (!email) return setMsg("Missing email. Go back to Sign Up.", "err");
+      try{
+        await postJSON(API + "/resend", { email });
+        setMsg(`New code sent to ${email}`, "ok");
+        startCooldown(30);
+      }catch(err){
+        setMsg(err.message, "err");
+      }
+    });
+
+    startCooldown(0); // Ready immediately
+  </script>
+</body>
+</html>
