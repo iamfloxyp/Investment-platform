@@ -213,13 +213,12 @@ const forgotPassword = async (req, res) => {
       expiresIn: "15m",
     });
 
-   // ✅ Use a single clean client URL depending on environment
+   // ✅ Final production-safe version
 const frontendBaseUrl =
   process.env.NODE_ENV === "production"
-    ? process.env.CLIENT_URL || "https://emuntra.com"
+    ? process.env.CLIENT_URL || "https://emuntra-q35s.vercel.app"
     : "http://127.0.0.1:5500/frontend";
 
-// ✅ Build the final reset link using that variable
 const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken}`;
     await sendEmail({
       to: user.email,
