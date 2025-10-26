@@ -211,7 +211,13 @@ const forgotPassword = async (req, res) => {
 
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "15m",
-    });
+    });// in forgotPassword handler, before sending email
+console.log("ISSUING RESET TOKEN", {
+  host: req.headers.host,
+  nodeEnv: process.env.NODE_ENV,
+  clientUrl: process.env.CLIENT_URL,
+  secretLen: (process.env.JWT_SECRET || "").length,
+});
 
     // ✅ Always prefer Render’s environment value
     let frontendBaseUrl = process.env.CLIENT_URL;
