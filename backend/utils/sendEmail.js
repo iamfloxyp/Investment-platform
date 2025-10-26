@@ -12,12 +12,12 @@ export async function sendEmail({ to, subject, html }) {
     return;
   }
 
-  const payload = {
-    sender: { email: sender, name: "Emuntra Investment" },
-    to: [{ email: to }],
-    subject,
-    htmlContent: html,
-  };
+ const payload = {
+  sender: { email: process.env.EMAIL_FROM, name: process.env.EMAIL_NAME },
+  to: [{ email: to }],
+  subject,
+  htmlContent: html,
+};
 
   try {
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
