@@ -1,4 +1,3 @@
-// config.js — shared for all user pages
 const isLocal =
   window.location.hostname === "127.0.0.1" ||
   window.location.hostname === "localhost";
