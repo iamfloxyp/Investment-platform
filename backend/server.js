@@ -28,28 +28,28 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ====== FIXED CORS ======
+import cors from "cors";
+
+// ✅ Allowed origins
 const allowedOrigins = [
   "http://127.0.0.1:5500",
-  "http://127.0.0.1:5501",
   "http://localhost:5500",
-  "http://localhost:5501",
-  "https://emuntra-q35s.vercel.app",
+  "https://emuntra-q35s.vercel.app"
 ];
 
+// ✅ Use CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.warn("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
+    credentials: true, // ✅ allow cookies
   })
 );
-
 // ===== ROUTES =====
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositRoutes);
