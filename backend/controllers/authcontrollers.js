@@ -200,7 +200,7 @@ const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-// ✅ FINAL STABLE FORGOT PASSWORD FUNCTION
+// ✅ FINAL FIXED VERSION – works both locally & on Render
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -213,34 +213,37 @@ const forgotPassword = async (req, res) => {
       expiresIn: "15m",
     });
 
-    // ✅ Smart link selector (auto works for both local + production)
-    const frontendBaseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.CLIENT_URL || "https://emuntra-q35s.vercel.app"
-        : "http://127.0.0.1:5500/frontend";
+    // ✅ Always prefer Render’s environment value
+    let frontendBaseUrl = process.env.CLIENT_URL;
+
+    // fallback logic
+    if (!frontendBaseUrl || frontendBaseUrl.includes("127.0.0.1")) {
+      if (process.env.NODE_ENV === "production") {
+        frontendBaseUrl = "https://emuntra-q35s.vercel.app";
+      } else {
+        frontendBaseUrl = "http://127.0.0.1:5500/frontend";
+      }
+    }
 
     const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken}`;
 
-    // ✅ Debugging log (you can remove later)
-    console.log("🟢 NODE_ENV:", process.env.NODE_ENV);
-    console.log("🌍 CLIENT_URL:", process.env.CLIENT_URL);
-    console.log("🔗 Reset URL:", resetUrl);
+    console.log("🌍 Using FRONTEND:", frontendBaseUrl);
+    console.log("🔗 Final Reset Link:", resetUrl);
 
-    // ✅ Send the email
     await sendEmail({
       to: user.email,
       subject: "Reset your password",
       html: `
         <p>Hi ${user.firstName},</p>
         <p>Click below to reset your password:</p>
-        <a href="${resetUrl}" style="color:#0a84ff;">${resetUrl}</a>
+        <a href="${resetUrl}" style="color:#007bff;">${resetUrl}</a>
         <p>This link expires in 15 minutes.</p>
       `,
     });
 
-    return res.json({ message: "Reset link sent to email" });
+    return res.json({ message: "Reset link sent successfully" });
   } catch (err) {
-    console.error("Forgot error:", err);
+    console.error("Forgot password error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
