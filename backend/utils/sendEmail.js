@@ -1,7 +1,6 @@
 // utils/sendEmail.js
 import dotenv from "dotenv";
 dotenv.config();
-
 import nodemailer from "nodemailer";
 
 const host = process.env.EMAIL_HOST;
@@ -21,40 +20,43 @@ let transporter = null;
 if (host && port && user && pass) {
   transporter = nodemailer.createTransport({
     host,
-    port,              // 587 for TLS, 465 for SSL
-    secure: false,     // set true only if you use port 465
+    port, // 587 for TLS
+    secure: port === 465, // true only if using SSL (465)
     auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false, // ✅ prevents Render SSL handshake issues
+    },
     logger: true,
     debug: true,
   });
 
+  // Verify connection on start
   transporter
     .verify()
-    .then(() => console.log("✅ SMTP ready"))
-    .catch((err) => console.error("❌ SMTP verify failed:", err));
+    .then(() => console.log("✅ SMTP connection established successfully."))
+    .catch((err) => console.error("❌ SMTP verify failed:", err.message));
 } else {
-  console.warn("⚠️ SMTP not fully configured, skipping transporter setup.");
+  console.warn("⚠️ SMTP not fully configured — skipping transporter setup.");
 }
 
-// ---- Export as BOTH named and default ----
+// ---- Export sendEmail ----
 export async function sendEmail({ to, subject, html }) {
   if (!transporter) {
-    console.warn("❌ Email not sent: Transporter not configured.");
+    console.warn("❌ Email not sent: transporter not initialized.");
     return;
   }
 
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || `Emuntra Platform <${user}>`,
+      from: process.env.EMAIL_FROM || `Emuntra Investment <${user}>`,
       to,
       subject,
       html,
     });
-    console.log("📧 Mail sent:", info.messageId);
+    console.log("📧 Mail sent successfully:", info.messageId);
     return info;
   } catch (error) {
-    console.error("❌ Email sending failed:", error);
-    throw error;
+    console.error("❌ Email sending failed:", error.message);
   }
 }
 
