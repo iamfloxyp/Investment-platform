@@ -220,7 +220,7 @@ const forgotPassword = async (req, res) => {
     ? "https://emuntra.com"
     : "http://127.0.0.1:5500/frontend");
 
-const resetUrl = `${frontendBaseUrl}/user/reset-password.html?token=${resetToken}`;
+const resetUrl = `${process.env.CLIENT_URL}/user/reset-password.html?token=${resetToken}`;
     await sendEmail({
       to: user.email,
       subject: "Reset your password",
