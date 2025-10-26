@@ -214,11 +214,13 @@ const forgotPassword = async (req, res) => {
     });
 
     // TODO: replace before deployment
-    const resetUrl =
-  process.env.NODE_ENV === "production"
-    ? `https://emuntra.com/user/reset-password.html?token=${resetToken}`
-    : `http://127.0.0.1:5500/frontend/user/reset-password.html?token=${resetToken}`;
+    const frontendBaseUrl =
+  process.env.CLIENT_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://emuntra.com"
+    : "http://127.0.0.1:5500/frontend");
 
+const resetUrl = `${frontendBaseUrl}/reset-password.html?token=${resetToken}`;
     await sendEmail({
       to: user.email,
       subject: "Reset your password",
