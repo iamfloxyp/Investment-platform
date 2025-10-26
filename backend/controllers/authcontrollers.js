@@ -250,28 +250,44 @@ const forgotPassword = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-// 🔐 Reset Password
+// ✅ FINAL resetPassword route (safe, clean, tested)
 const resetPassword = async (req, res) => {
   try {
-    const { token } = req.query;
+    // ✅ Get token from query directly (not destructuring)
+    const token = req.query.token;
     const { password } = req.body;
 
-    if (!token || !password)
-      return res
-        .status(400)
-        .json({ message: "Token and password required" });
+    // ✅ Validate inputs
+    if (!token) {
+      return res.status(400).json({ message: "Missing reset token" });
+    }
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
 
+    // ✅ Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
 
+    // ✅ Find user by decoded token ID
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Update password securely
     user.password = password;
     await user.save();
 
     return res.json({ message: "Password reset successful" });
   } catch (err) {
-    console.error("Reset error:", err);
-    return res.status(500).json({ message: "Invalid or expired token" });
+    console.error("❌ Reset Password Error:", err.message);
+    return res.status(500).json({
+      message:
+        err.name === "TokenExpiredError"
+          ? "Reset link expired. Please request a new one."
+          : "Server error during password reset",
+      error: err.message,
+    });
   }
 };
 
