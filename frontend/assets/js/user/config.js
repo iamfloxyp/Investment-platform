@@ -4,4 +4,4 @@ const isLocal =
 
 window.API_BASE = isLocal
   ? "http://127.0.0.1:4000"
-  : "https://investment-platform-1-qjx8.onrender.com";
+  : "https://investment-platform-1-qjx8.onrender.com"; // ✅ no slash at end
