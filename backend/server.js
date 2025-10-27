@@ -76,6 +76,14 @@ app.get("/api/test", (req, res) => {
   });
 });
 
+app.get("/api/_debug/np", (req, res) => {
+  const key = process.env.NOWPAYMENTS_API_KEY || "";
+  res.json({
+    keyExists: !!key,
+    keyLength: key.length,
+  });
+});
+
 // ===== DATABASE CONNECTION =====
 mongoose
   .connect(process.env.MONGO_URI, {

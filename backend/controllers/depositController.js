@@ -21,7 +21,7 @@ export const addDepositForUser = async (req, res) => {
       return res.status(400).json({ msg: "Invalid amount" });
     }
 
-    // ✅ Normalize plan
+    // ✅ Normalize plan name
     if (plan) {
       plan = plan.replace(/plan/i, "").trim().toLowerCase();
       const allowedPlans = ["bronze", "silver", "gold", "diamond", "platinum"];
@@ -31,6 +31,7 @@ export const addDepositForUser = async (req, res) => {
       plan = plan.charAt(0).toUpperCase() + plan.slice(1);
     }
 
+    // ✅ Find user
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
@@ -41,8 +42,8 @@ export const addDepositForUser = async (req, res) => {
       "https://api.nowpayments.io/v1/invoice",
       {
         price_amount: amount,
-        price_currency: currency || "usd", // can also use 'ngn' if preferred
-        pay_currency: method || "btc", // user’s chosen coin
+        price_currency: currency || "usd", // You can change to "ngn" if needed
+        pay_currency: method || "btc", // Example: btc, eth, usdt, etc.
         order_id: `emuntra_${Date.now()}`,
         order_description: `Deposit for ${plan} plan by ${user.firstName}`,
       },
@@ -54,7 +55,12 @@ export const addDepositForUser = async (req, res) => {
       }
     );
 
-    const paymentLink = paymentResponse.data.invoice_url;
+    // ✅ Handle payment link (convert http to https if necessary)
+    let paymentLink = paymentResponse.data.invoice_url;
+    if (paymentLink?.startsWith("http://")) {
+      paymentLink = paymentLink.replace("http://", "https://");
+    }
+
     console.log("✅ Payment link generated:", paymentLink);
 
     /* ============================================================
@@ -76,38 +82,21 @@ export const addDepositForUser = async (req, res) => {
     console.log("✅ Deposit saved successfully:", deposit._id);
 
     /* ============================================================
-       ✅ SEND EMAIL CONFIRMATION
+       ⚠️ DO NOT SEND EMAIL OR IN-APP NOTIFICATION YET
+       Email + notification will be triggered after admin approval
     ============================================================ */
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "Deposit Initiated 💳",
-        html: `
-          <div style="font-family: Arial, sans-serif;">
-            <h2>Deposit Created</h2>
-            <p>Hi ${user.firstName},</p>
-            <p>Your deposit of <strong>$${amount}</strong> for the <strong>${plan}</strong> plan has been created.</p>
-            <p>Please complete your payment using this link:</p>
-            <p><a href="${paymentLink}" style="color:#2ecc71;">Complete Payment</a></p>
-            <p>Status: <strong>${depositStatus.toUpperCase()}</strong></p>
-          </div>
-        `,
-      });
-    } catch (emailErr) {
-      console.warn("⚠️ Email send failed:", emailErr.message);
-    }
 
     return res.status(201).json({
       msg: "Deposit created. Complete payment using the provided link.",
       deposit,
       paymentLink,
     });
+
   } catch (err) {
     console.error("❌ addDepositForUser error:", err.message);
     return res.status(500).json({ msg: "Server error while creating deposit" });
   }
 };
-
 /* ============================================================
    ✅ GET ALL DEPOSITS (ADMIN)
 ============================================================ */
