@@ -225,7 +225,7 @@ console.log("ISSUING RESET TOKEN", {
     // ✅ Fallback logic for local testing or empty env
     if (!frontendBaseUrl || frontendBaseUrl.includes("127.0.0.1")) {
       if (process.env.NODE_ENV === "production") {
-        frontendBaseUrl = "https://emuntra-q35s.vercel.app";
+      frontendBaseUrl = "https://investment-platform-eta.vercel.app";
       } else {
         frontendBaseUrl = "http://127.0.0.1:5500/frontend";
       }
