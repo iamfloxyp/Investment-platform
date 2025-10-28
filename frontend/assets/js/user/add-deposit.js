@@ -154,6 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json();
         console.log("💰 Deposit response:", data);
+        if (data.paymentLink) {
+  const paymentBox = document.getElementById("paymentBox");
+  const frame = document.getElementById("paymentFrame");
+  paymentBox.style.display = "block";
+  frame.src = data.paymentLink;
+  console.log("✅ NowPayments frame loaded:", data.paymentLink);
+}
 
         if (res.ok && data.paymentLink) {
           showPopup("🪙 Loading payment interface...");

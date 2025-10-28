@@ -203,6 +203,16 @@
         <p id="cryptoAddress" style="word-break:break-all; background:#f4f4f4; padding:10px; border-radius:5px;"></p>
         <button id="copyAddressBtn" type="button" class="btn-secondary" style="margin-top:10px;">Copy Address</button>
       </div>
+      <!-- ✅ Payment iframe container -->
+<div id="paymentBox" style="display:none; margin-top:20px;">
+  <h4>Complete your payment below:</h4>
+  <iframe 
+    id="paymentFrame"
+    style="width:100%; height:600px; border:none; border-radius:10px; background:#fff;"
+    title="NowPayments Payment Frame"
+    allow="payment"
+  ></iframe>
+</div>
 
       <button id="depositOkBtn" type="button" class="btn-secondary">OK</button>
     </div>
