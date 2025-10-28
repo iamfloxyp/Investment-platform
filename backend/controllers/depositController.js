@@ -91,6 +91,37 @@ console.log("✅ Final verified secure payment link:", paymentLink);
        ⚠️ DO NOT SEND EMAIL OR IN-APP NOTIFICATION YET
        Email + notification will be triggered after admin approval
     ============================================================ */
+    /* ============================================================
+   ✅ SEND EMAIL + IN-APP NOTIFICATION AFTER APPROVAL
+============================================================ */
+try {
+  // 📨 Create in-app notification
+  await Notification.create({
+    userId: deposit.user,
+    title: "Deposit Approved ✅",
+    message: `Your deposit of $${deposit.amount} for the ${deposit.plan} plan has been approved.`,
+  });
+
+  // 📧 Send email notification
+  await sendEmail({
+    to: user.email,
+    subject: "Your Deposit Has Been Approved ✅",
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;">
+        <h2 style="color:#102630;">Deposit Approved</h2>
+        <p>Hi ${user.firstName || "Investor"},</p>
+        <p>Your deposit of <b>$${deposit.amount}</b> for the <b>${deposit.plan}</b> plan has been approved successfully.</p>
+        <p>You can now view it in your <a href="https://emuntra.com/user/dashboard.html">Emuntra Dashboard</a>.</p>
+        <br>
+        <p style="color:#555;">Thank you for investing with Emuntra!</p>
+      </div>
+    `,
+  });
+
+  console.log("📩 Email + in-app notification sent successfully");
+} catch (notifyErr) {
+  console.error("⚠️ Notification/Email error:", notifyErr.message);
+}
 
     return res.status(201).json({
       msg: "Deposit created. Complete payment using the provided link.",

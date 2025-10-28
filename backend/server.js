@@ -40,7 +40,8 @@ const allowedOrigins = [
   "http://localhost:5500",
   "http://localhost:5501",
   "https://investment-platform-eta.vercel.app",
-  "https://api.emuntra.com"
+  "https://api.emuntra.com",
+  "https://emuntra.com",
 ];
 
 app.use(

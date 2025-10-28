@@ -4,7 +4,7 @@
 const API_BASE = window.API_BASE || (
   window.location.hostname.includes("127.0.0.1") || window.location.hostname.includes("localhost")
     ? "http://127.0.0.1:4000"
-    : "https://investment-platform-1-gjx8.onrender.com"
+    : "https://api.emuntra.com"
 );
 
 // ✅ Auth route prefix
