@@ -139,7 +139,7 @@
     if (!address) return alert("Please enter a wallet address.");
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/wallet`, {
+      const res = await fetch(`${API_BASE}/api/withdrawals/users/wallet`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
