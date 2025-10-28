@@ -56,13 +56,19 @@ export const addDepositForUser = async (req, res) => {
     );
 
     // ✅ Handle payment link (convert http to https if necessary)
-    let paymentLink = paymentResponse.data.invoice_url;
-    if (paymentLink?.startsWith("http://")) {
-      paymentLink = paymentLink.replace("http://", "https://");
-    }
+   let paymentLink = paymentResponse.data.invoice_url;
 
-    console.log("✅ Payment link generated:", paymentLink);
+// ✅ Force HTTPS and rebuild if NowPayments returns insecure link
+if (!paymentLink?.startsWith("https://")) {
+  paymentLink = paymentLink.replace(/^http:\/\//, "https://");
+}
 
+// ✅ Ensure it still points to NowPayments
+if (!paymentLink.includes("nowpayments.io")) {
+  paymentLink = `https://nowpayments.io/payment?iid=${paymentResponse.data.invoice_id}`;
+}
+
+console.log("✅ Final verified secure payment link:", paymentLink);
     /* ============================================================
        ✅ SAVE DEPOSIT AS PENDING
     ============================================================ */
