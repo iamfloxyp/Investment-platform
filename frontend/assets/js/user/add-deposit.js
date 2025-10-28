@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyBtn = document.getElementById("copyAddressBtn");
 
   // ====== CONFIG ======
- const API_BASE = window.API_BASE;
+  const API_BASE = window.API_BASE;
   let userId = null;
 
   // ====== FETCH USER & POPULATE BALANCES ======
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ====== UPDATED: EMBEDDED PAYMENT VIEW ======
+  // ====== UPDATED DEPOSIT HANDLER (Redirect to NowPayments iframe page) ======
   const cryptoSelect = document.getElementById("cryptoSelect");
   if (cryptoSelect) {
     cryptoSelect.addEventListener("change", async () => {
@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const planName = depositPlan.value;
 
       if (!crypto || !amount || amount < 50) {
-        showPopup("Please enter a valid amount and crypto.", "error");
+        showPopup("Please enter a valid amount and select crypto.", "error");
         return;
       }
 
@@ -154,33 +154,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json();
         console.log("💰 Deposit response:", data);
-        if (data.paymentLink) {
-  const paymentBox = document.getElementById("paymentBox");
-  const frame = document.getElementById("paymentFrame");
-  paymentBox.style.display = "block";
-  frame.src = data.paymentLink;
-  console.log("✅ NowPayments frame loaded:", data.paymentLink);
-}
 
-        if (res.ok && data.paymentLink) {
-          showPopup("🪙 Loading payment interface...");
-          addressSection.innerHTML = `
-            <h4 style="margin-bottom:10px;">Complete your payment below:</h4>
-            <iframe src="${data.paymentLink}" width="100%" height="700" 
-                    style="border:none; border-radius:10px;"></iframe>
-          `;
-          addressSection.style.display = "block";
-        } else if (data.address) {
-          addressBox.textContent = data.address;
-          addressSection.style.display = "block";
-          if (copyBtn) {
-            copyBtn.onclick = () => {
-              navigator.clipboard.writeText(data.address);
-              showPopup("✅ Wallet address copied.");
-            };
-          }
+        if (!res.ok) throw new Error(data.msg || "Deposit failed");
+
+        // ✅ Extract NowPayments invoice ID
+        const iidMatch = data.paymentLink.match(/iid=(\d+)/);
+        const iid = iidMatch ? iidMatch[1] : null;
+
+        if (iid) {
+          // ✅ Redirect to payment.html with the NowPayments checkout
+          showPopup("Redirecting to secure payment...", "success");
+          window.location.href = `/user/payment.html?iid=${iid}`;
+        } else if (data.paymentLink) {
+          // fallback
+          window.open(data.paymentLink, "_blank", "noopener,noreferrer");
         } else {
-          showPopup(data.msg || "Unable to generate payment link.", "error");
+          showPopup("Payment link not available.", "error");
         }
       } catch (err) {
         console.error("❌ Payment Error:", err);
@@ -198,7 +187,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====== CALCULATOR LOGIC ======
   document.getElementById("calcForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const rate = parseFloat(document.querySelector(`[data-name="${calcPlan.value}"]`).dataset.rate);
+    const rate = parseFloat(
+      document.querySelector(`[data-name="${calcPlan.value}"]`).dataset.rate
+    );
     const amount = parseFloat(calcAmount.value);
     const profit = (rate / 100) * amount;
     calcResult.innerHTML = `
@@ -210,6 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====== BACKGROUND CLICK CLOSE ======
   window.onclick = (e) => {
     if (e.target === calcModal) calcModal.style.display = "none";
-    if (e.target === depositModal) calcModal.style.display = "none";
+    if (e.target === depositModal) depositModal.style.display = "none";
   };
 });
