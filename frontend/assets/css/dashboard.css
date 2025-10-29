@@ -1662,3 +1662,13 @@ calcForm button,
   display: block;
   opacity: 1;
 }
+#loadingScreen {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #8dbbf0;
+  font-weight: 500;
+}
+
+#mainContent {
+  display: none; /* hidden by default */
+}
