@@ -12,36 +12,48 @@ document.addEventListener("DOMContentLoaded", async () => {
   let userId = null;
 
   // ✅ Step 1: Fetch logged-in user via cookies
-// ===== Add loader and main visibility control =====
-const mainContent = document.getElementById("mainContent");
-const loadingScreen = document.getElementById("loadingScreen");
-
-if (mainContent) mainContent.style.display = "none";
-if (loadingScreen) {
-  loadingScreen.innerHTML = `<p>Loading your dashboard...</p>`;
-  loadingScreen.style.display = "flex";
-  loadingScreen.style.alignItems = "center";
-  loadingScreen.style.justifyContent = "center";
-  loadingScreen.style.height = "80vh";
-  loadingScreen.style.color = "#8dbbf0";
-}
-
 try {
-  const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include" });
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
+    credentials: "include",
+  });
   if (!res.ok) throw new Error("User not authenticated");
 
   const user = await res.json();
   userId = user.id;
+  console.log("✅ Logged-in userId:", userId);
 
-  if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
-  if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
+  // === Fix duplicate or placeholder issue ===
+  const userBtn = document.getElementById("userBtn");
+  const welcomeName = document.getElementById("welcomeName");
+  
 
-  // ✅ Hide loader and show dashboard
-  if (loadingScreen) loadingScreen.style.display = "none";
-  if (mainContent) mainContent.style.display = "block";
+  if (userBtn) {
+    userBtn.textContent = `${user.firstName} ▾`;
+  }
+
+  if (welcomeName) {
+    // Clean up placeholder text before setting real name
+    let text = welcomeName.textContent.trim();
+    if (text.toLowerCase().includes("welcome")) {
+      text = text.replace(/welcome[, ]*/i, "");
+    }
+    if (text.toLowerCase() === "user") {
+      text = "";
+    }
+
+    // Safely update with real user name
+    welcomeName.textContent = `Welcome, ${user.firstName}`;
+  }
+
+  // Optional: if you want to avoid the initial "User" flicker
+  if (welcomeName) {
+    welcomeName.style.visibility = "visible";
+  }
+
 } catch (err) {
   console.error("❌ Not logged in:", err);
   window.location.href = "./login.html";
+  return;
 }
 
   // ✅ Step 2: Fetch notifications from backend
