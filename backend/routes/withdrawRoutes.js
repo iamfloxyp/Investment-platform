@@ -12,7 +12,7 @@ const router = express.Router();
 
 // ✅ USER ROUTES
 router.patch("/users/wallet", protect, updateWallet);
-router.post("/withdrawals", protect, createWithdrawal);
+router.post("/", protect, createWithdrawal);
 // router.get("/withdrawals/pending", protect, getPendingWithdrawals);
 router.get("/pending", protect, getPendingWithdrawals);
 
