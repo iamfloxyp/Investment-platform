@@ -115,7 +115,7 @@ export const approveWithdrawal = async (req, res) => {
       userId: withdrawal.user._id,
       title: "Withdrawal Update",
       message: msg,
-      type: "withdrawal",
+      type: "withdraw",
     });
 
     // ✅ Email notification
