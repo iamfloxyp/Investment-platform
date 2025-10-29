@@ -155,3 +155,18 @@ export const approveWithdrawal = async (req, res) => {
     res.status(500).json({ message: "Server error while approving withdrawal" });
   }
 };
+
+// ✅ Fetch all pending withdrawals for logged-in user
+export const getPendingWithdrawals = async (req, res) => {
+  try {
+    const withdrawals = await Withdrawal.find({
+      user: req.user.id,
+      status: "pending",
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(withdrawals);
+  } catch (err) {
+    console.error("❌ Error fetching pending withdrawals:", err);
+    res.status(500).json({ message: "Server error while fetching withdrawals." });
+  }
+};
