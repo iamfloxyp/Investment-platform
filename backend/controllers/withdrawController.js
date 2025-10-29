@@ -112,7 +112,7 @@ export const approveWithdrawal = async (req, res) => {
 
     // ✅ In-app notification
     await Notification.create({
-      userId: withdrawal.user._id,
+      userId: withdrawal.user._id ||withdrawal.user,
       title: "Withdrawal Update",
       message: msg,
       type: "withdraw",
