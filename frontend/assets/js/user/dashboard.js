@@ -16,33 +16,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 const mainContent = document.getElementById("mainContent");
 const loadingScreen = document.getElementById("loadingScreen");
 
-// Hide main content at first
 if (mainContent) mainContent.style.display = "none";
 if (loadingScreen) {
   loadingScreen.innerHTML = `<p>Loading your dashboard...</p>`;
   loadingScreen.style.display = "flex";
+  loadingScreen.style.alignItems = "center";
+  loadingScreen.style.justifyContent = "center";
+  loadingScreen.style.height = "80vh";
+  loadingScreen.style.color = "#8dbbf0";
 }
 
-// ✅ Fetch user
 try {
-  const res = await fetch(`${API_BASE}/api/auth/me`, {
-    credentials: "include",
-  });
+  const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include" });
   if (!res.ok) throw new Error("User not authenticated");
 
   const user = await res.json();
   userId = user.id;
 
-  // ✅ Update name
   if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
   if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
 
-  // ✅ When done loading, show content and hide loader
+  // ✅ Hide loader and show dashboard
   if (loadingScreen) loadingScreen.style.display = "none";
-  if (mainContent) {
-    mainContent.classList.add("visible");
-  }
-
+  if (mainContent) mainContent.style.display = "block";
 } catch (err) {
   console.error("❌ Not logged in:", err);
   window.location.href = "./login.html";
