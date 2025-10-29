@@ -20,7 +20,7 @@ router.get("/pending", protect, getPendingWithdrawals);
 router.patch("/admin/withdrawals/:id", protect, adminOnly, approveWithdrawal);
 
 // ✅ GET TOTAL WITHDRAWALS FOR A SPECIFIC USER
-router.get("/withdrawals/user/total/:id", protect, async (req, res) => {
+router.get("/user/total/:id", protect, async (req, res) => {
   try {
     const userId = req.params.id;
 
