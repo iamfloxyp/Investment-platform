@@ -303,7 +303,7 @@ async function loadTotalWithdrawals(userId) {
       ? "http://127.0.0.1:4000"
       : "https://investment-platform-1-qjx8.onrender.com";
 
-    const res = await fetch(`${API_BASE}/api/withdraw/user/total/${userId}`, {
+    const res = await fetch(`${API_BASE}/api/withdrawals/user/total/${userId}`, {
       credentials: "include",
     });
     if (!res.ok) throw new Error("Failed to fetch total withdrawals");
