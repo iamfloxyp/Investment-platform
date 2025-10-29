@@ -37,7 +37,7 @@ try {
 
   // ✅ Hide loader and show main content
   if (loadingScreen) loadingScreen.style.display = "none";
-  if (mainContent) mainContent.style.display = "block";
+  if (mainContent) mainContent.classList.add("visible")
 } catch (err) {
   console.error("❌ Not logged in:", err);
   window.location.href = "./login.html";
