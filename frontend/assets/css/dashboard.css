@@ -1638,3 +1638,27 @@ calcForm button,
   display: block;
   margin-bottom: 5px;
 }
+
+/* Hide main dashboard initially */
+#mainContent {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+/* Loading screen style */
+#loadingScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  color: #8dbbf0;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+/* When main content becomes visible */
+#mainContent.visible {
+  display: block;
+  opacity: 1;
+}
