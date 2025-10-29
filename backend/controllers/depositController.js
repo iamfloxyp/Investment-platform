@@ -149,7 +149,7 @@ export const getAllDeposits = async (req, res) => {
   }
 };
 
-/* ============================================================
+/*/* ============================================================
    ✅ UPDATE DEPOSIT STATUS (Approve / Reject)
 ============================================================ */
 export const updateDepositStatus = async (req, res) => {
@@ -161,7 +161,8 @@ export const updateDepositStatus = async (req, res) => {
       return res.status(400).json({ msg: "Invalid deposit ID" });
     }
 
-    const deposit = await Deposit.findById(depositId).populate("user");
+    // ✅ Populate only required user fields (important for email)
+    const deposit = await Deposit.findById(depositId).populate("user", "firstName lastName email referredBy balance wallets");
     if (!deposit) return res.status(404).json({ msg: "Deposit not found" });
 
     if (deposit.status === status) {
@@ -173,6 +174,9 @@ export const updateDepositStatus = async (req, res) => {
 
     const user = deposit.user;
 
+    // ============================================================
+    // ✅ HANDLE APPROVED DEPOSIT
+    // ============================================================
     if (status === "approved") {
       const method = deposit.method || "btc";
 
@@ -181,12 +185,36 @@ export const updateDepositStatus = async (req, res) => {
       user.wallets[method] = (user.wallets[method] || 0) + Number(deposit.amount);
       await user.save();
 
+      // ✅ In-App Notification
       await Notification.create({
         user: user._id,
         type: "deposit",
         message: `✅ Your ${method.toUpperCase()} deposit of $${deposit.amount} under ${deposit.plan} plan has been approved.`,
       });
 
+      // ✅ Send Email Notification
+      if (user.email) {
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: "Deposit Approved ✅",
+            html: `
+              <div style="font-family:Arial,sans-serif;padding:10px">
+                <h3>Hello ${user.firstName || "Investor"},</h3>
+                <p>Your deposit of <strong>$${deposit.amount}</strong> under the <strong>${deposit.plan}</strong> plan has been <strong>approved</strong> and credited to your account.</p>
+                <p>You can now view it on your dashboard.</p>
+                <br>
+                <p>Best regards,<br><strong>Emuntra Investment Team</strong></p>
+              </div>
+            `,
+          });
+          console.log(`📧 Deposit approval email sent to ${user.email}`);
+        } catch (emailErr) {
+          console.error("❌ Email send error:", emailErr.message);
+        }
+      }
+
+      // ✅ Referral commission (unchanged)
       if (user.referredBy && mongoose.isValidObjectId(user.referredBy)) {
         try {
           const referrer = await User.findById(user.referredBy);
@@ -201,14 +229,10 @@ export const updateDepositStatus = async (req, res) => {
             await Notification.create({
               user: referrer._id,
               type: "referral",
-              message: `🎉 You earned $${commission.toFixed(
-                2
-              )} from ${user.firstName}'s deposit!`,
+              message: `🎉 You earned $${commission.toFixed(2)} from ${user.firstName}'s deposit!`,
             });
 
-            console.log(
-              `💰 Referral commission of $${commission.toFixed(2)} sent to ${referrer.email}`
-            );
+            console.log(`💰 Referral commission of $${commission.toFixed(2)} sent to ${referrer.email}`);
           }
         } catch (refErr) {
           console.error("⚠️ Referral error during approval:", refErr.message);
@@ -216,14 +240,40 @@ export const updateDepositStatus = async (req, res) => {
       }
     }
 
+    // ============================================================
+    // ✅ HANDLE REJECTED DEPOSIT
+    // ============================================================
     if (status === "rejected") {
       await Notification.create({
         user: user._id,
         type: "deposit",
         message: `❌ Your deposit of $${deposit.amount} under ${deposit.plan} plan was rejected.`,
       });
+
+      // ✅ Send rejection email too
+      if (user.email) {
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: "Deposit Rejected ❌",
+            html: `
+              <div style="font-family:Arial,sans-serif;padding:10px">
+                <h3>Hello ${user.firstName || "Investor"},</h3>
+                <p>We regret to inform you that your deposit of <strong>$${deposit.amount}</strong> under the <strong>${deposit.plan}</strong> plan was <strong>rejected</strong>.</p>
+                <p>Please contact support for more details.</p>
+                <br>
+                <p>Best regards,<br><strong>Emuntra Investment Team</strong></p>
+              </div>
+            `,
+          });
+          console.log(`📧 Deposit rejection email sent to ${user.email}`);
+        } catch (emailErr) {
+          console.error("❌ Email send error (rejection):", emailErr.message);
+        }
+      }
     }
 
+    // ============================================================
     res.json({ msg: `Deposit ${status} successfully`, deposit });
   } catch (err) {
     console.error("❌ updateDepositStatus error:", err.message);
@@ -237,16 +287,13 @@ export const updateDepositStatus = async (req, res) => {
 export const getUserDeposits = async (req, res) => {
   try {
     const { userId } = req.params;
-    const deposits = await Deposit.find({ user: userId }).sort({
-      createdAt: -1,
-    });
+    const deposits = await Deposit.find({ user: userId }).sort({ createdAt: -1 });
     res.json(deposits);
   } catch (err) {
     console.error("❌ getUserDeposits error:", err);
     res.status(500).json({ msg: "Server error fetching deposits" });
   }
 };
-
 /* ============================================================
    ✅ DELETE A DEPOSIT (ADMIN)
 ============================================================ */
