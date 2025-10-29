@@ -24,7 +24,7 @@ router.get("/withdrawals/user/total/:id", protect, async (req, res) => {
     const userId = req.params.id;
 
     // ✅ Get all approved or completed withdrawals for this user
-    const withdrawals = await Withdrawal.find({
+    const withdrawals = await withdraw.find({
       user: userId,
       status: { $in: ["approved", "completed"] },
     });
