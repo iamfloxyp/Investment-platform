@@ -12,23 +12,62 @@ document.addEventListener("DOMContentLoaded", async () => {
   let userId = null;
 
   // ✅ Step 1: Fetch logged-in user via cookies
-  try {
-    const res = await fetch(`${API_BASE}/api/auth/me`, {
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error("User not authenticated");
+// === Fix duplicate or placeholder issue ===
 
-    const user = await res.json();
-    userId = user.id;
-    console.log("✅ Logged-in userId:", userId);
+// ===== Add loader and main visibility control =====
+const mainContent = document.getElementById("mainContent");
+const loadingScreen = document.getElementById("loadingScreen");
 
-    if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
-    if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
-  } catch (err) {
-    console.error("❌ Not logged in:", err);
-    window.location.href = "./login.html";
-    return;
+if (mainContent) mainContent.style.display = "none";
+if (loadingScreen) {
+  loadingScreen.innerHTML = `<p>Loading your dashboard...</p>`;
+  loadingScreen.style.display = "flex";
+  loadingScreen.style.alignItems = "center";
+  loadingScreen.style.justifyContent = "center";
+  loadingScreen.style.height = "80vh";
+  loadingScreen.style.color = "#8dbbf0";
+}
+
+// ===== STEP 1: Fetch logged-in user via cookies =====
+try {
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("User not authenticated");
+
+  const user = await res.json();
+  userId = user.id;
+  console.log("✅ Logged-in userId:", userId);
+
+  // ✅ Clean up placeholder text before showing real user
+  if (welcomeName) {
+    let text = welcomeName.textContent.trim();
+    if (text.toLowerCase().includes("welcome")) {
+      text = text.replace(/welcome[, ]*/gi, "");
+    }
+    if (text.toLowerCase() === "user") {
+      text = "";
+    }
+
+    // Safely update with real user name
+    welcomeName.textContent = `Welcome, ${user.firstName}`;
+    welcomeName.style.visibility = "visible";
   }
+
+  // ✅ Update top-right user button
+  if (userBtn) {
+    userBtn.textContent = `${user.firstName} ▾`;
+  }
+
+  // ✅ Hide loading screen and show real dashboard
+  if (loadingScreen) loadingScreen.style.display = "none";
+  if (mainContent) mainContent.style.display = "block";
+
+} catch (err) {
+  console.error("❌ Not logged in:", err);
+  window.location.href = "./login.html";
+  return;
+}
 
   // ✅ Step 2: Fetch notifications from backend
   try {
