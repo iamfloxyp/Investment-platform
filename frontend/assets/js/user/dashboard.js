@@ -11,18 +11,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const API_BASE = window.API_BASE;
   let userId = null;
 
-  // ===== Loader and content control =====
-const mainContent = document.getElementById("mainContent");
+  const mainContent = document.getElementById("mainContent");
 const loadingScreen = document.getElementById("loadingScreen");
 
 if (mainContent) mainContent.style.display = "none";
 if (loadingScreen) {
-  loadingScreen.innerHTML = `<p>Loading your dashboard...</p>`;
-  loadingScreen.style.display = "flex";
-  loadingScreen.style.alignItems = "center";
-  loadingScreen.style.justifyContent = "center";
-  loadingScreen.style.height = "80vh";
-  loadingScreen.style.color = "#8dbbf0";
+  loadingScreen.style.display = "block";
+  loadingScreen.textContent = "Loading your dashboard...";
 }
 
 try {
@@ -35,9 +30,9 @@ try {
   if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
   if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
 
-  // ✅ Hide loader and show main content
+  // ✅ Final reveal — simple, no transitions
   if (loadingScreen) loadingScreen.style.display = "none";
-  if (mainContent) mainContent.classList.add("visible")
+  if (mainContent) mainContent.style.display = "block";
 } catch (err) {
   console.error("❌ Not logged in:", err);
   window.location.href = "./login.html";
