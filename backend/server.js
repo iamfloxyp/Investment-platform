@@ -63,7 +63,7 @@ app.use("/api/deposits", depositRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/external", externalRoutes);
-app.use("/api", withdrawRoutes); // ✅ clearer path
+app.use("/api/withdraw", withdrawRoutes); // ✅ clearer path
 app.use("/api/referrals", referralRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
