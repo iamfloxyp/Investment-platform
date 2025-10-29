@@ -24,7 +24,7 @@ import testEmailRoute from "./routes/testEmail.js";
 
 // ===== IMPORT MODELS =====
 import Deposit from "./models/depositModel.js";
-import Withdraw from "./models/withdrawModel.js";
+import Withdrawal from "./models/withdrawModel.js";
 
 const app = express();
 

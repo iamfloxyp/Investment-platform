@@ -5,6 +5,7 @@ import {
   getPendingWithdrawals,
   approveWithdrawal, // ✅ new import
 } from "../controllers/withdrawController.js";
+import Withdrawal from "../models/withdrawModel.js"
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -24,7 +25,7 @@ router.get("/withdrawals/user/total/:id", protect, async (req, res) => {
     const userId = req.params.id;
 
     // ✅ Get all approved or completed withdrawals for this user
-    const withdrawals = await withdraw.find({
+    const withdrawals = await Withdrawal.find({
       user: userId,
       status: { $in: ["approved", "completed"] },
     });

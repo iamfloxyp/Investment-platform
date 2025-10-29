@@ -36,6 +36,9 @@ const userSchema = new mongoose.Schema(
       bnb: { type: Number, default: 0 },
       bch: { type: Number, default: 0 },
       tron: { type: Number, default: 0 },
+      ltc: { type: Number, default: 0 },
+      xrp: { type: Number, default: 0 },
+      doge: { type: Number, default: 0 },
     },
     // ✅ Wallet addresses for each crypto
   walletAddresses: {
