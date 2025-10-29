@@ -102,7 +102,7 @@ mongoose
       );
       console.log(`✅ Updated deposits: ${result1.modifiedCount}`);
 
-      const result2 = await Withdraw.updateMany(
+      const result2 = await Withdrawal.updateMany(
         { userId: { $exists: true } },
         [
           { $set: { user: "$userId" } },
