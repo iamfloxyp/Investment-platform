@@ -87,6 +87,10 @@ function showError(msg) {
 
       // ✅ Optional cleanup — clear referral cookie after successful signup
       document.cookie = "refCode=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      // ✅ Clear any previous session or cookie before continuing
+document.cookie = "emuntra_user_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+document.cookie = "emuntra_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+localStorage.clear();
 
       // ✅ Redirect to verify page
       window.location.href = `./verify.html?email=${encodeURIComponent(email)}`;
@@ -143,6 +147,10 @@ function showError(msg) {
 
       // Save minimal info if needed
       localStorage.setItem("userId", userData.id);
+      // ✅ Clear any lingering session from another user
+document.cookie = "emuntra_user_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+document.cookie = "emuntra_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+localStorage.clear();
 
       window.location.href = "./dashboard.html";
     } catch (err) {
