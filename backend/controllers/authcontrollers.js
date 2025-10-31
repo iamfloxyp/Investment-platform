@@ -16,11 +16,12 @@ const setCookie = (res, token, role) => {
     role === "admin" ? "emuntra_admin_token" : "emuntra_user_token";
 
   res.cookie(cookieName, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
+  httpOnly: true,
+  secure: true, // ✅ always secure since you’re on HTTPS (Render + Vercel)
+  sameSite: "none", // ✅ allow cross-domain cookie (Vercel <-> Render)
+  path: "/", // ✅ ensures cookie is available site-wide
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
 };
 
 // 📩 Send Email Verification Code
