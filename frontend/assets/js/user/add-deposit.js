@@ -50,6 +50,14 @@ document.addEventListener("DOMContentLoaded", () => {
           maximumFractionDigits: 2,
         })}`;
       });
+
+      // ✅ ADD THIS SECTION — SHOW AVAILABLE BALANCE ON PAGE
+      const availableEl = document.getElementById("availableBalance");
+      if (availableEl) {
+        const balance = user.availableBalance ?? user.balance ?? 0;
+        availableEl.textContent = `$${balance.toFixed(2)}`;
+      }
+
     } catch (err) {
       console.error("❌ Auth Error:", err);
       alert("Session expired. Please log in again.");

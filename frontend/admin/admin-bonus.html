@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Bonus Panel</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Admin CSS -->
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+
+  <style>
+    .bonus-container {
+      margin-top: 30px;
+      padding: 25px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      max-width: 500px;
+    }
+    .bonus-container h2 {
+      color: #102630;
+      margin-bottom: 20px;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    button {
+      background: #102630;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    button:hover { background: #153b4a; }
+    #applyAll {
+      background: #126e2c;
+    }
+    #applyAll:hover {
+      background: #0f5a24;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2><i class="fa-solid fa-shield-halved"></i> ADMIN</h2>
+    <div class="close-btn" id="closeSidebar">
+      <i class="fa-solid fa-xmark"></i>
+    </div>
+    <ul>
+      <li><a href="admin.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="users.html"><i class="fa-solid fa-users"></i> Users Management</a></li>
+      <li><a href="transactions.html"><i class="fa-solid fa-credit-card"></i> Transactions</a></li>
+      <li><a href="admin-bonus.html" class="active"><i class="fa-solid fa-gift"></i> Bonus Management</a></li>
+      <li><a href="admin-settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="hamburger" id="hamburgerBtn">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="search-box">
+        <input type="text" placeholder="Search users..." />
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <div class="profile">
+        <i class="fa-solid fa-user-circle" id="profileIcon"></i>
+        <div class="dropdown" id="profileDropdown">
+          <ul>
+            <li><i class="fa-solid fa-id-card"></i> View Profile</li>
+            <li><i class="fa-solid fa-gear"></i> Settings</li>
+            <li><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- Bonus Section -->
+    <section class="dashboard">
+      <div class="bonus-container">
+        <h2>🎁 Admin Bonus Control Panel</h2>
+
+        <label for="userSelect">Select User:</label>
+        <select id="userSelect">
+          <option>Loading users...</option>
+        </select>
+
+        <label for="bonusAmount">Bonus Amount ($):</label>
+        <input type="number" id="bonusAmount" placeholder="Enter bonus amount" />
+
+        <button id="addBonusBtn">Add Bonus to Selected User</button>
+        <button id="applyAll">🎉 Apply Bonus to All Users (Tiered)</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- JS Scripts -->
+  <script src="../assets/js/admin/config.js"></script>
+  <script src="../assets/js/admin/admin.js"></script>
+  <script>
+  // ✅ Base API depending on environment
+  const API_BASE = window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1")
+    ? "http://127.0.0.1:4000"
+    : "https://investment-platform-1-qjx8.onrender.com";
+
+  // ✅ Reusable popup notification function
+  function showPopup(message, type = "success") {
+    // Create popup container if not already present
+    let popupContainer = document.querySelector(".popup-container");
+    if (!popupContainer) {
+      popupContainer = document.createElement("div");
+      popupContainer.className = "popup-container";
+      document.body.appendChild(popupContainer);
+    }
+
+    // Create individual popup
+    const popup = document.createElement("div");
+    popup.className = `popup-message ${type}`;
+    popup.textContent = message;
+    popupContainer.appendChild(popup);
+
+    // Animate in
+    setTimeout(() => popup.classList.add("show"), 10);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      popup.classList.remove("show");
+      setTimeout(() => popup.remove(), 300);
+    }, 3000);
+  }
+
+  // ✅ Inject popup styles (lightweight)
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .popup-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .popup-message {
+      background: #102630;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+    .popup-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .popup-message.error {
+      background: #b63c3c;
+    }
+    .popup-message.success {
+      background: #126e2c;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ✅ Load all users in dropdown
+  async function loadUsers() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/users`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load users");
+
+      const users = await res.json();
+      const select = document.getElementById("userSelect");
+      select.innerHTML = "";
+
+      if (!users.length) {
+        const opt = document.createElement("option");
+        opt.textContent = "No users found";
+        select.appendChild(opt);
+        return;
+      }
+
+      users.forEach(u => {
+        const option = document.createElement("option");
+        option.value = u._id;
+        option.textContent = `${u.firstName || ""} ${u.lastName || ""} (${u.email})`;
+        select.appendChild(option);
+      });
+
+      console.log("✅ Users loaded successfully");
+    } catch (err) {
+      console.error("❌ Error loading users:", err);
+      showPopup("Error loading users. Please refresh.", "error");
+    }
+  }
+
+  // ✅ Add bonus to single user
+  document.getElementById("addBonusBtn").addEventListener("click", async () => {
+    const userId = document.getElementById("userSelect").value;
+    const bonusAmount = document.getElementById("bonusAmount").value;
+
+    if (!userId || !bonusAmount) {
+      showPopup("Please select a user and enter a bonus amount.", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/bonus`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId, bonusAmount }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error applying bonus");
+
+      // ✅ Show popup success
+      showPopup(`🎁 ${data.message}`, "success");
+
+      // 🧹 Clear input fields after success
+      document.getElementById("bonusAmount").value = "";
+      document.getElementById("userSelect").selectedIndex = 0;
+
+    } catch (err) {
+      console.error("❌ Error adding bonus:", err);
+      showPopup("Failed to add bonus. Please try again.", "error");
+    }
+  });
+
+  // ✅ Apply bonus to all users (tiered)
+  document.getElementById("applyAll").addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to apply tiered bonus to ALL users?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/bonus/all`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      showPopup(`🎉 ${data.message}`, "success");
+
+      // 🧹 Clear inputs after success
+      document.getElementById("bonusAmount").value = "";
+      document.getElementById("userSelect").selectedIndex = 0;
+
+    } catch (err) {
+      console.error("❌ Error applying bonus to all:", err);
+      showPopup("Error applying bonus to all users.", "error");
+    }
+  });
+
+  // ✅ Wait until DOM is ready
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      loadUsers();
+    }, 1200);
+  });
+</script>
+</body>
+</html>

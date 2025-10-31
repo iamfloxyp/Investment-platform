@@ -52,6 +52,27 @@ const userSchema = new mongoose.Schema(
     xrp: { type: String, default: "" },
     doge: { type: String, default: "" },
   },
+  eactiveDeposit: {
+  type: Number,
+  default: 0,
+},
+totalDeposits: {
+  type: Number,
+  default: 0,
+},
+earnedTotal: {
+  type: Number,
+  default: 0,
+},
+dailyProfit: {
+  type: Number,
+  default: 0,
+},
+lastProfitDate: {
+  type: String, // store date like "2025-10-29"
+  default: "",
+},
+
 
     // 📨 Email verification fields
     verifyCodeHash: { type: String, select: false },

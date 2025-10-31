@@ -9,6 +9,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 /* ============================================================
    ✅ ADMIN CREATES DEPOSIT FOR USER (NOWPAYMENTS + EXISTING LOGIC)
 ============================================================ */
+// controllers/depositController.js
 export const addDepositForUser = async (req, res) => {
   try {
     console.log("🟢 Deposit request received:", req.body);
@@ -36,14 +37,84 @@ export const addDepositForUser = async (req, res) => {
     if (!user) return res.status(404).json({ msg: "User not found" });
 
     /* ============================================================
-       ✅ CREATE PAYMENT LINK WITH NOWPAYMENTS
+       ✅ MERGE LOGIC: Check if user already has same plan deposit
+    ============================================================ */
+// ============================================================
+// ✅ Check if user already has a deposit for this plan
+// ============================================================
+const existingDeposit = await Deposit.findOne({ user: userId, plan });
+
+if (existingDeposit) {
+  console.log("⚡ Existing deposit found. Creating new payment for additional amount...");
+
+  try {
+    // ✅ Create new NowPayments invoice for top-up
+    const paymentResponse = await axios.post(
+      "https://api.nowpayments.io/v1/invoice",
+      {
+        price_amount: amount,
+        price_currency: currency || "usd",
+        pay_currency: method || "btc",
+        order_id: `emuntra_${Date.now()}`,
+        order_description: `Additional deposit of $${amount} to ${plan} plan by ${user.firstName}`,
+      },
+      {
+        headers: {
+          "x-api-key": process.env.NOWPAYMENTS_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // ✅ Build the payment link safely
+    let paymentLink = paymentResponse.data.invoice_url;
+    if (!paymentLink?.startsWith("https://")) {
+      paymentLink = paymentLink.replace(/^http:\/\//, "https://");
+    }
+    if (!paymentLink.includes("nowpayments.io")) {
+      paymentLink = `https://nowpayments.io/payment?iid=${paymentResponse.data.invoice_id}`;
+    }
+
+    console.log("✅ Payment link for existing plan:", paymentLink);
+
+    // ✅ Create a new pending deposit record (this one tracks the top-up)
+    const newDeposit = new Deposit({
+      user: userId,
+      amount,
+      method,
+      plan,
+      note: `Top-up for existing ${plan} plan`,
+      status: "pending",
+      type: "deposit",
+    });
+
+    await newDeposit.save();
+
+    await Notification.create({
+      user: userId,
+      type: "deposit",
+      message: `🆕 A new payment link has been created for your additional $${amount} deposit under ${plan} plan.`,
+    });
+
+    return res.status(201).json({
+      msg: "Payment link created for existing plan deposit.",
+      deposit: newDeposit,
+      paymentLink,
+    });
+  } catch (npErr) {
+    console.error("❌ NowPayments error:", npErr.message);
+    return res.status(500).json({ msg: "Error connecting to payment server" });
+  }
+}
+    /* ============================================================
+       ✅ CREATE PAYMENT LINK WITH NOWPAYMENTS (New Plan)
     ============================================================ */
     const paymentResponse = await axios.post(
       "https://api.nowpayments.io/v1/invoice",
       {
         price_amount: amount,
-        price_currency: currency || "usd", // You can change to "ngn" if needed
-        pay_currency: method || "btc", // Example: btc, eth, usdt, etc.
+        price_currency: currency || "usd",
+        pay_currency: method || "btc",
         order_id: `emuntra_${Date.now()}`,
         order_description: `Deposit for ${plan} plan by ${user.firstName}`,
       },
@@ -55,22 +126,20 @@ export const addDepositForUser = async (req, res) => {
       }
     );
 
-    // ✅ Handle payment link (convert http to https if necessary)
-   let paymentLink = paymentResponse.data.invoice_url;
+    let paymentLink = paymentResponse.data.invoice_url;
 
-// ✅ Force HTTPS and rebuild if NowPayments returns insecure link
-if (!paymentLink?.startsWith("https://")) {
-  paymentLink = paymentLink.replace(/^http:\/\//, "https://");
-}
+    // ✅ Ensure HTTPS
+    if (!paymentLink?.startsWith("https://")) {
+      paymentLink = paymentLink.replace(/^http:\/\//, "https://");
+    }
+    if (!paymentLink.includes("nowpayments.io")) {
+      paymentLink = `https://nowpayments.io/payment?iid=${paymentResponse.data.invoice_id}`;
+    }
 
-// ✅ Ensure it still points to NowPayments
-if (!paymentLink.includes("nowpayments.io")) {
-  paymentLink = `https://nowpayments.io/payment?iid=${paymentResponse.data.invoice_id}`;
-}
+    console.log("✅ Final verified secure payment link:", paymentLink);
 
-console.log("✅ Final verified secure payment link:", paymentLink);
     /* ============================================================
-       ✅ SAVE DEPOSIT AS PENDING
+       ✅ SAVE NEW DEPOSIT AS PENDING
     ============================================================ */
     const depositStatus = status || "pending";
     const deposit = new Deposit({
@@ -81,54 +150,22 @@ console.log("✅ Final verified secure payment link:", paymentLink);
       note,
       status: depositStatus,
       type: "deposit",
-      paymentLink,
     });
 
     await deposit.save();
-    console.log("✅ Deposit saved successfully:", deposit._id);
 
-    /* ============================================================
-       ⚠️ DO NOT SEND EMAIL OR IN-APP NOTIFICATION YET
-       Email + notification will be triggered after admin approval
-    ============================================================ */
-    /* ============================================================
-   ✅ SEND EMAIL + IN-APP NOTIFICATION AFTER APPROVAL
-============================================================ */
-try {
-  // 📨 Create in-app notification
-  await Notification.create({
-    userId: deposit.user,
-    title: "Deposit Approved ✅",
-    message: `Your deposit of $${deposit.amount} for the ${deposit.plan} plan has been approved.`,
-  });
-
-  // 📧 Send email notification
-  await sendEmail({
-    to: user.email,
-    subject: "Your Deposit Has Been Approved ✅",
-    html: `
-      <div style="font-family:Arial,sans-serif;line-height:1.5;">
-        <h2 style="color:#102630;">Deposit Approved</h2>
-        <p>Hi ${user.firstName || "Investor"},</p>
-        <p>Your deposit of <b>$${deposit.amount}</b> for the <b>${deposit.plan}</b> plan has been approved successfully.</p>
-        <p>You can now view it in your <a href="https://emuntra.com/user/dashboard.html">Emuntra Dashboard</a>.</p>
-        <br>
-        <p style="color:#555;">Thank you for investing with Emuntra!</p>
-      </div>
-    `,
-  });
-
-  console.log("📩 Email + in-app notification sent successfully");
-} catch (notifyErr) {
-  console.error("⚠️ Notification/Email error:", notifyErr.message);
-}
+    // 📨 In-app notification
+    await Notification.create({
+      user: userId,
+      type: "deposit",
+      message: `🆕 Deposit of $${amount} created under ${plan} plan.`,
+    });
 
     return res.status(201).json({
-      msg: "Deposit created. Complete payment using the provided link.",
+      msg: "New deposit created successfully.",
       deposit,
       paymentLink,
     });
-
   } catch (err) {
     console.error("❌ addDepositForUser error:", err.message);
     return res.status(500).json({ msg: "Server error while creating deposit" });

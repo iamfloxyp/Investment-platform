@@ -23,14 +23,14 @@ router.delete("/admin/delete/:depositId", protect, adminOnly, deleteDeposit);
 /* ============================================================
    ✅ USER ROUTES
 ============================================================ */
+router.post("/add", protect, addDepositForUser);
 router.post("/", protect, addDepositForUser);
 router.get("/user/:userId", protect, getUserDeposits);
 
 /* ============================================================
    ✅ NOWPAYMENTS WEBHOOK ROUTE (AUTO PAYMENT UPDATES)
 ============================================================ */
-// 🔔 This route will be called automatically by NOWPayments
-// when a deposit is completed or confirmed on the blockchain.
-router.post("/webhook/nowpayments", express.json(), handleNowPaymentsIPN);
+// ⚠️ Changed path name slightly to avoid conflict with paymentRoutes.js
+router.post("/webhook/ipn", express.json(), handleNowPaymentsIPN);
 
 export default router;

@@ -96,6 +96,13 @@
         </tr>
       </thead>
       <tbody id="notifTableBody">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+ 
+  <button id="clearAllBtn" 
+    style="background:#d9534f;color:#fff;border:none;padding:8px 14px;border-radius:5px;cursor:pointer;">
+    Clear All
+  </button>
+</div>
         <!-- Filled by JS -->
       </tbody>
     </table>
@@ -143,53 +150,227 @@
   <script src="../assets/js/user/dashboard.js"></script>
 
   <!-- ✅ FIXED SCRIPT -->
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+ <script>
+  document.getElementById("year").textContent = new Date().getFullYear();
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const notifTableBody = document.getElementById("notifTableBody");
+  document.addEventListener("DOMContentLoaded", async () => {
+    const notifTableBody = document.getElementById("notifTableBody");
+    const mainContent = document.getElementById("mainContent");
+    const notifBadge = document.getElementById("notifBadge");
+    const clearAllBtn = document.getElementById("clearAllBtn");
 
-      const isLocal =
-        window.location.hostname.includes("127.0.0.1") ||
-        window.location.hostname.includes("localhost");
-      const API_BASE = isLocal
-        ? "http://127.0.0.1:4000"
-        : "https://investment-platform-1-qjx8.onrender.com";
+    const isLocal =
+      window.location.hostname.includes("127.0.0.1") ||
+      window.location.hostname.includes("localhost");
+    const API_BASE = isLocal
+      ? "http://127.0.0.1:4000"
+      : "https://investment-platform-1-qjx8.onrender.com";
 
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // ✅ Popup message for success/error
+    function showPopup(message, isError = false) {
+      const popup = document.createElement("div");
+      popup.textContent = message;
+      popup.style.position = "fixed";
+      popup.style.bottom = "30px";
+      popup.style.right = "30px";
+      popup.style.background = isError ? "#d9534f" : "#4BB543";
+      popup.style.color = "#fff";
+      popup.style.padding = "12px 20px";
+      popup.style.borderRadius = "5px";
+      popup.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
+      popup.style.zIndex = "9999";
+      document.body.appendChild(popup);
+      setTimeout(() => popup.remove(), 2500);
+    }
+
+    // ✅ Confirmation popup
+    function showConfirmPopup(message, onConfirm) {
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100%";
+      overlay.style.height = "100%";
+      overlay.style.background = "rgba(0,0,0,0.4)";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+      overlay.style.zIndex = "9999";
+
+      const box = document.createElement("div");
+      box.style.background = "#fff";
+      box.style.padding = "25px";
+      box.style.borderRadius = "8px";
+      box.style.textAlign = "center";
+      box.style.width = "300px";
+      box.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
+
+      const text = document.createElement("p");
+      text.textContent = message;
+      text.style.marginBottom = "20px";
+
+      const btnContainer = document.createElement("div");
+      btnContainer.style.display = "flex";
+      btnContainer.style.justifyContent = "space-around";
+
+      const yesBtn = document.createElement("button");
+      yesBtn.textContent = "Yes, Delete";
+      yesBtn.style.background = "#d9534f";
+      yesBtn.style.color = "#fff";
+      yesBtn.style.border = "none";
+      yesBtn.style.padding = "8px 15px";
+      yesBtn.style.borderRadius = "5px";
+      yesBtn.style.cursor = "pointer";
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.style.background = "#6c757d";
+      cancelBtn.style.color = "#fff";
+      cancelBtn.style.border = "none";
+      cancelBtn.style.padding = "8px 15px";
+      cancelBtn.style.borderRadius = "5px";
+      cancelBtn.style.cursor = "pointer";
+
+      btnContainer.append(cancelBtn, yesBtn);
+      box.append(text, btnContainer);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      yesBtn.addEventListener("click", () => {
+        document.body.removeChild(overlay);
+        onConfirm();
+      });
+      cancelBtn.addEventListener("click", () => {
+        document.body.removeChild(overlay);
+      });
+    }
+
+    // ✅ Clear All Notifications
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener("click", () => {
+        showConfirmPopup("Are you sure you want to delete all notifications?", async () => {
+          try {
+            const delAllRes = await fetch(`${API_BASE}/api/notifications`, {
+              method: "DELETE",
+              credentials: "include",
+            });
+            if (delAllRes.ok) {
+              notifTableBody.innerHTML = `
+                <tr><td colspan="4" style="text-align:center; color:#777;">All notifications cleared</td></tr>`;
+              showPopup("All notifications deleted successfully");
+
+              // 🔄 Reset badge count
+              if (notifBadge) {
+                notifBadge.textContent = data.unreadcount;
+                notifBadge.style.display = data.unreadcount > 0 ? " inline-block" : "none";
+              }
+            } else {
+              showPopup("Failed to clear notifications", true);
+            }
+          } catch (err) {
+            console.error("❌ Error deleting all notifications:", err);
+            showPopup("Error deleting notifications", true);
+          }
+        });
+      });
+    }
+
+    // ✅ Load Notifications with Pagination
+    async function loadNotifications(page = 1) {
       try {
-        const res = await fetch(`${API_BASE}/api/notifications`, {
+        const res = await fetch(`${API_BASE}/api/notifications?page=${page}&limit=10`, {
           credentials: "include",
         });
-        if (!res.ok) throw new Error("Failed to fetch notifications");
 
-        const notifications = await res.json();
+        if (!res.ok) throw new Error("Failed to fetch notifications");
+        const { notifications, currentPage: pageNum, totalPages: pages } = await res.json();
+
+        currentPage = pageNum;
+        totalPages = pages;
 
         if (!notifications.length) {
           notifTableBody.innerHTML = `
-            <tr><td colspan="3" style="text-align:center; color:#777;">No notifications yet</td></tr>`;
+            <tr><td colspan="4" style="text-align:center; color:#777;">No notifications yet</td></tr>`;
           return;
         }
 
         notifTableBody.innerHTML = notifications
-          .map((n) => {
-            const date = n.createdAt
-              ? new Date(n.createdAt).toLocaleDateString()
-              : "-";
-            const status = n.read ? "Read" : "Unread";
-            return `
-              <tr class="${!n.read ? "notif-unread" : ""}">
-                <td>${n.message || "No message"}</td>
-                <td>${date}</td>
-                <td>${status}</td>
-              </tr>`;
-          })
+          .map(
+            (n) => `
+            <tr class="${!n.read ? "notif-unread" : ""}">
+              <td>${n.message}</td>
+              <td>${new Date(n.createdAt).toLocaleDateString()}</td>
+              <td>${n.read ? "Read" : "Unread"}</td>
+              <td><button class="delete-btn" data-id="${n._id}" style="background:#d9534f;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+            </tr>`
+          )
           .join("");
+
+        // 🗑️ Delete individual notifications
+        document.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-id");
+            showConfirmPopup("Delete this notification?", async () => {
+              const delRes = await fetch(`${API_BASE}/api/notifications/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+              });
+              if (delRes.ok) {
+                btn.closest("tr").remove();
+                showPopup("Notification deleted");
+
+                // 🔄 Update badge count
+                if (notifBadge) {
+                  let count = parseInt(notifBadge.textContent || "0");
+                  count = Math.max(0, count - 1);
+                  notifBadge.textContent = count;
+                  notifBadge.style.display = count > 0 ? "inline-block" : "none";
+                }
+              } else {
+                showPopup("Error deleting notification", true);
+              }
+            });
+          });
+        });
+
+        renderPaginationControls();
       } catch (err) {
         console.error("❌ Error loading notifications:", err);
         notifTableBody.innerHTML = `
-          <tr><td colspan="3" style="text-align:center; color:red;">Error loading notifications</td></tr>`;
+          <tr><td colspan="4" style="text-align:center; color:red;">Error loading notifications</td></tr>`;
       }
-    });
-  </script>
-</body>
-</html>
+    }
+
+    // ✅ Pagination Controls
+    function renderPaginationControls() {
+      let paginationDiv = document.getElementById("paginationControls");
+      if (!paginationDiv) {
+        paginationDiv = document.createElement("div");
+        paginationDiv.id = "paginationControls";
+        paginationDiv.style.marginTop = "15px";
+        paginationDiv.style.textAlign = "center";
+        mainContent.appendChild(paginationDiv);
+      }
+
+      paginationDiv.innerHTML = `
+        <button id="prevPage" ${currentPage === 1 ? "disabled" : ""} style="margin-right:8px;padding:8px 14px;border:none;background:#102630;color:#fff;border-radius:5px;cursor:pointer;">⬅️ Prev</button>
+        <span style="margin:0 8px;">Page ${currentPage} of ${totalPages}</span>
+        <button id="nextPage" ${currentPage === totalPages ? "disabled" : ""} style="margin-left:8px;padding:8px 14px;border:none;background:#102630;color:#fff;border-radius:5px;cursor:pointer;">Next ➡️</button>
+      `;
+
+      document.getElementById("prevPage")?.addEventListener("click", () => {
+        if (currentPage > 1) loadNotifications(currentPage - 1);
+      });
+
+      document.getElementById("nextPage")?.addEventListener("click", () => {
+        if (currentPage < totalPages) loadNotifications(currentPage + 1);
+      });
+    }
+
+    // 🚀 Load first page
+    loadNotifications(1);
+  });
+</script>

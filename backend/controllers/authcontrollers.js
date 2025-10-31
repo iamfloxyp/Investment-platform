@@ -9,15 +9,18 @@ const signToken = (user) =>
     expiresIn: process.env.JWT_EXPIRES || "7d",
   });
 
-// 🍪 Set Auth Cookie (universal fix)
-const setCookie = (res, token) => {
-  const isProd = process.env.NODE_ENV === "production";
-  res.cookie("emuntra_token", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",  // important for https
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-});
+// 🍪 Set Auth Cookie – handles both user and admin tokens (now distinct)
+const setCookie = (res, token, role) => {
+  // ✅ Separate cookies to avoid user/admin confusion
+  const cookieName =
+    role === "admin" ? "emuntra_admin_token" : "emuntra_user_token";
+
+  res.cookie(cookieName, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
 };
 
 // 📩 Send Email Verification Code
@@ -65,7 +68,7 @@ const register = async (req, res) => {
       lastName,
       email,
       password,
-      referralCode, // ✅ save here
+      referralCode,
       referredBy: referredByUser ? referredByUser._id : null,
     });
 
@@ -85,7 +88,7 @@ const register = async (req, res) => {
     console.error("Register error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
-}; 
+};
 
 // ✅ Verify Email
 const verifyEmail = async (req, res) => {
@@ -119,9 +122,8 @@ const verifyEmail = async (req, res) => {
 
     // ✅ Create JWT and set cookie
     const token = signToken(user);
-    setCookie(res, token);
+    setCookie(res, token, user.role);
 
-    // ✅ Explicitly confirm cookie delivery with JSON response
     return res.status(200).json({
       success: true,
       message: "Email verified successfully",
@@ -172,7 +174,10 @@ const login = async (req, res) => {
         .json({ message: "Please verify your email first" });
 
     const token = signToken(user);
-    setCookie(res, token);
+
+    // ✅ Clear any old admin cookie before setting user cookie
+    res.clearCookie("emuntra_admin_token");
+    setCookie(res, token, user.role);
 
     return res.json({
       message: "Login successful",
@@ -192,7 +197,13 @@ const login = async (req, res) => {
 
 // 🔓 Logout
 const logout = (req, res) => {
-  res.clearCookie("emuntra_token", {
+  // ✅ Clear both cookies (admin and user)
+  res.clearCookie("emuntra_user_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  res.clearCookie("emuntra_admin_token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -200,7 +211,7 @@ const logout = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-// ✅ FINAL FIXED VERSION – No CLIENT_URL= in email, works both locally & on Render
+// ✅ Forgot Password
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -211,33 +222,18 @@ const forgotPassword = async (req, res) => {
 
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "15m",
-    });// in forgotPassword handler, before sending email
-console.log("ISSUING RESET TOKEN", {
-  host: req.headers.host,
-  nodeEnv: process.env.NODE_ENV,
-  clientUrl: process.env.CLIENT_URL,
-  secretLen: (process.env.JWT_SECRET || "").length,
-});
+    });
 
-    // ✅ Always prefer Render’s environment value
     let frontendBaseUrl = process.env.CLIENT_URL;
-
-    // ✅ Fallback logic for local testing or empty env
     if (!frontendBaseUrl || frontendBaseUrl.includes("127.0.0.1")) {
-      if (process.env.NODE_ENV === "production") {
-      frontendBaseUrl = "https://investment-platform-eta.vercel.app";
-      } else {
-        frontendBaseUrl = "http://127.0.0.1:5500/frontend";
-      }
+      frontendBaseUrl =
+        process.env.NODE_ENV === "production"
+          ? "https://investment-platform-eta.vercel.app"
+          : "http://127.0.0.1:5500/frontend";
     }
 
-    // ✅ Make sure there’s NO 'CLIENT_URL=' in the final string
     const cleanBaseUrl = frontendBaseUrl.replace("CLIENT_URL=", "").trim();
-
     const resetUrl = `${cleanBaseUrl}/user/reset-password.html?token=${resetToken}`;
-
-    console.log("🌍 Using FRONTEND:", cleanBaseUrl);
-    console.log("🔗 Final Reset Link:", resetUrl);
 
     await sendEmail({
       to: user.email,
@@ -256,47 +252,26 @@ console.log("ISSUING RESET TOKEN", {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-// ✅ FINAL WORKING resetPassword controller
+
+// ✅ Reset Password
 const resetPassword = async (req, res) => {
   try {
     const token = req.query.token;
     const { password } = req.body;
 
-    if (!token) {
-      console.log("❌ Missing token");
+    if (!token)
       return res.status(400).json({ message: "Invalid or missing token" });
-    }
-
-    if (!password) {
-      console.log("❌ Missing password");
+    if (!password)
       return res.status(400).json({ message: "Password is required" });
-    }
 
-    // ✅ Decode the token safely
-    let decoded;
-    try {
-      decoded = jwt.verify(token.trim(), process.env.JWT_SECRET.trim());
-    } catch (err) {
-      console.error("❌ Token verification failed:", err.message);
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    console.log("✅ Decoded token:", decoded);
-
-    // ✅ Find the user
+    const decoded = jwt.verify(token.trim(), process.env.JWT_SECRET.trim());
     const user = await User.findById(decoded.id);
-    if (!user) {
-      console.log("❌ User not found");
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // ✅ Save new password
     user.password = password;
     await user.save();
 
-    console.log(`✅ Password reset successful for ${user.email}`);
     return res.json({ message: "Password reset successful" });
-
   } catch (error) {
     console.error("❌ Reset Password Error:", error.message);
     return res.status(500).json({
@@ -306,40 +281,73 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// ✅ Admin Login Controller
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied — not admin" });
+    }
+
+    // ✅ Sign and set cookie for admin only
+    const token = jwt.sign(
+      { id: user._id, role: "admin" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // ✅ Clear user cookie before setting admin cookie
+    res.clearCookie("emuntra_user_token");
+    setCookie(res, token, "admin");
+
+    res.json({
+      message: "Admin login successful",
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Admin login error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // 🧠 Get Logged In User
 const getMe = async (req, res) => {
   try {
-    // Fetch fresh user data from DB to ensure latest fields (wallets, etc.)
     const user = await User.findById(req.user._id).select(
-      "firstName lastName email role balance wallets walletAddresses referralCode referredBy"
+      "firstName lastName email role balance wallets walletAddresses referralCode referredBy earnedTotal dailyProfit"
     );
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    // ✅ Auto-generate referral code for old users who don’t have one
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     if (!user.referralCode) {
       const prefix = (user.firstName || "USR").slice(0, 3).toUpperCase();
       const code = prefix + Math.floor(1000 + Math.random() * 9000);
       user.referralCode = code;
       await user.save();
-      console.log("✅ Auto referralCode created for ${user.email}: ${code}");
+      console.log(`✅ Auto referralCode created for ${user.email}: ${code}`);
     }
 
-
-    // ✅ Ensure wallets always exist
     if (!user.wallets) {
-      user.wallets = {
-        btc: 0,
-        eth: 0,
-        usdt: 0,
-        bnb: 0,
-        tron: 0,
-      };
-      await user.save(); // save only if we just added wallets
+      user.wallets = { btc: 0, eth: 0, usdt: 0, bnb: 0, tron: 0 };
+      await user.save();
     }
 
-    // ✅ Respond with user data
+    const earnedTotal = Number(user.earnedTotal) || 0;
+    const dailyProfit = Number(user.dailyProfit) || 0;
+    const availableBalance = (user.balance || 0) + (user.earnedTotal || 0);
+
     res.json({
       id: user._id,
       email: user.email,
@@ -347,10 +355,13 @@ const getMe = async (req, res) => {
       lastName: user.lastName,
       role: user.role,
       balance: user.balance || 0,
+      availableBalance,
       wallets: user.wallets,
       walletAddresses: user.walletAddresses || {},
       referralCode: user.referralCode || null,
       referredBy: user.referredBy || null,
+      earnedTotal,
+      dailyProfit,
     });
   } catch (err) {
     console.error("❌ getMe error:", err);
@@ -358,6 +369,31 @@ const getMe = async (req, res) => {
   }
 };
 
+// 🧠 Admin-only route to verify admin identity
+const getAdmin = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      "firstName lastName email role"
+    );
+
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    res.json({
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (err) {
+    console.error("❌ getAdmin error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// ✅ Export all controllers together
 export {
   register,
   verifyEmail,
@@ -367,4 +403,6 @@ export {
   forgotPassword,
   resetPassword,
   getMe,
+  adminLogin,
+  getAdmin,
 };

@@ -8,6 +8,13 @@
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  integrity="sha512-HdM6Vxg7Gk3MxN9T8wZVwJkz5V4GxQ7S8uCB5uTh6S9b5Gq6Q7RHpe+G4vP0fY2jv8JmjDlF3Hy8tZgY5L+fPw=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
 </head>
 <body>
   
@@ -71,64 +78,76 @@
   <!-- MAIN DASHBOARD CONTENT -->
   <main id="mainContent">
     <div class="dashboard-header">
-      <h1><span id="welcomeName">User</span> 👋</h1>
+      <h1>Welcome, <span id="welcomeName">User</span> 👋</h1>
       <button type="button" class="invest-btn" onclick="startInvestment()">Start Investment</button>
     </div>
 
     <!-- Dashboard Cards -->
-    <section class="dashboard-cards">
+   <section class="dashboard-cards">
 
-      <div class="card" onclick="goToPage('history.html')">
-        <div class="card-content">
-          <i class="fa-solid fa-coins card-icon earned"></i>
-          <div class="card-info">
-            <h3>Earned Total</h3>
-            <p>$0.00</p>
-          </div>
-        </div>
+  <div class="card" onclick="goToPage('history.html')">
+    <div class="card-content">
+      <i class="fa-solid fa-coins card-icon earned"></i>
+      <i id="earnedInfo" class="fa-solid fa-circle-info" 
+         data-tooltip="This shows the total profit you’ve earned so far, including bonuses and completed returns."></i>
+      <div class="card-info">
+        <h3>Earned Total</h3>
+        <p id="earnedTotal">$0.00</p>
       </div>
+    </div>
+  </div>
 
-      <div class="card" onclick="goToPage('deposits.html')">
-        <div class="card-content">
-          <i class="fa-solid fa-wallet card-icon deposit"></i>
-          <div class="card-info">
-            <h3>Total Deposits</h3>
-            <p>$0.00</p>
-          </div>
-        </div>
+  <div class="card" onclick="goToPage('deposits.html')">
+    <div class="card-content">
+      <i class="fa-solid fa-wallet card-icon deposit"></i>
+      <i id="depositInfo" class="fa-solid fa-circle-info" 
+         data-tooltip="This is the total amount you’ve deposited into your investment account."></i>
+      <div class="card-info">
+        <h3>Total Deposits</h3>
+        <p>$0.00</p>
       </div>
+    </div>
+  </div>
 
-      <div class="card" onclick="goToPage('deposit.html')">
-        <div class="card-content">
-          <i class="fa-solid fa-chart-line card-icon active"></i>
-          <div class="card-info">
-            <h3>Active Deposit</h3>
-            <p>$0.00</p>
-          </div>
-        </div>
+  <div class="card" onclick="goToPage('deposit.html')">
+    <div class="card-content">
+      <i class="fa-solid fa-chart-line card-icon active"></i>
+      <i id="activeInfo" class="fa-solid fa-circle-info" 
+         data-tooltip="Your current active investment capital that is generating profit."></i>
+      <div class="card-info">
+        <h3>Active Deposit</h3>
+        <p>$0.00</p>
       </div>
+    </div>
+  </div>
 
-      <div class="card" onclick="goToPage('history.html')">
-        <div class="card-content">
-          <i class="fa-solid fa-chart-pie card-icon daily"></i>
-          <div class="card-info">
-            <h3>Daily Profit</h3>
-            <p>$0.00</p>
-          </div>
-        </div>
+  <div class="card" onclick="goToPage('history.html')">
+    <div class="card-content">
+      <i class="fa-solid fa-chart-pie card-icon daily"></i>
+      <i id="dailyInfo" class="fa-solid fa-circle-info" 
+         data-tooltip="The profit you earned today from your active deposits. Updates daily."></i>
+      <div class="card-info">
+        <h3>Daily Profit</h3>
+        <p id="dailyProfit">$0.00</p>
       </div>
+    </div>
+  </div>
 
-      <div class="card" onclick="goToPage('withdraw.html')">
-        <div class="card-content">
-          <i class="fa-solid fa-money-bill-transfer card-icon withdraw"></i>
-          <div class="card-info">
-            <h3>Total Withdraw</h3>
-            <p>$0.00</p>
-          </div>
-        </div>
+  <div class="card" onclick="goToPage('withdraw.html')">
+    <div class="card-content">
+      <i class="fa-solid fa-money-bill-transfer card-icon withdraw"></i>
+      <i id="withdrawInfo" class="fa-solid fa-circle-info" 
+         data-tooltip="The total amount you have successfully withdrawn from your account."></i>
+      <div class="card-info">
+        <h3>Total Withdraw</h3>
+        <p>$0.00</p>
       </div>
+    </div>
+  </div>
 
-    </section>
+</section>
+
+
 
     <!-- Stats Section -->
     <section class="stats-section">
@@ -252,7 +271,34 @@
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  
+document.addEventListener("DOMContentLoaded", () => {
+  const infoIcons = document.querySelectorAll(".fa-circle-info");
+
+  infoIcons.forEach((icon) => {
+    const message = icon.getAttribute("data-tooltip");
+
+    // Create tooltip element
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip-box";
+    tooltip.textContent = message;
+
+    // Insert tooltip after the icon
+    icon.parentNode.insertBefore(tooltip, icon.nextSibling);
+
+    // Handle hover show/hide with JS
+    icon.addEventListener("mouseenter", () => {
+      tooltip.classList.add("show");
+    });
+
+    icon.addEventListener("mouseleave", () => {
+      tooltip.classList.remove("show");
+    });
+  });
+});
+</script>
+
+  
   <script src="../assets/js/user/config.js"></script>
   <script src="../assets/js/user/dashboard.js" defer></script>
 </body>

@@ -160,6 +160,73 @@ function setupUIControls() {
     }
   });
 }
+// ===================== ADMIN PROFILE MENU (Deploy Ready) =====================
+document.addEventListener("DOMContentLoaded", () => {
+  const profileDropdown = document.getElementById("profileDropdown");
+  const profileModal = document.getElementById("profileModal");
+  const closeProfile = document.getElementById("closeProfile");
+
+  if (!profileDropdown) return; // Exit if no dropdown found
+
+  // Handle clicks inside dropdown
+  profileDropdown.addEventListener("click", async (e) => {
+    const item = e.target.closest("li");
+    if (!item) return;
+
+    const text = item.textContent.trim();
+
+    // 🔹 View Profile
+    if (text.includes("View Profile")) {
+      if (profileModal) profileModal.classList.add("show");
+    }
+
+    // 🔹 Go to Settings Page
+    if (text.includes("Settings")) {
+      window.location.href = "admin-settings.html";
+    }
+
+    // 🔹 Logout Function (✅ Works Locally + Live)
+    if (text.includes("Logout")) {
+      try {
+        // Smart base URL (auto detect local vs production)
+        const baseURL =
+          window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? "http://localhost:4000"
+            : "https://api.emuntra.com";
+
+        const res = await fetch(`${baseURL}/api/auth/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (res.ok) {
+          localStorage.clear();
+          alert("✅ Logged out successfully!");
+          window.location.href = "admin-login.html"; // ✅ redirect to admin login page
+        } else {
+          alert("⚠️ Logout failed. Please try again.");
+        }
+      } catch (err) {
+        console.error("Logout error:", err);
+        alert("❌ Error logging out. Check your connection.");
+      }
+    }
+  });
+
+  // 🔹 Close Profile Modal
+  if (closeProfile) {
+    closeProfile.addEventListener("click", () => {
+      profileModal.classList.remove("show");
+    });
+  }
+
+  // 🔹 Close dropdown when clicking outside
+  window.addEventListener("click", (e) => {
+    if (!e.target.closest(".profile")) {
+      profileDropdown.classList.remove("show");
+    }
+  });
+});
 // ✅ Initialize page logic
 document.addEventListener("DOMContentLoaded", () => {
   setupUIControls();

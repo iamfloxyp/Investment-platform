@@ -1,13 +1,17 @@
-import jwt from "jsonwebtoken";
+ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
-// 🧩 Protect Middleware
 export const protect = async (req, res, next) => {
   try {
-    // ✅ Try reading the token from cookies first
-    let token = req.cookies?.emuntra_token;
+    // ✅ Always prioritize the admin token first
+    let token = null;
+    if (req.cookies?.emuntra_admin_token) {
+      token = req.cookies.emuntra_admin_token;
+    } else if (req.cookies?.emuntra_token) {
+      token = req.cookies.emuntra_token;
+    }
 
-    // 🧠 Optional fallback for debugging (sometimes cookies don’t attach in dev)
+    // ✅ Fallback: Authorization header
     if (!token && req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
     }
@@ -19,31 +23,26 @@ export const protect = async (req, res, next) => {
     // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ Find user in database (include wallets!)
-    const user = await User.findById(decoded.id).select(
-      "firstName lastName email role balance wallets"
-    );
-
+    // ✅ Get user info
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    // ✅ Attach user data to request object
     req.user = user;
-    req.userId = decoded.id;
-    req.userRole = decoded.role;
+    req.userRole = decoded.role; // store directly
 
     next();
   } catch (error) {
-    console.error("Auth Middleware Error:", error.message);
-    return res.status(401).json({ message: "Invalid or expired token" });
+    console.error("Protect error:", error.message);
+    res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 
-// 🔒 Admin-only Middleware
+// ✅ Restrict to Admin Only
 export const adminOnly = (req, res, next) => {
   if (req.userRole !== "admin") {
-    return res.status(403).json({ message: "Admin access only" });
+    return res.status(403).json({ message: "Forbidden: Admin access only" });
   }
   next();
 };

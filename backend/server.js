@@ -4,12 +4,28 @@ import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+// 🕘 Daily Profit Scheduler
+import cron from "node-cron";
+import { runDailyProfit } from "./dailyProfitJob.js";
+
+
+// import dailyProfitJob from "./dailyProfitJob.js";
 
 // ===== LOAD ENV =====
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
-
+//  Run every day at 9 PM (US time / roughly 2 AM UTC)
+cron.schedule("0 2 * * *", async () => {
+  try {
+    console.log("⏰ Running scheduled daily profit job (2 AM UTC / 9 PM US Time)...");
+    await runDailyProfit();
+  } catch (error) {
+    console.error("❌ Error running daily profit schedule:", error.message);
+  }
+});
+console.log("✅ Daily profit scheduler initialized (runs 2 AM UTC / 9 PM US Time).");
+// dailyProfitJob();
 // ===== IMPORT ROUTES =====
 import authRoutes from "./routes/authRoutes.js";
 import depositRoutes from "./routes/depositRoutes.js";
@@ -28,9 +44,7 @@ import Withdrawal from "./models/withdrawModel.js";
 
 const app = express();
 
-// ===== MIDDLEWARE =====
-app.use(express.json());
-app.use(cookieParser());
+
 
 // ===== FIXED CORS =====
 // ===== FIXED CORS CONFIGURATION =====
@@ -57,6 +71,9 @@ app.use(
     credentials: true, // ✅ enable cookies
   })
 );
+// ===== MIDDLEWARE =====
+app.use(express.json());
+app.use(cookieParser());
 // ===== ROUTES =====
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositRoutes);
@@ -84,6 +101,15 @@ app.get("/api/_debug/np", (req, res) => {
     keyLength: key.length,
   });
 });
+// ===== SERVE FRONTEND FILES =====
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve the entire frontend folder (including /user/payment.html)
+app.use(express.static(path.join(__dirname, "frontend")));
 
 // ===== DATABASE CONNECTION =====
 mongoose

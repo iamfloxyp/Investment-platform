@@ -10,33 +10,31 @@ const API_BASE = window.API_BASE || (
 // ✅ Auth route prefix
 const API = `${API_BASE}/api/auth`;
 
-// ===== SESSION VALIDATION (Run on admin.html) =====
+// ===== SESSION VALIDATION (only on admin dashboard) =====
 document.addEventListener("DOMContentLoaded", async () => {
+  // 🧩 Run only if we are on the dashboard page
+  if (!window.location.href.includes("admin.html")) return;
+
   try {
     const meRes = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include" });
     if (!meRes.ok) throw new Error("Not logged in");
     const me = await meRes.json();
 
-    // ✅ If not admin, send back to login
     if (me.role !== "admin") {
       window.location.href = "admin-login.html";
       return;
     }
 
-    // ✅ Display admin info
     const nameEl = document.getElementById("adminName");
     const emailEl = document.getElementById("adminEmail");
     if (nameEl)
       nameEl.textContent = `${me.firstName || ""} ${me.lastName || ""}`.trim() || "Admin";
     if (emailEl) emailEl.textContent = me.email || "-";
 
-    // ✅ Load dashboard data (users, totals, etc.)
     loadUsers();
   } catch (err) {
     console.error("Auth check failed:", err.message);
-    if (!window.location.href.includes("admin-login.html")) {
-      window.location.href = "admin-login.html";
-    }
+    window.location.href = "admin-login.html";
   }
 });
 
@@ -78,7 +76,7 @@ if (form) {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // send/receive cookie

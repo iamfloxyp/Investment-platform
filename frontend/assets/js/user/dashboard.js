@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", async () => {
   const userBtn = document.getElementById("userBtn");
   const dropdownMenu = document.getElementById("dropdownMenu");
@@ -11,32 +12,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   const API_BASE = window.API_BASE;
   let userId = null;
 
+  // ===== LOADING + MAIN CONTENT HANDLING =====
+  const loadingScreen = document.getElementById("loadingScreen");
   const mainContent = document.getElementById("mainContent");
-const loadingScreen = document.getElementById("loadingScreen");
 
-if (mainContent) mainContent.style.display = "none";
-if (loadingScreen) {
-  loadingScreen.style.display = "block";
-  loadingScreen.textContent = "Loading your dashboard...";
+  if (loadingScreen) {
+    loadingScreen.style.display = "block";
+    loadingScreen.textContent = "Loading your dashboard...";
+  }
+  if (mainContent) mainContent.style.display = "none";
+
+  try {
+    // ✅ Step 1: Fetch logged-in user
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("User not authenticated");
+
+    const user = await res.json();
+    userId = user.id;
+    console.log("✅ Logged-in user:", user.firstName);
+
+    // ✅ Step 2: Update user UI
+    if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
+    // if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
+    if (welcomeName) {
+  welcomeName.textContent = user.firstName || "User";
 }
 
-try {
-  const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include" });
-  if (!res.ok) throw new Error("User not authenticated");
+    // ✅ Step 3: Show dashboard
+    if (loadingScreen) loadingScreen.style.display = "none";
+    if (mainContent) mainContent.style.display = "block";
 
-  const user = await res.json();
-  userId = user.id;
-
-  if (userBtn) userBtn.textContent = `${user.firstName} ▾`;
-  if (welcomeName) welcomeName.textContent = `Welcome, ${user.firstName}`;
-
-  // ✅ Final reveal — simple, no transitions
-  if (loadingScreen) loadingScreen.style.display = "none";
-  if (mainContent) mainContent.style.display = "block";
-} catch (err) {
-  console.error("❌ Not logged in:", err);
-  window.location.href = "./login.html";
-}
+  } catch (err) {
+    console.error("❌ Not logged in:", err);
+    window.location.href = "./login.html";
+    return;
+  } finally {
+    // ✅ SAFETY NET: Always show main section even if JS crashes mid-way
+    if (loadingScreen) loadingScreen.style.display = "none";
+    if (mainContent) mainContent.style.display = "block";
+  }
 
   // ✅ Step 2: Fetch notifications from backend
   try {
@@ -45,13 +61,15 @@ try {
     });
     if (!res.ok) throw new Error("Failed to load notifications");
 
-    const notifs = await res.json();
+    // const notifs = await res.json();
 
     // ✅ Count unread
-    const unread = notifs.filter((n) => !n.read);
-    notifBadge.textContent = unread.length;
-    notifBadge.style.display = unread.length > 0 ? "inline-block" : "none";
+   const data = await res.json();
+const notifs = Array.isArray(data) ? data : data.notifications || [];
 
+const unread = notifs.filter((n) => !n.read);
+notifBadge.textContent = unread.length;
+notifBadge.style.display = unread.length > 0 ? "inline-block" : "none";
     // ✅ Render list with scroll + footer
     notifList.innerHTML = notifs
       .map(
@@ -63,8 +81,6 @@ try {
       )
       .join("");
 
-    
-    // ✅ Make the dropdown scrollable if content is long
     notifDropdown.style.maxHeight = "300px";
     notifDropdown.style.overflowY = "auto";
 
@@ -169,10 +185,12 @@ async function loadUserFinancialStats(userId) {
     const isLocal =
       window.location.hostname.includes("127.0.0.1") ||
       window.location.hostname.includes("localhost");
+
     const API_BASE = isLocal
       ? "http://127.0.0.1:4000"
       : "https://investment-platform-1-qjx8.onrender.com";
 
+    // ✅ Fetch user's deposit/withdraw transactions
     const res = await fetch(`${API_BASE}/api/deposits/user/${userId}`, {
       credentials: "include",
     });
@@ -180,6 +198,7 @@ async function loadUserFinancialStats(userId) {
 
     const data = await res.json();
 
+    // ✅ Separate deposits and withdrawals
     const deposits = data.filter(
       (t) =>
         t.type === "deposit" &&
@@ -191,25 +210,44 @@ async function loadUserFinancialStats(userId) {
         (t.status === "approved" || t.status === "completed")
     );
 
+    // ✅ Calculate total deposit and total withdrawal
     const totalDeposit = deposits.reduce((sum, t) => sum + t.amount, 0);
     const totalWithdraw = withdrawals.reduce((sum, t) => sum + t.amount, 0);
     const activeDeposit = totalDeposit;
-    const earnedTotal = totalDeposit * 0.1;
-    const dailyProfit = totalDeposit * 0.01;
 
+    // ✅ Fetch user's current dailyProfit & earnedTotal from backend
+    const userRes = await fetch(`${API_BASE}/api/auth/me`, {
+      credentials: "include",
+    });
+    const user = await userRes.json();
+
+    // ✅ Safely convert backend values to numbers (avoid .toFixed() errors)
+    const dailyProfit = Number(user.dailyProfit) || 0;
+    const earnedTotal = Number(user.earnedTotal) || 0;
+
+    // ✅ Display user's profit data in dashboard header
+    const dailyProfitEl = document.getElementById("dailyProfit");
+    const earnedTotalEl = document.getElementById("earnedTotal");
+
+    if (dailyProfitEl) dailyProfitEl.textContent = `$${dailyProfit.toFixed(2)}`;
+    if (earnedTotalEl) earnedTotalEl.textContent = `$${earnedTotal.toFixed(2)}`;
+
+    // ✅ Update the financial cards on dashboard (if present)
     const cards = document.querySelectorAll(".card-info p");
     if (cards.length >= 5) {
-      cards[0].textContent = `$${earnedTotal.toFixed(2)}`;
-      cards[1].textContent = `$${totalDeposit.toFixed(2)}`;
-      cards[2].textContent = `$${activeDeposit.toFixed(2)}`;
-      cards[3].textContent = `$${dailyProfit.toFixed(2)}`;
-      cards[4].textContent = `$${totalWithdraw.toFixed(2)}`;
+      cards[0].textContent = `$${earnedTotal.toFixed(2)}`;      // Total Earnings
+      cards[1].textContent = `$${totalDeposit.toFixed(2)}`;     // Total Deposit
+      cards[2].textContent = `$${activeDeposit.toFixed(2)}`;    // Active Deposit
+      cards[3].textContent = `$${dailyProfit.toFixed(2)}`;      // Daily Profit
+      cards[4].textContent = `$${totalWithdraw.toFixed(2)}`;    // Total Withdraw
     }
+
+    console.log("✅ User financial stats loaded successfully");
+
   } catch (err) {
     console.error("❌ Error loading user financial stats:", err);
   }
 }
-
 // ====== Account Overview ======
 async function loadAccountOverview(userId) {
   try {
@@ -288,7 +326,6 @@ async function loadPendingWithdrawals() {
     const pending = await res.json();
     const totalPending = pending.reduce((sum, w) => sum + w.amount, 0);
 
-    // ✅ Update the dashboard pending section
     const pendingSection = document.getElementById("pendingWithdrawals");
     if (pendingSection) {
       pendingSection.textContent = `$${totalPending.toFixed(2)}`;
@@ -299,7 +336,6 @@ async function loadPendingWithdrawals() {
     console.error("❌ Error loading pending withdrawals:", err);
   }
 }
-
 
 // ====== Load Total Withdrawals ======
 async function loadTotalWithdrawals(userId) {
@@ -319,7 +355,6 @@ async function loadTotalWithdrawals(userId) {
     const data = await res.json();
     const total = data.total || 0;
 
-    // ✅ Update card value
     const withdrawCard = document.querySelector(
       ".card .card-icon.withdraw"
     )?.closest(".card")?.querySelector(".card-info p");
@@ -330,6 +365,7 @@ async function loadTotalWithdrawals(userId) {
     console.error("❌ Error loading total withdrawals:", err);
   }
 }
+
 // ====== Investment Calculator ======
 function calculateReturn() {
   const amount = parseFloat(document.getElementById("amount").value);
@@ -362,6 +398,7 @@ function resetCalc() {
 function startInvestment() {
   window.location.href = "add-deposit.html";
 }
+
 // ====== Load Crypto Wallet Balances ======
 async function loadCryptoBalances(userId) {
   try {
@@ -372,7 +409,6 @@ async function loadCryptoBalances(userId) {
       ? "http://127.0.0.1:4000"
       : "https://investment-platform-1-qjx8.onrender.com";
 
-    // ✅ Fetch user details to get wallet balances
     const res = await fetch(`${API_BASE}/api/auth/me`, {
       credentials: "include",
     });
@@ -385,13 +421,11 @@ async function loadCryptoBalances(userId) {
       return;
     }
 
-    // ✅ Map wallet balances to UI
     const cryptoItems = document.querySelectorAll(".crypto-list li");
     cryptoItems.forEach((item) => {
       const coin = item.getAttribute("data-coin");
       const balance = user.wallets[coin] || 0;
       const span = item.querySelector("span");
-
       if (span) span.textContent = `$${balance.toFixed(2)}`;
     });
 
@@ -400,3 +434,20 @@ async function loadCryptoBalances(userId) {
     console.error("❌ Error loading crypto balances:", err);
   }
 }
+
+// 🧠 Info icon toggle for tooltips
+document.addEventListener("DOMContentLoaded", () => {
+  const infoIcons = document.querySelectorAll(".info-icon");
+
+  infoIcons.forEach(icon => {
+    icon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      icon.classList.toggle("active");
+    });
+  });
+
+  // Close tooltip when clicking anywhere else
+  window.addEventListener("click", () => {
+    infoIcons.forEach(icon => icon.classList.remove("active"));
+  });
+});

@@ -1,8 +1,8 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import Deposit from "../models/depositModel.js"; // ✅ added for dashboard stats
-import Withdraw from "../models/withdrawModel.js"
-
+import Withdraw from "../models/withdrawModel.js";
+import Notification from "../models/notificationModel.js"; // ✅ added for notifications
 
 // ✅ Fetch all users (with balances)
 export const getAllUsers = async (req, res) => {
@@ -16,6 +16,83 @@ export const getAllUsers = async (req, res) => {
   } catch (err) {
     console.error("Error fetching users:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ✅ Add bonus to selected user (includes notification)
+export const addBonusToUser = async (req, res) => {
+  try {
+    const { userId, bonusAmount } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const bonus = Number(bonusAmount);
+    if (isNaN(bonus) || bonus <= 0)
+      return res.status(400).json({ message: "Invalid bonus amount" });
+
+    // ✅ Update both earnedTotal and balance
+    user.earnedTotal = (user.earnedTotal || 0) + bonus;
+    user.balance = (user.balance || 0) + bonus;
+    await user.save();
+
+    // ✅ Create notification for this user
+    await Notification.create({
+      user: user._id,
+      type: "message",
+      message: `🎁 A bonus of $${bonus.toFixed(2)} has been added to your account by Admin.`,
+    });
+
+    res.json({
+      message: `🎁 Bonus of $${bonus.toFixed(2)} added to ${user.email}`,
+      updatedUser: {
+        email: user.email,
+        earnedTotal: user.earnedTotal,
+        balance: user.balance,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error adding bonus:", error);
+    res.status(500).json({ message: "Error adding bonus" });
+  }
+};
+
+// ✅ Add bonus to all users based on deposit tiers (includes notifications)
+export const addBonusToAll = async (req, res) => {
+  try {
+    const users = await User.find();
+    if (!users.length) return res.status(404).json({ message: "No users found" });
+
+    for (const user of users) {
+      const deposit = user.totalDeposits || user.balance || 0;
+      if (deposit <= 0) continue;
+
+      let percent = 1;
+      if (deposit > 10000) percent = 5; // top investors
+      else if (deposit > 5000) percent = 3; // medium investors
+
+      const bonus = (deposit * percent) / 100;
+      user.earnedTotal = (user.earnedTotal || 0) + bonus;
+      user.balance = (user.balance || 0) + bonus;
+      await user.save();
+
+      // ✅ Create a notification for each user
+      await Notification.create({
+        user: user._id,
+        type: "message",
+        message: `🎉 You received a ${percent}% bonus of $${bonus.toFixed(
+          2
+        )} based on your deposit tier!`,
+      });
+
+      console.log(`💸 ${user.email} received ${percent}% bonus = $${bonus.toFixed(2)}`);
+    }
+
+    res.json({
+      message: "🎉 Bonus applied successfully to all users based on deposit tiers!",
+    });
+  } catch (error) {
+    console.error("❌ Error applying bonus to all:", error);
+    res.status(500).json({ message: "Error applying bonus to all users" });
   }
 };
 
