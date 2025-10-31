@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ✅ Update referral link dynamically
     const referralInput = document.getElementById("referralLink");
-    const referralUrl = `http://127.0.0.1:5501/frontend/index.html?ref=${referralCode}`;
+    const referralUrl = `https://emuntra.vercel.app/index.html?ref=${referralCode}`;
     // const referralUrl = `https://emuntra.com/?ref=${referralCode}`;
     referralInput.value = referralUrl;
 
