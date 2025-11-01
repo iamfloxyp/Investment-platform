@@ -87,22 +87,23 @@
   <!-- MAIN -->
   <main class="notifications-page" id="mainContent">
     <h2>All Notifications</h2>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+      <button id="clearAllBtn" 
+        style="background:#d9534f;color:#fff;border:none;padding:8px 14px;border-radius:5px;cursor:pointer;">
+        Clear All
+      </button>
+    </div>
+
     <table class="notif-table">
       <thead>
         <tr>
           <th>Message</th>
           <th>Date</th>
           <th>Status</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="notifTableBody">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
- 
-  <button id="clearAllBtn" 
-    style="background:#d9534f;color:#fff;border:none;padding:8px 14px;border-radius:5px;cursor:pointer;">
-    Clear All
-  </button>
-</div>
         <!-- Filled by JS -->
       </tbody>
     </table>
@@ -135,7 +136,7 @@
       <div class="f-col">
         <h4>Contact</h4>
         <ul class="f-links f-contact">
-          <li><a href="mailto:support@Emuntra.com">support@Emuntra.com</a></li>
+          <li><a href="mailto:support@emuntra.com">support@emuntra.com</a></li>
           <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
         </ul>
       </div>
@@ -146,30 +147,30 @@
   </footer>
 
   <!-- JS -->
-   <script src="../assets/js/admin/config.js"></script>
+  <script src="../assets/js/admin/config.js"></script>
   <script src="../assets/js/user/dashboard.js"></script>
 
   <!-- ✅ FIXED SCRIPT -->
- <script>
+  <script>
   document.getElementById("year").textContent = new Date().getFullYear();
 
   document.addEventListener("DOMContentLoaded", async () => {
     const notifTableBody = document.getElementById("notifTableBody");
-    const mainContent = document.getElementById("mainContent");
     const notifBadge = document.getElementById("notifBadge");
     const clearAllBtn = document.getElementById("clearAllBtn");
+    const mainContent = document.getElementById("mainContent");
 
     const isLocal =
       window.location.hostname.includes("127.0.0.1") ||
       window.location.hostname.includes("localhost");
     const API_BASE = isLocal
       ? "http://127.0.0.1:4000"
-      : "https://investment-platform-1-qjx8.onrender.com";
+      : "https://api.emuntra.com";
 
     let currentPage = 1;
     let totalPages = 1;
 
-    // ✅ Popup message for success/error
+    // ✅ Popup message
     function showPopup(message, isError = false) {
       const popup = document.createElement("div");
       popup.textContent = message;
@@ -186,7 +187,7 @@
       setTimeout(() => popup.remove(), 2500);
     }
 
-    // ✅ Confirmation popup
+    // ✅ Confirmation box
     function showConfirmPopup(message, onConfirm) {
       const overlay = document.createElement("div");
       overlay.style.position = "fixed";
@@ -248,37 +249,32 @@
       });
     }
 
-    // ✅ Clear All Notifications
+    // ✅ Clear All
     if (clearAllBtn) {
       clearAllBtn.addEventListener("click", () => {
         showConfirmPopup("Are you sure you want to delete all notifications?", async () => {
           try {
-            const delAllRes = await fetch(`${API_BASE}/api/notifications`, {
+            const res = await fetch(`${API_BASE}/api/notifications`, {
               method: "DELETE",
               credentials: "include",
             });
-            if (delAllRes.ok) {
-              notifTableBody.innerHTML = `
-                <tr><td colspan="4" style="text-align:center; color:#777;">All notifications cleared</td></tr>`;
+            if (res.ok) {
+              notifTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#777;">All notifications cleared</td></tr>`;
+              notifBadge.textContent = "0";
+              notifBadge.style.display = "none";
               showPopup("All notifications deleted successfully");
-
-              // 🔄 Reset badge count
-              if (notifBadge) {
-                notifBadge.textContent = data.unreadcount;
-                notifBadge.style.display = data.unreadcount > 0 ? " inline-block" : "none";
-              }
             } else {
               showPopup("Failed to clear notifications", true);
             }
           } catch (err) {
-            console.error("❌ Error deleting all notifications:", err);
+            console.error("❌ Error deleting notifications:", err);
             showPopup("Error deleting notifications", true);
           }
         });
       });
     }
 
-    // ✅ Load Notifications with Pagination
+    // ✅ Load Notifications
     async function loadNotifications(page = 1) {
       try {
         const res = await fetch(`${API_BASE}/api/notifications?page=${page}&limit=10`, {
@@ -286,30 +282,27 @@
         });
 
         if (!res.ok) throw new Error("Failed to fetch notifications");
-        const { notifications, currentPage: pageNum, totalPages: pages } = await res.json();
 
-        currentPage = pageNum;
-        totalPages = pages;
+        const data = await res.json();
+        const notifications = Array.isArray(data.notifications) ? data.notifications : [];
+        currentPage = data.currentPage || 1;
+        totalPages = data.totalPages || 1;
 
-        if (!notifications.length) {
-          notifTableBody.innerHTML = `
-            <tr><td colspan="4" style="text-align:center; color:#777;">No notifications yet</td></tr>`;
+        if (notifications.length === 0) {
+          notifTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#777;">No notifications yet</td></tr>`;
           return;
         }
 
-        notifTableBody.innerHTML = notifications
-          .map(
-            (n) => `
-            <tr class="${!n.read ? "notif-unread" : ""}">
-              <td>${n.message}</td>
-              <td>${new Date(n.createdAt).toLocaleDateString()}</td>
-              <td>${n.read ? "Read" : "Unread"}</td>
-              <td><button class="delete-btn" data-id="${n._id}" style="background:#d9534f;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">🗑️</button></td>
-            </tr>`
-          )
-          .join("");
+        notifTableBody.innerHTML = notifications.map((n) => `
+          <tr class="${!n.read ? "notif-unread" : ""}">
+            <td>${n.message}</td>
+            <td>${new Date(n.createdAt).toLocaleDateString()}</td>
+            <td>${n.read ? "Read" : "Unread"}</td>
+            <td><button class="delete-btn" data-id="${n._id}" style="background:#d9534f;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">🗑️</button></td>
+          </tr>
+        `).join("");
 
-        // 🗑️ Delete individual notifications
+        // 🗑️ Delete One
         document.querySelectorAll(".delete-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-id");
@@ -321,14 +314,9 @@
               if (delRes.ok) {
                 btn.closest("tr").remove();
                 showPopup("Notification deleted");
-
-                // 🔄 Update badge count
-                if (notifBadge) {
-                  let count = parseInt(notifBadge.textContent || "0");
-                  count = Math.max(0, count - 1);
-                  notifBadge.textContent = count;
-                  notifBadge.style.display = count > 0 ? "inline-block" : "none";
-                }
+                let count = parseInt(notifBadge.textContent || "0");
+                notifBadge.textContent = Math.max(0, count - 1);
+                notifBadge.style.display = notifBadge.textContent === "0" ? "none" : "inline-block";
               } else {
                 showPopup("Error deleting notification", true);
               }
@@ -339,12 +327,11 @@
         renderPaginationControls();
       } catch (err) {
         console.error("❌ Error loading notifications:", err);
-        notifTableBody.innerHTML = `
-          <tr><td colspan="4" style="text-align:center; color:red;">Error loading notifications</td></tr>`;
+        notifTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Error loading notifications</td></tr>`;
       }
     }
 
-    // ✅ Pagination Controls
+    // ✅ Pagination
     function renderPaginationControls() {
       let paginationDiv = document.getElementById("paginationControls");
       if (!paginationDiv) {
@@ -370,7 +357,8 @@
       });
     }
 
-    // 🚀 Load first page
     loadNotifications(1);
   });
-</script>
+  </script>
+</body>
+</html>
