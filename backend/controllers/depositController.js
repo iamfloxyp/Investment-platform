@@ -230,6 +230,9 @@ export const updateDepositStatus = async (req, res) => {
       user.earnedTotal = user.earnedTotal || 0;
       user.dailyProfit = user.dailyProfit || 0;
 
+      // ✅ Set next profit eligibility time — 24h from now
+  deposit.profitEligibleAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
       await user.save();
 
       // 🔔 Notify user
