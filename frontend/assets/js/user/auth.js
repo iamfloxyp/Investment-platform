@@ -7,6 +7,7 @@ const API_BASE = window.API_BASE;
 const SIGNUP_URL = `${API_BASE}/api/auth/register`;
 const LOGIN_URL  = `${API_BASE}/api/auth/login`;
 const ME_URL     = `${API_BASE}/api/auth/me`;
+const LOGOUT_URL = `${API_BASE}/api/auth/logout`;
 
 // ====== HELPERS ======
 function qs(sel, root = document) {
@@ -32,19 +33,20 @@ function showError(msg) {
   setTimeout(() => (el.style.display = "none"), 6000);
 }
 
+// ✅ Helper to read cookies
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+}
+
 // ====== SIGNUP HANDLER ======
 (function attachSignup() {
   const form = qs(".signup-form");
   if (!form) return;
 
   const submitBtn = form.querySelector('button[type="submit"], .btn');
-
-  // ✅ Helper to read cookies
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -59,7 +61,6 @@ function showError(msg) {
       showError("Please accept the Terms & Conditions.");
       return;
     }
-
     if (!firstName || !lastName || !email || !password) {
       showError("All fields are required.");
       return;
@@ -68,31 +69,23 @@ function showError(msg) {
     try {
       setLoading(submitBtn, true);
 
-      // ✅ Check referral code from BOTH cookie & URL
+      // ✅ Collect referral (URL first, then cookie)
       const cookieRef = getCookie("refCode");
       const urlParams = new URLSearchParams(window.location.search);
       const urlRef = urlParams.get("ref");
-
-      // Priority: URL referral > Cookie referral
-      const refCode = urlRef || cookieRef || null; // ✅ renamed correctly
+      const refCode = urlRef || cookieRef || null;
 
       // ✅ Optional cleanup of previous session
-      await fetch(`${API_BASE}/api/auth/logout`, { credentials: "include" });
+      await fetch(LOGOUT_URL, { credentials: "include" }).catch(() => {});
 
       // ✅ Prepare signup payload
-      const body = {
-        firstName,
-        lastName,
-        email,
-        password,
-        refCode, // 👈 matches backend
-      };
+      const body = { firstName, lastName, email, password, refCode };
 
-      // ✅ Send signup request
+      // ✅ Send signup request (with cookies!)
       const res = await fetch(SIGNUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ cookies enabled
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
@@ -137,33 +130,40 @@ function showError(msg) {
 
     try {
       setLoading(submitBtn, true, "Signing In...");
-      // ✅ Clear any previous cookies
-      await fetch(`${API_BASE}/api/auth/logout`, { credentials: "include" });
+
+      // ✅ Clear any old session before login
+      await fetch(LOGOUT_URL, { credentials: "include" }).catch(() => {});
 
       // ✅ Send login request
       const loginRes = await fetch(LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ include cookies
+        credentials: "include", // ✅ keep cookies for mobile
         body: JSON.stringify({ email, password }),
       });
 
       const loginData = await loginRes.json();
+
       if (!loginRes.ok) {
         showError(loginData?.message || "Login failed.");
         return;
       }
 
-      // ✅ Check session immediately after login
-      const userRes = await fetch(ME_URL, { credentials: "include" });
+      // ✅ Check user session after login
+      const userRes = await fetch(ME_URL, {
+        method: "GET",
+        credentials: "include", // ✅ very important for mobile browsers
+      });
+
       const userData = await userRes.json();
 
       if (!userRes.ok || !userData?.id) {
-        showError("Failed to fetch user session.");
+        console.warn("Session check failed:", userData);
+        showError("Failed to fetch user session. Please refresh and try again.");
         return;
       }
 
-      // ✅ Store minimal info (optional)
+      // ✅ Store minimal info
       localStorage.setItem("userId", userData.id);
 
       // ✅ Redirect to dashboard
