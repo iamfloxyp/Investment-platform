@@ -8,9 +8,9 @@ export const sendContactMessage = async (req, res) => {
       return res.status(400).json({ msg: "All fields are required." });
     }
 
-    // Email to admin/support inbox
+    // Email to admin/support inbox@
     await sendEmail({
-      to: "hello@emuntra.com", // Replace with your domain support email
+      to: "emuntraplatform@gmail.com", // Replace with your domain support email
       subject: `📩 New Contact Message: ${subject || "General Inquiry"}`,
       html: `
         <div style="font-family: Arial, sans-serif;">

@@ -27,9 +27,31 @@ router.post("/admin/login", adminLogin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
-// 🔹 Protected Route (requires valid cookie)
+// 🔹 Protected Routes
 router.get("/me", protect, getMe);
 router.get("/admin", protect, getAdmin);
 
+// 🔹 Force Logout (clears all cookies)
+router.get("/force-logout", (req, res) => {
+  try {
+    res.clearCookie("emuntra_user_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+    res.clearCookie("emuntra_admin_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+    console.log("✅ All cookies cleared");
+    return res.json({ message: "✅ All cookies cleared successfully" });
+  } catch (err) {
+    console.error("Force logout error:", err);
+    return res.status(500).json({ message: "Server error clearing cookies" });
+  }
+});
 
 export default router;

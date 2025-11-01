@@ -1,58 +1,61 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "./models/userModel.js";
-import Deposit from "./models/depositModel.js"; // ✅ make sure this path is correct
+import Deposit from "./models/depositModel.js";
+import Plan from "./models/planModel.js";
+import { computePercentForDay } from "./utils/planPercent.js";
 
 dotenv.config();
+
 const MONGO_URI = process.env.MONGO_URI;
 
-const runDailyProfit = async () => {
+export const runDailyProfit = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected for daily profit\n");
+    console.log("✅ MongoDB connected for daily profit");
+
+    const plans = await Plan.find();
+    const planMap = {};
+    plans.forEach(p => (planMap[p.slug] = p));
 
     const users = await User.find();
-    console.log(`📊 Total users found: ${users.length}\n`);
-
     const now = new Date();
 
     for (const user of users) {
-      console.log(`🧾 Checking deposits for user: ${user.email || "unknown"}`);
-
-      // ✅ FIXED: use 'user' instead of 'userId'
       const deposits = await Deposit.find({
         user: user._id,
-        type: "deposit", // only deposits, not withdrawals
+        type: "deposit",
         status: { $in: ["approved", "completed"] },
       });
 
-      if (deposits.length === 0) {
-        console.log(`⚠️ No approved/completed deposits found for ${user.email}\n`);
-        continue;
+      if (deposits.length === 0) continue;
+
+      let totalProfit = 0;
+
+      for (const dep of deposits) {
+        const slug = (dep.plan || "bronze").toLowerCase();
+        const plan = planMap[slug] || planMap["bronze"];
+        const percent = computePercentForDay(plan, now);
+        const profit = dep.amount * percent;
+        totalProfit += profit;
       }
 
-      const totalDeposit = deposits.reduce((sum, dep) => sum + dep.amount, 0);
-      console.log(`💰 Total Deposits for ${user.email}: $${totalDeposit.toFixed(2)}`);
-
-      const percent = Math.floor(Math.random() * 5) + 1;
-      const profit = totalDeposit * (percent / 100);
-
-      user.earnedTotal = (user.earnedTotal || 0) + profit;
-      user.dailyProfit = profit;
+      user.earnedTotal = (user.earnedTotal || 0) + totalProfit;
+      user.dailyProfit = totalProfit;
       user.lastProfitUpdate = now;
       await user.save();
 
       console.log(
-        `✅ Profit for ${user.email}: $${profit.toFixed(2)} (${percent}%) added\n`
+        `💰 ${user.email}: +$${totalProfit.toFixed(2)} added (${(
+          totalProfit / user.balance
+        ).toFixed(2)}%)`
       );
     }
 
-    console.log("🎉 Daily profit calculation complete!\n");
-    process.exit();
-  } catch (error) {
-    console.error("❌ Error in daily profit job:", error.message);
+    console.log("🎯 Daily profit job complete");
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ daily profit job error:", err);
     process.exit(1);
   }
 };
-
-export {runDailyProfit};

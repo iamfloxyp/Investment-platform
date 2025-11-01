@@ -45,6 +45,53 @@
     #applyAll:hover {
       background: #0f5a24;
     }
+
+    /* Toggle Switch */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      background: #f6f6f6;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .toggle-row label {
+      font-weight: 600;
+      color: #102630;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+    .switch input { display: none; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #126e2c;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
   </style>
 </head>
 
@@ -97,8 +144,16 @@
           <option>Loading users...</option>
         </select>
 
-        <label for="bonusAmount">Bonus Amount ($):</label>
-        <input type="number" id="bonusAmount" placeholder="Enter bonus amount" />
+        <div class="toggle-row">
+          <label id="bonusTypeLabel">Bonus Type: Fixed Amount</label>
+          <label class="switch">
+            <input type="checkbox" id="toggleBonusType">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <label for="bonusInput" id="bonusInputLabel">Bonus Amount ($):</label>
+        <input type="number" id="bonusInput" placeholder="Enter bonus amount" />
 
         <button id="addBonusBtn">Add Bonus to Selected User</button>
         <button id="applyAll">🎉 Apply Bonus to All Users (Tiered)</button>
@@ -115,65 +170,33 @@
     ? "http://127.0.0.1:4000"
     : "https://api.emuntra.com";
 
-  // ✅ Reusable popup notification function
+  // ✅ Popup notification function
   function showPopup(message, type = "success") {
-    // Create popup container if not already present
     let popupContainer = document.querySelector(".popup-container");
     if (!popupContainer) {
       popupContainer = document.createElement("div");
       popupContainer.className = "popup-container";
       document.body.appendChild(popupContainer);
     }
-
-    // Create individual popup
     const popup = document.createElement("div");
     popup.className = `popup-message ${type}`;
     popup.textContent = message;
     popupContainer.appendChild(popup);
-
-    // Animate in
     setTimeout(() => popup.classList.add("show"), 10);
-
-    // Auto-remove after 3 seconds
     setTimeout(() => {
       popup.classList.remove("show");
       setTimeout(() => popup.remove(), 300);
     }, 3000);
   }
 
-  // ✅ Inject popup styles (lightweight)
+  // ✅ Popup styles
   const style = document.createElement("style");
   style.innerHTML = `
-    .popup-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .popup-message {
-      background: #102630;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 6px;
-      font-size: 14px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s ease;
-    }
-    .popup-message.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .popup-message.error {
-      background: #b63c3c;
-    }
-    .popup-message.success {
-      background: #126e2c;
-    }
+    .popup-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .popup-message { background: #102630; color: #fff; padding: 12px 20px; border-radius: 6px; font-size: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; }
+    .popup-message.show { opacity: 1; transform: translateY(0); }
+    .popup-message.error { background: #b63c3c; }
+    .popup-message.success { background: #126e2c; }
   `;
   document.head.appendChild(style);
 
@@ -182,7 +205,6 @@
     try {
       const res = await fetch(`${API_BASE}/api/admin/users`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to load users");
-
       const users = await res.json();
       const select = document.getElementById("userSelect");
       select.innerHTML = "";
@@ -208,34 +230,54 @@
     }
   }
 
+  // ✅ Handle bonus type toggle
+  const toggle = document.getElementById("toggleBonusType");
+  const bonusTypeLabel = document.getElementById("bonusTypeLabel");
+  const bonusInputLabel = document.getElementById("bonusInputLabel");
+  const bonusInput = document.getElementById("bonusInput");
+
+  toggle.addEventListener("change", () => {
+    if (toggle.checked) {
+      bonusTypeLabel.textContent = "Bonus Type: Percentage (%)";
+      bonusInputLabel.textContent = "Bonus Percentage (%):";
+      bonusInput.placeholder = "Enter percentage (e.g. 10)";
+    } else {
+      bonusTypeLabel.textContent = "Bonus Type: Fixed Amount ($)";
+      bonusInputLabel.textContent = "Bonus Amount ($):";
+      bonusInput.placeholder = "Enter bonus amount";
+    }
+  });
+
   // ✅ Add bonus to single user
   document.getElementById("addBonusBtn").addEventListener("click", async () => {
     const userId = document.getElementById("userSelect").value;
-    const bonusAmount = document.getElementById("bonusAmount").value;
+    const value = document.getElementById("bonusInput").value;
+    const isPercentage = toggle.checked;
 
-    if (!userId || !bonusAmount) {
-      showPopup("Please select a user and enter a bonus amount.", "error");
+    if (!userId || !value) {
+      showPopup("Please select a user and enter a bonus value.", "error");
       return;
     }
+
+    const body = isPercentage
+      ? { userId, percentage: Number(value) }
+      : { userId, bonusAmount: Number(value) };
 
     try {
       const res = await fetch(`${API_BASE}/api/admin/bonus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ userId, bonusAmount }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error applying bonus");
 
-      // ✅ Show popup success
       showPopup(`🎁 ${data.message}`, "success");
 
-      // 🧹 Clear input fields after success
-      document.getElementById("bonusAmount").value = "";
+      document.getElementById("bonusInput").value = "";
       document.getElementById("userSelect").selectedIndex = 0;
-
     } catch (err) {
       console.error("❌ Error adding bonus:", err);
       showPopup("Failed to add bonus. Please try again.", "error");
@@ -251,16 +293,12 @@
         method: "POST",
         credentials: "include",
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
       showPopup(`🎉 ${data.message}`, "success");
-
-      // 🧹 Clear inputs after success
-      document.getElementById("bonusAmount").value = "";
+      document.getElementById("bonusInput").value = "";
       document.getElementById("userSelect").selectedIndex = 0;
-
     } catch (err) {
       console.error("❌ Error applying bonus to all:", err);
       showPopup("Error applying bonus to all users.", "error");
@@ -269,10 +307,8 @@
 
   // ✅ Wait until DOM is ready
   document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-      loadUsers();
-    }, 1200);
+    setTimeout(() => loadUsers(), 1200);
   });
-</script>
+  </script>
 </body>
 </html>

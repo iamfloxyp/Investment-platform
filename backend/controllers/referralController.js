@@ -1,64 +1,84 @@
-import Deposit from "../models/depositModel.js";
+// controllers/referralController.js
 import User from "../models/userModel.js";
-import Notification from "../models/notificationModel.js";
+import Deposit from "../models/depositModel.js";
 
 /* ============================================================
-   ✅ GET USER REFERRAL STATS (Updated)
+   ✅ USER: GET REFERRAL STATS
 ============================================================ */
 export const getReferralStats = async (req, res) => {
   try {
-    const userId = req.user._id; // logged-in user
+    const me = await User.findById(req.user._id).select(
+      "firstName lastName referralEarnings referredBy referralCode"
+    );
+    if (!me) return res.status(404).json({ msg: "User not found" });
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const referrals = await User.find({ referredBy: userId }).select(
-      "firstName lastName email isVerified createdAt"
+    // All users I referred
+    const myRefs = await User.find({ referredBy: me._id }).select(
+      "_id firstName lastName email"
     );
 
-    const referredIds = referrals.map((r) => r._id);
+    // Active referrals = those who have at least one approved/completed deposit
+    const activeIds = await Deposit.distinct("user", {
+      user: { $in: myRefs.map((u) => u._id) },
+      status: { $in: ["approved", "completed"] },
+    });
 
-    const activeDeposits = await Deposit.find({
-      user: { $in: referredIds },
-      status: "approved",
-    }).select("user");
+    // fallback recompute commission if needed
+    const deposits = await Deposit.find({
+      user: { $in: myRefs.map((u) => u._id) },
+      status: { $in: ["approved", "completed"] },
+    });
 
-    const activeReferrals = new Set(activeDeposits.map((d) => d.user.toString())).size;
+    const computed = deposits.reduce((sum, d) => sum + d.amount * 0.07, 0);
+    const totalCommission = Number(me.referralEarnings || computed || 0);
 
-    const totalCommission = user.referralEarnings || 0;
+    // Find my upline (the person who referred me)
+    let uplineName = "None";
+    if (me.referredBy) {
+      const up = await User.findById(me.referredBy).select("firstName lastName");
+      if (up) uplineName = `${up.firstName || ""} ${up.lastName || ""}`.trim() || "None";
+    }
 
     res.json({
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        email: user.email,
-        referralCode: user.referralCode,
-      },
-      totalReferrals: referrals.length,
-      activeReferrals,
-      totalCommission,
-      referrals,
+      referralsCount: myRefs.length,
+      activeReferrals: activeIds.length,
+      totalCommission: Number(totalCommission.toFixed(2)),
+      uplineName,
+      referralCode: me.referralCode || null,
+      referrals: myRefs.map((u) => ({
+        id: u._id,
+        name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
+        email: u.email,
+      })),
     });
-  } catch (err) {
-    console.error("❌ getReferralStats error:", err);
-    res.status(500).json({ message: "Server error fetching referrals" });
+  } catch (e) {
+    console.error("getReferralStats error:", e.message);
+    res.status(500).json({ msg: "Server error fetching referral stats" });
   }
 };
 
 /* ============================================================
-   ✅ GET ALL REFERRALS (ADMIN)
+   ✅ ADMIN: GET ALL REFERRALS
 ============================================================ */
-export const getAllReferrals = async (req, res) => {
+export const getAllReferrals = async (_req, res) => {
   try {
-    const users = await User.find()
-      .select("firstName lastName email referralCode referredBy referralEarnings")
+    const allRefs = await User.find({ referredBy: { $ne: null } })
+      .select("firstName lastName email referredBy referralEarnings")
       .populate("referredBy", "firstName lastName email");
 
-    res.json(users);
+    res.json({
+      total: allRefs.length,
+      data: allRefs.map((r) => ({
+        name: `${r.firstName || ""} ${r.lastName || ""}`.trim(),
+        email: r.email,
+        upline: r.referredBy
+          ? `${r.referredBy.firstName || ""} ${r.referredBy.lastName || ""}`.trim()
+          : "None",
+        earned: r.referralEarnings || 0,
+      })),
+    });
   } catch (err) {
-    console.error("❌ getAllReferrals error:", err);
-    res.status(500).json({ message: "Server error fetching all referrals" });
+    console.error("getAllReferrals error:", err.message);
+    res.status(500).json({ msg: "Server error fetching all referrals" });
   }
 };
-
-// ✅ Export both functions at the very bottom — only once!

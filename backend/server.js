@@ -4,18 +4,17 @@ import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-// 🕘 Daily Profit Scheduler
 import cron from "node-cron";
 import { runDailyProfit } from "./dailyProfitJob.js";
-
-
-// import dailyProfitJob from "./dailyProfitJob.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // ===== LOAD ENV =====
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
-//  Run every day at 9 PM (US time / roughly 2 AM UTC)
+
+// ===== DAILY PROFIT SCHEDULER =====
 cron.schedule("0 2 * * *", async () => {
   try {
     console.log("⏰ Running scheduled daily profit job (2 AM UTC / 9 PM US Time)...");
@@ -25,7 +24,7 @@ cron.schedule("0 2 * * *", async () => {
   }
 });
 console.log("✅ Daily profit scheduler initialized (runs 2 AM UTC / 9 PM US Time).");
-// dailyProfitJob();
+
 // ===== IMPORT ROUTES =====
 import authRoutes from "./routes/authRoutes.js";
 import depositRoutes from "./routes/depositRoutes.js";
@@ -37,49 +36,55 @@ import referralRoutes from "./routes/referralRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import testEmailRoute from "./routes/testEmail.js";
+import contactRoutes from "./routes/contactRoutes.js"
 
 // ===== IMPORT MODELS =====
 import Deposit from "./models/depositModel.js";
 import Withdrawal from "./models/withdrawModel.js";
 
+// ===== INITIALIZE APP =====
 const app = express();
 
-
-
-// ===== FIXED CORS =====
-// ===== FIXED CORS CONFIGURATION =====
+/// ===== FIXED CORS (FINAL VERSION) =====
 const allowedOrigins = [
-  "http://127.0.0.1:5500",
-  "http://127.0.0.1:5501",
-  "http://localhost:5500",
-  "http://localhost:5501",
   "https://investment-platform-eta.vercel.app",
-  "https://api.emuntra.com",
   "https://emuntra.com",
+  "https://emuntra-backend.onrender.com",
+  "http://127.0.0.1:5500",
+  "http://localhost:5500"
 ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true, // ✅ enable cookies
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 // ===== MIDDLEWARE =====
 app.use(express.json());
 app.use(cookieParser());
+
 // ===== ROUTES =====
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/external", externalRoutes);
-app.use("/api/withdrawals", withdrawRoutes); // ✅ clearer path
+app.use("/api/withdrawals", withdrawRoutes);
 app.use("/api/referrals", referralRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api", testEmailRoute);
+app.use("/api/contact", contactRoutes);
 
 // ===== TEST ROUTE =====
 app.get("/api/test", (req, res) => {
@@ -89,6 +94,7 @@ app.get("/api/test", (req, res) => {
   });
 });
 
+// ===== DEBUG NOWPAYMENTS =====
 app.get("/api/_debug/np", (req, res) => {
   const key = process.env.NOWPAYMENTS_API_KEY || "";
   res.json({
@@ -96,17 +102,36 @@ app.get("/api/_debug/np", (req, res) => {
     keyLength: key.length,
   });
 });
-// ===== SERVE FRONTEND FILES =====
-import path from "path";
-import { fileURLToPath } from "url";
 
+// ===== FORCE LOGOUT ROUTE (for clearing stuck cookies) =====
+app.get("/api/auth/force-logout", (req, res) => {
+  try {
+    res.clearCookie("emuntra_user_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+    res.clearCookie("emuntra_admin_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+    console.log("✅ All cookies cleared (force-logout route active)");
+    return res.json({ message: "✅ All cookies cleared successfully" });
+  } catch (err) {
+    console.error("❌ Force logout error:", err);
+    return res.status(500).json({ message: "Server error clearing cookies" });
+  }
+});
+
+// ===== SERVE FRONTEND FILES =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Serve the entire frontend folder (including /user/payment.html)
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// ===== DATABASE CONNECTION =====
+// ===== DATABASE CONNECTION & APP LISTEN =====
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -115,8 +140,8 @@ mongoose
   .then(async () => {
     console.log("✅ MongoDB connected");
 
-    // 🧹 Data migration (safe)
     try {
+      // 🧹 Data migration (safe)
       const result1 = await Deposit.updateMany(
         { type: "withdrawal" },
         { $set: { type: "withdraw" } }
@@ -135,8 +160,11 @@ mongoose
       console.error("⚠️ Migration error:", e.message);
     }
 
+    // ✅ Start Server
     const PORT = process.env.PORT || 4000;
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);

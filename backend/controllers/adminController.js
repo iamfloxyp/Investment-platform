@@ -7,7 +7,6 @@ import Notification from "../models/notificationModel.js"; // ✅ added for noti
 // ✅ Fetch all users (with balances)
 export const getAllUsers = async (req, res) => {
   try {
-    // Fetch all users and explicitly include balance
     const users = await User.find()
       .select("firstName lastName email role isVerified balance createdAt")
       .sort({ createdAt: -1 });
@@ -19,23 +18,38 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// ✅ Add bonus to selected user (includes notification)
+// ✅ Add bonus to selected user (fixed or percentage)
 export const addBonusToUser = async (req, res) => {
   try {
-    const { userId, bonusAmount } = req.body;
+    const { userId, bonusAmount, percentage } = req.body;
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const bonus = Number(bonusAmount);
-    if (isNaN(bonus) || bonus <= 0)
-      return res.status(400).json({ message: "Invalid bonus amount" });
+    let bonus = 0;
 
-    // ✅ Update both earnedTotal and balance
+    // ✅ If percentage provided, calculate based on totalDeposits or activeDeposit
+    if (percentage && Number(percentage) > 0) {
+      const base = user.activeDeposit || user.totalDeposits || user.balance || 0;
+      if (base <= 0)
+        return res.status(400).json({ message: "User has no active deposit to apply percentage" });
+
+      bonus = (Number(percentage) / 100) * base;
+      console.log(`💰 Percentage bonus applied: ${percentage}% of ${base} = ${bonus}`);
+    }
+    // ✅ Otherwise, fall back to fixed bonus
+    else if (bonusAmount && Number(bonusAmount) > 0) {
+      bonus = Number(bonusAmount);
+      console.log(`💰 Fixed bonus applied: $${bonus}`);
+    } else {
+      return res.status(400).json({ message: "Provide either bonusAmount or percentage" });
+    }
+
+    // ✅ Update user’s totals
     user.earnedTotal = (user.earnedTotal || 0) + bonus;
     user.balance = (user.balance || 0) + bonus;
     await user.save();
 
-    // ✅ Create notification for this user
+    // ✅ Notify user
     await Notification.create({
       user: user._id,
       type: "message",
@@ -67,15 +81,14 @@ export const addBonusToAll = async (req, res) => {
       if (deposit <= 0) continue;
 
       let percent = 1;
-      if (deposit > 10000) percent = 5; // top investors
-      else if (deposit > 5000) percent = 3; // medium investors
+      if (deposit > 10000) percent = 5;
+      else if (deposit > 5000) percent = 3;
 
       const bonus = (deposit * percent) / 100;
       user.earnedTotal = (user.earnedTotal || 0) + bonus;
       user.balance = (user.balance || 0) + bonus;
       await user.save();
 
-      // ✅ Create a notification for each user
       await Notification.create({
         user: user._id,
         type: "message",
@@ -116,15 +129,10 @@ export const toggleUserStatus = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
-
-    // Find the user first
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 🧹 Delete all deposits belonging to this user
     await Deposit.deleteMany({ user: userId });
-
-    // 🧹 Delete the user record itself
     await user.deleteOne();
 
     res.json({ message: "User and related transactions deleted successfully" });
@@ -166,49 +174,32 @@ export const createUser = async (req, res) => {
   }
 };
 
-// ✅ Admin Dashboard Stats (with pending withdrawals + clean structure)
+// ✅ Admin Dashboard Stats
 export const getAdminStats = async (req, res) => {
   try {
-    // ✅ 1. Total Users
     const totalUsers = await User.countDocuments();
 
-    // ✅ 2. Total Deposits (approved + completed)
     const totalDepositsData = await Deposit.aggregate([
-      {
-        $match: {
-          type: "deposit",
-          status: { $in: ["approved", "completed"] },
-        },
-      },
+      { $match: { type: "deposit", status: { $in: ["approved", "completed"] } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const totalDeposits = totalDepositsData[0]?.total || 0;
 
-    // ✅ 3. Total Withdrawals (approved + completed)
     const totalWithdrawalsData = await Withdraw.aggregate([
-      {
-        $match: {
-          status: { $in: ["approved", "completed"] },
-        },
-      },
+      { $match: { status: { $in: ["approved", "completed"] } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const totalWithdrawals = totalWithdrawalsData[0]?.total || 0;
 
-    // ✅ 4. Pending Withdrawals (still pending)
     const pendingWithdrawalsData = await Withdraw.aggregate([
       { $match: { status: "pending" } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const pendingWithdrawals = pendingWithdrawalsData[0]?.total || 0;
 
-    // ✅ 5. Net Deposits (inflow - outflow)
     const netDeposits = totalDeposits - totalWithdrawals;
-
-    // ✅ 6. Active Investments (you can replace logic later)
     const activeInvestments = totalDeposits - totalWithdrawals - pendingWithdrawals;
 
-    // ✅ 7. Recent Transactions (latest 5 deposits + withdrawals)
     const recentDeposits = await Deposit.find()
       .populate("user", "firstName lastName email")
       .sort({ createdAt: -1 })
@@ -223,7 +214,6 @@ export const getAdminStats = async (req, res) => {
       (a, b) => b.createdAt - a.createdAt
     );
 
-    // ✅ 8. Format transactions for frontend
     const formattedTransactions = recentTransactions.map((tx) => ({
       user: tx.user ? `${tx.user.firstName} ${tx.user.lastName}` : "Unknown User",
       amount: tx.amount,
@@ -234,7 +224,6 @@ export const getAdminStats = async (req, res) => {
       date: tx.createdAt,
     }));
 
-    // ✅ 9. Send all stats to frontend
     res.status(200).json({
       totalUsers,
       totalDeposits,
