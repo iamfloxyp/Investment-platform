@@ -45,21 +45,36 @@ import Withdrawal from "./models/withdrawModel.js";
 // ===== INITIALIZE APP =====
 const app = express();
 
-// ===== CORS CONFIGURATION (FINAL, SECURE) =====
-app.use(
-  cors({
-    origin: [
-      "https://platform-eta.vercel.app",  // ✅ your frontend (Vercel)
-      "https://emuntra.com",              // ✅ custom domain (if added later)
-      "https://emuntra-backend.onrender.com", // ✅ backend URL for testing
-      "http://127.0.0.1:5500",            // ✅ local dev
-      "http://localhost:5500"
-    ],
-    credentials: true, // ✅ enables cookies across domains
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// ===== ADVANCED CORS CONFIGURATION (FINAL, SECURE, RENDER ↔ VERCEL) =====
+const allowedOrigins = [
+  "https://investment-platform-eta.vercel.app",   // ✅ your Vercel frontend
+  "https://investment-platform-eta.vercel.app/",  // ✅ trailing slash variant
+  "https://investment-platform-1-gjx8.onrender.com", // ✅ Render backend domain
+  "https://emuntra.com",                          // ✅ custom domain (future)
+  "https://emuntra-backend.onrender.com",         // ✅ alt backend
+  "http://localhost:4000",                        // ✅ local backend
+  "http://127.0.0.1:4000",
+  "http://localhost:5500",                        // ✅ local frontend
+  "http://127.0.0.1:5500",
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // ✅ Always respond to preflight OPTIONS request
+  if (req.method === "OPTIONS") {
+    return res.status(204).send();
+  }
+
+  next();
+});
 
 // ===== MIDDLEWARE =====
 app.use(express.json());
@@ -133,7 +148,7 @@ mongoose
     console.log("✅ MongoDB connected");
 
     try {
-      // 🧹 Safe data migration checks
+      // 🧹 Safe migration (type fix)
       const result1 = await Deposit.updateMany(
         { type: "withdrawal" },
         { $set: { type: "withdraw" } }
