@@ -47,15 +47,14 @@ const app = express();
 
 // ===== ADVANCED CORS CONFIGURATION (FINAL, SECURE, RENDER ↔ VERCEL) =====
 const allowedOrigins = [
-  "https://investment-platform-eta.vercel.app",   // ✅ your Vercel frontend
-  "https://investment-platform-eta.vercel.app/",  // ✅ trailing slash variant
-  "https://investment-platform-1-gjx8.onrender.com", // ✅ Render backend domain
-  "https://emuntra.com",                          // ✅ custom domain (future)
-  "https://emuntra-backend.onrender.com",         // ✅ alt backend
-  "http://localhost:4000",                        // ✅ local backend
-  "http://127.0.0.1:4000",
-  "http://localhost:5500",                        // ✅ local frontend
+  "https://app.emuntra.com",                // ✅ your Vercel frontend custom domain
+  "https://investment-platform-eta.vercel.app", // (backup)
+  "https://api.emuntra.com",                // ✅ backend custom domain
+  "https://emuntra.com",                    // main site if you ever route root traffic
+  "http://localhost:5500",                  // local frontend (testing)
   "http://127.0.0.1:5500",
+  "http://localhost:4000",
+  "http://127.0.0.1:4000",
 ];
 
 app.use((req, res, next) => {
