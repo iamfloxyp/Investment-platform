@@ -787,7 +787,7 @@ cForm?.addEventListener('submit', async (e) => {
   };
 
   try {
-    const res = await fetch("https://emuntra-backend.onrender.com/api/contact/send", {
+    const res = await fetch("https://api.emuntra.com/api/contact/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
