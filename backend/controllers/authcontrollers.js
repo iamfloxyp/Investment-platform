@@ -1,10 +1,10 @@
- // backend/controllers/authController.js
+// backend/controllers/authController.js
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { makeCode, hash } from "../utils/otp.js";
 
-// ---------- helpers ----------
+// ---------- Helpers ----------
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES || "7d",
@@ -12,23 +12,19 @@ const signToken = (user) =>
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Cookie options that work in both local (http) and prod (https, cross-site)
+// ✅ Updated cookie options (Render ↔ Vercel cross-domain safe)
 const cookieOpts = {
   httpOnly: true,
-  secure: isProd ? true : false,           // must be HTTPS in prod; allow http in dev
-  sameSite: isProd ? "none" : "lax",       // cross-site in prod; lax in dev
+  secure: isProd,            // must be true on HTTPS (Render)
+  sameSite: isProd ? "none" : "lax", // allow cross-site only in prod
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-// Set all compatible cookies so middleware (old/new) can read either
+// ✅ Consistent cookie setter for both roles
 const setAuthCookies = (res, token, role = "user") => {
-  // legacy (most protects read this)
-  res.cookie("emuntra_token", token, cookieOpts);
-  // role-scoped cookies (optional)
   if (role === "admin") {
     res.cookie("emuntra_admin_token", token, cookieOpts);
-    // ensure user cookie is cleared so dashboards don’t collide
     res.clearCookie("emuntra_user_token", { ...cookieOpts, maxAge: 0 });
   } else {
     res.cookie("emuntra_user_token", token, cookieOpts);
@@ -36,14 +32,15 @@ const setAuthCookies = (res, token, role = "user") => {
   }
 };
 
+// ✅ Safe cookie cleanup
 const clearAllAuthCookies = (res) => {
   const base = { ...cookieOpts, maxAge: 0 };
-  res.clearCookie("emuntra_token", base);
   res.clearCookie("emuntra_user_token", base);
   res.clearCookie("emuntra_admin_token", base);
+  res.clearCookie("emuntra_token", base);
 };
 
-// Send verification email + store hashed code
+// ✅ Email verification sender
 async function sendVerification(user) {
   const code = makeCode();
   user.verifyCodeHash = hash(code);
@@ -72,15 +69,16 @@ export const register = async (req, res) => {
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ message: "Email already used" });
 
-    // referral match (optional)
+    // referral match
     let referredByUser = null;
     if (refCode) {
       referredByUser = await User.findOne({ referralCode: refCode.trim() });
       if (!referredByUser) console.warn(`⚠️ Invalid referral code: ${refCode}`);
     }
 
-    const referralCode =
-      `${(firstName || "USR").slice(0, 3).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+    const referralCode = `${(firstName || "USR").slice(0, 3).toUpperCase()}${Math.floor(
+      1000 + Math.random() * 9000
+    )}`;
 
     const user = await User.create({
       firstName,
@@ -115,10 +113,16 @@ export const verifyEmail = async (req, res) => {
     if (!email || !code)
       return res.status(400).json({ message: "Email and code required" });
 
-    const user = await User.findOne({ email }).select("+verifyCodeHash +verifyCodeExpires");
+    const user = await User.findOne({ email }).select(
+      "+verifyCodeHash +verifyCodeExpires"
+    );
     if (!user) return res.status(400).json({ message: "Invalid email/code" });
 
-    if (!user.verifyCodeHash || !user.verifyCodeExpires || user.verifyCodeExpires < Date.now())
+    if (
+      !user.verifyCodeHash ||
+      !user.verifyCodeExpires ||
+      user.verifyCodeExpires < Date.now()
+    )
       return res.status(400).json({ message: "Code expired, request a new one" });
 
     if (user.verifyCodeHash !== hash(code))
@@ -129,15 +133,18 @@ export const verifyEmail = async (req, res) => {
     user.verifyCodeExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    clearAllAuthCookies(res);                 // wipe any stale cookies
+    clearAllAuthCookies(res);
     const token = signToken(user);
-    setAuthCookies(res, token, user.role);   // set fresh cookies
+    setAuthCookies(res, token, user.role);
 
     return res.status(200).json({
       success: true,
       message: "Email verified successfully",
       user: {
-        id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName,
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
     });
   } catch (err) {
@@ -153,7 +160,8 @@ export const resendCode = async (req, res) => {
     if (!email) return res.status(400).json({ message: "Email is required" });
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Email not found" });
-    if (user.isVerified) return res.status(400).json({ message: "Already verified" });
+    if (user.isVerified)
+      return res.status(400).json({ message: "Already verified" });
 
     await sendVerification(user);
     return res.json({ message: "Verification code resent" });
@@ -172,16 +180,22 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
 
     if (!user.isVerified)
-      return res.status(403).json({ message: "Please verify your email first" });
+      return res
+        .status(403)
+        .json({ message: "Please verify your email first" });
 
-    clearAllAuthCookies(res);                  // remove any old cookies
+    clearAllAuthCookies(res);
     const token = signToken(user);
-    setAuthCookies(res, token, user.role);     // set new cookies
+    setAuthCookies(res, token, user.role);
 
     return res.json({
       message: "Login successful",
       user: {
-        id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role,
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
       },
     });
   } catch (err) {
@@ -196,7 +210,7 @@ export const logout = (_req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-// ---------- FORGOT / RESET ----------
+// ---------- FORGOT PASSWORD ----------
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -205,15 +219,20 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     let frontendBaseUrl = process.env.CLIENT_URL;
     if (!frontendBaseUrl || frontendBaseUrl.includes("127.0.0.1")) {
-      frontendBaseUrl = isProd ? "https://investment-platform-eta.vercel.app"
-                               : "http://127.0.0.1:5500/frontend";
+      frontendBaseUrl = isProd
+        ? "https://investment-platform-eta.vercel.app"
+        : "http://127.0.0.1:5500/frontend";
     }
-    const cleanBaseUrl = frontendBaseUrl.replace("CLIENT_URL=", "").trim();
-    const resetUrl = `${cleanBaseUrl}/user/reset-password.html?token=${resetToken}`;
+    const resetUrl = `${frontendBaseUrl.replace(
+      "CLIENT_URL=",
+      ""
+    )}/user/reset-password.html?token=${resetToken}`;
 
     await sendEmail({
       to: user.email,
@@ -233,6 +252,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
+// ---------- RESET PASSWORD ----------
 export const resetPassword = async (req, res) => {
   try {
     const token = (req.query.token || "").trim();
@@ -251,7 +271,10 @@ export const resetPassword = async (req, res) => {
     return res.json({ message: "Password reset successful" });
   } catch (error) {
     console.error("❌ Reset Password Error:", error.message);
-    return res.status(500).json({ message: "Server error during password reset", error: error.message });
+    return res.status(500).json({
+      message: "Server error during password reset",
+      error: error.message,
+    });
   }
 };
 
@@ -267,12 +290,20 @@ export const adminLogin = async (req, res) => {
       return res.status(403).json({ message: "Access denied — not admin" });
 
     clearAllAuthCookies(res);
-    const token = jwt.sign({ id: user._id, role: "admin" }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user._id, role: "admin" }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
     setAuthCookies(res, token, "admin");
 
     res.json({
       message: "Admin login successful",
-      user: { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role },
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error("Admin login error:", error);
@@ -283,20 +314,20 @@ export const adminLogin = async (req, res) => {
 // ---------- GET ME ----------
 export const getMe = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) return res.status(401).json({ message: "Not authorized" });
+    if (!req.user || !req.user._id)
+      return res.status(401).json({ message: "Not authorized" });
 
     const user = await User.findById(req.user._id).select(
       "firstName lastName email role balance wallets walletAddresses referralCode referredBy earnedTotal dailyProfit"
     );
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // ensure referralCode & wallets exist
+    // Ensure referralCode & wallets exist
     if (!user.referralCode) {
       const prefix = (user.firstName || "USR").slice(0, 3).toUpperCase();
       const code = prefix + Math.floor(1000 + Math.random() * 9000);
       user.referralCode = code;
       await user.save();
-      console.log(`✅ Auto referralCode created for ${user.email}: ${code}`);
     }
     if (!user.wallets) {
       user.wallets = { btc: 0, eth: 0, usdt: 0, bnb: 0, tron: 0 };
@@ -305,7 +336,7 @@ export const getMe = async (req, res) => {
 
     const earnedTotal = Number(user.earnedTotal) || 0;
     const dailyProfit = Number(user.dailyProfit) || 0;
-    const availableBalance = (user.balance || 0) + (user.earnedTotal || 0);
+    const availableBalance = (user.balance || 0) + earnedTotal;
 
     res.json({
       id: user._id,
@@ -328,7 +359,7 @@ export const getMe = async (req, res) => {
   }
 };
 
-// ---------- bulk clear (optional util) ----------
+// ---------- LOGOUT ALL ----------
 export const logoutAll = (_req, res) => {
   clearAllAuthCookies(res);
   return res.json({ message: "All cookies cleared" });
@@ -337,11 +368,19 @@ export const logoutAll = (_req, res) => {
 // ---------- ADMIN SELF ----------
 export const getAdmin = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("firstName lastName email role");
+    const user = await User.findById(req.user._id).select(
+      "firstName lastName email role"
+    );
     if (!user || user.role !== "admin")
       return res.status(403).json({ message: "Access denied. Admins only." });
 
-    res.json({ id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, role: user.role });
+    res.json({
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+    });
   } catch (err) {
     console.error("❌ getAdmin error:", err);
     res.status(500).json({ message: "Internal Server Error" });
