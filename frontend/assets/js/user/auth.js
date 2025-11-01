@@ -2,6 +2,7 @@
 
 // 🧠 Automatically switch API base depending on environment
 const API_BASE = window.API_BASE;
+
 // Endpoints
 const SIGNUP_URL = `${API_BASE}/api/auth/register`;
 const LOGIN_URL  = `${API_BASE}/api/auth/login`;
@@ -38,7 +39,7 @@ function showError(msg) {
 
   const submitBtn = form.querySelector('button[type="submit"], .btn');
 
-  // ✅ Helper to read referral cookie
+  // ✅ Helper to read cookies
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -67,15 +68,32 @@ function showError(msg) {
     try {
       setLoading(submitBtn, true);
 
-      // ✅ Get referral code from cookie (if any)
-      const refCode = getCookie("refCode") || null;
+      // ✅ Check referral code from BOTH cookie & URL
+      const cookieRef = getCookie("refCode");
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRef = urlParams.get("ref");
 
-      // ✅ Include referral code in signup payload
+      // Priority: URL referral > Cookie referral
+      const refCode = urlRef || cookieRef || null; // ✅ renamed correctly
+
+      // ✅ Optional cleanup of previous session
+      await fetch(`${API_BASE}/api/auth/logout`, { credentials: "include" });
+
+      // ✅ Prepare signup payload
+      const body = {
+        firstName,
+        lastName,
+        email,
+        password,
+        refCode, // 👈 matches backend
+      };
+
+      // ✅ Send signup request
       const res = await fetch(SIGNUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // ✅ cookies enabled
-        body: JSON.stringify({ firstName, lastName, email, password, refCode }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -85,12 +103,8 @@ function showError(msg) {
         return;
       }
 
-      // ✅ Optional cleanup — clear referral cookie after successful signup
+      // ✅ Clear referral cookie if signup succeeded
       document.cookie = "refCode=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      // ✅ Clear any previous session or cookie before continuing
-document.cookie = "emuntra_user_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-document.cookie = "emuntra_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-localStorage.clear();
 
       // ✅ Redirect to verify page
       window.location.href = `./verify.html?email=${encodeURIComponent(email)}`;
@@ -102,6 +116,7 @@ localStorage.clear();
     }
   });
 })();
+
 // ====== LOGIN HANDLER ======
 (function attachLogin() {
   const form = qs(".login-form");
@@ -122,11 +137,14 @@ localStorage.clear();
 
     try {
       setLoading(submitBtn, true, "Signing In...");
+      // ✅ Clear any previous cookies
+      await fetch(`${API_BASE}/api/auth/logout`, { credentials: "include" });
 
+      // ✅ Send login request
       const loginRes = await fetch(LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ cookies enabled
+        credentials: "include", // ✅ include cookies
         body: JSON.stringify({ email, password }),
       });
 
@@ -145,16 +163,13 @@ localStorage.clear();
         return;
       }
 
-      // Save minimal info if needed
+      // ✅ Store minimal info (optional)
       localStorage.setItem("userId", userData.id);
-      // ✅ Clear any lingering session from another user
-document.cookie = "emuntra_user_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-document.cookie = "emuntra_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-localStorage.clear();
 
+      // ✅ Redirect to dashboard
       window.location.href = "./dashboard.html";
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       showError("Something went wrong. Try again.");
     } finally {
       setLoading(submitBtn, false, "Sign In");

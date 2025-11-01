@@ -61,34 +61,35 @@
     </div>
     <section class="referral-section">
       <!-- Left: Referral URL + Earn Box -->
-      <div class="referral-card">
-        <h2>Your Referral URL</h2>
-        <div class="referral-box">
-          <input type="text" id="referralLink" value="" readonly>
-          <button class="btn-copy" id="copyBtn" onclick="copyReferral()">Copy</button>
-          <span class="copy-message" id="copyMessage">Copied!</span>
-        </div>
+<div class="referral-card">
+  <h2>Your Referral URL</h2>
 
-        <div class="earn-box">
-          YOU HAVE EARNED $0.00 FROM REFERRALS SO FAR
-        </div>
+  <div class="referral-box">
+    <input type="text" id="referralLink" value="" readonly>
+    <button class="btn-copy" id="copyBtn">Copy</button>
+    <span class="copy-message" id="copyMessage" aria-live="polite">Copied!</span>
+  </div>
 
-        <p>Each participant of the program invites investors using their referral link.</p>
-        <p>Your personal referral link: <span style="color:#2563eb;">https://-Emuntra.com/?ref=tata</span></p>
-        <p>When opening an investment deposit by invited participant you get 7% of additional income from each deposit of invited participant.</p>
-      </div>
+  <div class="earn-box">
+    YOU HAVE EARNED $<span id="earnFromRefs">0.00</span> FROM REFERRALS SO FAR
+  </div>
 
-      <!-- Right: Referral Stats -->
-      <div class="referral-stats">
-        <h2>Your Referral Stats</h2>
-        <table class="referral-table">
-          <tr><td>Your status</td><td>Client</td></tr>
-          <tr><td>Your upline</td><td>None</td></tr>
-          <tr><td>Referrals</td><td>0</td></tr>
-          <tr><td>Active referrals</td><td>0</td></tr>
-          <tr><td>Total commission</td><td>$0.00</td></tr>
-        </table>
-      </div>
+  <p>Each participant of the program invites investors using their referral link.</p>
+ 
+  <p>When an invited participant opens a deposit you get 7% of their deposit as additional income.</p>
+</div>
+
+<!-- Right: Referral Stats -->
+<div class="referral-stats">
+  <h2>Your Referral Stats</h2>
+  <table class="referral-table">
+    <tr><td>Your status</td><td id="refStatus">Client</td></tr>
+    <tr><td>Your upline</td><td id="uplineName">None</td></tr>
+    <tr><td>Referrals</td><td id="referralsCount">0</td></tr>
+    <tr><td>Active referrals</td><td id="activeReferrals">0</td></tr>
+    <tr><td>Total commission</td><td>$<span id="totalCommission">0.00</span></td></tr>
+  </table>
+</div>
     </section>
   </main>
 

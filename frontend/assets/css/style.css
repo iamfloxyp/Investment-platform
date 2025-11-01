@@ -106,7 +106,7 @@
 @media (max-width: 1000px) {
     .navbar{
         position: relative;
-        bottom: 80px;
+        bottom: 40px;
     }
     .nav-wrapper {
       display: none;
