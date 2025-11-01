@@ -36,7 +36,7 @@ import referralRoutes from "./routes/referralRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import testEmailRoute from "./routes/testEmail.js";
-import contactRoutes from "./routes/contactRoutes.js"
+import contactRoutes from "./routes/contactRoutes.js";
 
 // ===== IMPORT MODELS =====
 import Deposit from "./models/depositModel.js";
@@ -45,30 +45,22 @@ import Withdrawal from "./models/withdrawModel.js";
 // ===== INITIALIZE APP =====
 const app = express();
 
-/// ===== FIXED CORS (FINAL VERSION) =====
-const allowedOrigins = [
-  "https://investment-platform-eta.vercel.app",
-  "https://emuntra.com",
-  "https://emuntra-backend.onrender.com",
-  "http://127.0.0.1:5500",
-  "http://localhost:5500"
-];
+// ===== CORS CONFIGURATION (FINAL, SECURE) =====
+app.use(
+  cors({
+    origin: [
+      "https://platform-eta.vercel.app",  // ✅ your frontend (Vercel)
+      "https://emuntra.com",              // ✅ custom domain (if added later)
+      "https://emuntra-backend.onrender.com", // ✅ backend URL for testing
+      "http://127.0.0.1:5500",            // ✅ local dev
+      "http://localhost:5500"
+    ],
+    credentials: true, // ✅ enables cookies across domains
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-  next();
-});
 // ===== MIDDLEWARE =====
 app.use(express.json());
 app.use(cookieParser());
@@ -103,7 +95,7 @@ app.get("/api/_debug/np", (req, res) => {
   });
 });
 
-// ===== FORCE LOGOUT ROUTE (for clearing stuck cookies) =====
+// ===== FORCE LOGOUT ROUTE (clear cookies manually) =====
 app.get("/api/auth/force-logout", (req, res) => {
   try {
     res.clearCookie("emuntra_user_token", {
@@ -141,7 +133,7 @@ mongoose
     console.log("✅ MongoDB connected");
 
     try {
-      // 🧹 Data migration (safe)
+      // 🧹 Safe data migration checks
       const result1 = await Deposit.updateMany(
         { type: "withdrawal" },
         { $set: { type: "withdraw" } }
