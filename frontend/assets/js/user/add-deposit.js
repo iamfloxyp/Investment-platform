@@ -14,9 +14,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const addressSection = document.getElementById("cryptoAddressSection");
   const addressBox = document.getElementById("cryptoAddress");
 
+  // PayPal modal elements
+  const paypalModal = document.getElementById("paypalModal");
+  const paypalEmailEl = document.getElementById("paypalEmail");
+  const copyPaypalBtn = document.getElementById("copyPaypalBtn");
+  const paypalSentBtn = document.getElementById("paypalSentBtn");
+  const closePaypalBtn = document.getElementById("closePaypal");
+
   const API_BASE = window.API_BASE;
   let userId = null;
 
+  // Nice labels for common coins
   const COIN_LABELS = {
     btc: "Bitcoin (BTC)",
     eth: "Ethereum (ETH)",
@@ -29,6 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
     doge: "Dogecoin (DOGE)",
   };
 
+  // ==========================================================
+  //                       POPUP UTILITY
+  // ==========================================================
   function showPopup(message, type = "success") {
     const popup = document.createElement("div");
     popup.textContent = message;
@@ -48,6 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
   //            DYNAMIC CRYPTO LIST FROM NOWPAYMENTS
   // ==========================================================
   async function loadCryptoList() {
+    if (!cryptoSelect) return;
+
     try {
       const res = await fetch(`${API_BASE}/api/nowpay/coins`);
       const data = await res.json();
@@ -56,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.success && Array.isArray(data.coins) && data.coins.length > 0) {
         data.coins.forEach((coin) => {
-          const value = coin.toLowerCase();
+          const value = String(coin).toLowerCase();
           const label = COIN_LABELS[value] || value.toUpperCase();
 
           const opt = document.createElement("option");
@@ -66,12 +79,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         console.log("NowPayments coin list loaded:", data.coins);
-        return;
+      } else {
+        throw new Error("Empty coin list");
       }
-
-      throw new Error("Empty coin list");
     } catch (error) {
-      console.error("Unable to fetch NowPayments coins. Using backup list.");
+      console.error("Unable to fetch NowPayments coins, using backup list.", error);
 
       cryptoSelect.innerHTML = `
         <option value="">-- Select --</option>
@@ -80,6 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <option value="usdt">Tether (USDT)</option>
       `;
     }
+
+    // Always append PayPal as an extra option
+    const paypalOpt = document.createElement("option");
+    paypalOpt.value = "paypal";
+    paypalOpt.textContent = "PayPal (Friends and Family)";
+    cryptoSelect.appendChild(paypalOpt);
   }
 
   loadCryptoList();
@@ -170,6 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const card = e.target.closest(".plan-card");
+      if (!card) return;
+
       calcPlan.value = card.dataset.name;
       calcAmount.value = card.dataset.min;
       calcResult.innerHTML = "";
@@ -183,119 +203,146 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".btn-plan").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const card = e.target.closest(".plan-card");
+      if (!card) return;
+
       depositPlan.value = card.dataset.name;
       depositAmount.value = card.dataset.min;
       depositModal.style.display = "flex";
 
-      addressBox.textContent = "";
-      addressSection.style.display = "none";
+      if (addressBox && addressSection) {
+        addressBox.textContent = "";
+        addressSection.style.display = "none";
+      }
+
+      // Reset dropdown each time
+      if (cryptoSelect) cryptoSelect.value = "";
     });
   });
 
   // ==========================================================
-  //                      PAYPAL MODAL
+  //                      PAYPAL HANDLERS
+  // ==========================================================
+  if (copyPaypalBtn && paypalEmailEl) {
+    copyPaypalBtn.onclick = () => {
+      const email = paypalEmailEl.textContent.trim();
+      navigator.clipboard
+        .writeText(email)
+        .then(() => showPopup("PayPal email copied"))
+        .catch(() => showPopup("Unable to copy email", "error"));
+    };
+  }
 
-  // PayPal flow
-if (method === "paypal") {
-  const paypalModal = document.getElementById("paypalModal");
-  paypalModal.style.display = "flex";
-
-  // Copy email
-  document.getElementById("copyPaypalBtn").onclick = () => {
-    const email = document.getElementById("paypalEmail").textContent;
-    navigator.clipboard.writeText(email);
-    showPopup("PayPal email copied");
-  };
-
-  // User clicked "I have sent the money"
-  document.getElementById("paypalSentBtn").onclick = async () => {
-    try {
-      const resUser = await fetch(`${API_BASE}/api/auth/me`, {
-        credentials: "include",
-      });
-      const user = await resUser.json();
-      const userId = user._id || user.id;
-
-      await fetch(`${API_BASE}/api/deposits`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          userId,
-          amount,
-          plan: planName,
-          method: "paypal_manual",
-          note: "User selected PayPal. Pending admin verification.",
-        }),
-      });
-
-      showPopup("Your PayPal deposit request is created.", "success");
+  if (closePaypalBtn && paypalModal) {
+    closePaypalBtn.onclick = () => {
       paypalModal.style.display = "none";
-      depositModal.style.display = "none";
-    } catch (e) {
-      console.error(e);
-      showPopup("Error creating PayPal deposit.", "error");
-    }
-  };
+    };
+  }
 
-  return;
-}
-document.getElementById("closePaypal").onclick = () => {
-  document.getElementById("paypalModal").style.display = "none";
-};
   // ==========================================================
   //               CREATE DEPOSIT AND REDIRECT
   // ==========================================================
-  cryptoSelect.addEventListener("change", async () => {
-    const crypto = cryptoSelect.value;
-    const amount = parseFloat(depositAmount.value || 0);
-    const planName = depositPlan.value;
+  if (cryptoSelect) {
+    cryptoSelect.addEventListener("change", async () => {
+      const method = cryptoSelect.value;
+      const amount = parseFloat(depositAmount.value || 0);
+      const planName = depositPlan.value;
 
-    if (!crypto || !amount || amount < 50) {
-      showPopup("Please enter a valid amount and select crypto.", "error");
-      return;
-    }
+      if (!method) return;
 
-    try {
-      const resUser = await fetch(`${API_BASE}/api/auth/me`, {
-        credentials: "include",
-      });
-      const user = await resUser.json();
-      const userId = user._id || user.id;
-
-      const res = await fetch(`${API_BASE}/api/deposits`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          userId,
-          amount,
-          plan: planName,
-          method: crypto,
-        }),
-      });
-
-      const data = await res.json();
-      console.log("Deposit response:", data);
-
-      if (!res.ok) throw new Error(data.msg || "Deposit failed");
-
-      const iidMatch = data.paymentLink && data.paymentLink.match(/iid=(\d+)/);
-      const iid = iidMatch ? iidMatch[1] : null;
-
-      if (iid) {
-        showPopup("Redirecting to secure payment. Please wait.", "success");
-        window.location.href = `/user/payment.html?iid=${iid}`;
-      } else if (data.paymentLink) {
-        window.open(data.paymentLink, "_blank", "noopener,noreferrer");
-      } else {
-        showPopup("Payment link not available.", "error");
+      if (!amount || amount < 50) {
+        showPopup("Please enter a valid amount.", "error");
+        return;
       }
-    } catch (err) {
-      console.error("Payment Error:", err);
-      showPopup("Error connecting to payment server.", "error");
-    }
-  });
+
+      // ---------- PayPal path ----------
+      if (method === "paypal") {
+        if (!paypalModal) {
+          showPopup("PayPal modal not found in DOM.", "error");
+          return;
+        }
+
+        paypalModal.style.display = "flex";
+
+        if (paypalSentBtn) {
+          paypalSentBtn.onclick = async () => {
+            try {
+              const resUser = await fetch(`${API_BASE}/api/auth/me`, {
+                credentials: "include",
+              });
+              const user = await resUser.json();
+              const uid = user._id || user.id;
+
+              // TODO: adjust this endpoint to match your backend
+              const res = await fetch(`${API_BASE}/api/deposits/paypal`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  userId: uid,
+                  amount,
+                  plan: planName,
+                  note: "User selected PayPal Friends and Family. Pending admin verification.",
+                }),
+              });
+
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.msg || "PayPal deposit failed");
+
+              showPopup("Your PayPal deposit request has been created.", "success");
+              paypalModal.style.display = "none";
+              depositModal.style.display = "none";
+            } catch (e) {
+              console.error(e);
+              showPopup("Error creating PayPal deposit.", "error");
+            }
+          };
+        }
+
+        return;
+      }
+
+      // ---------- Crypto path via NowPayments ----------
+      try {
+        const resUser = await fetch(`${API_BASE}/api/auth/me`, {
+          credentials: "include",
+        });
+        const user = await resUser.json();
+        const uid = user._id || user.id;
+
+        const res = await fetch(`${API_BASE}/api/deposits`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            userId: uid,
+            amount,
+            plan: planName,
+            method, // crypto coin
+          }),
+        });
+
+        const data = await res.json();
+        console.log("Deposit response:", data);
+
+        if (!res.ok) throw new Error(data.msg || "Deposit failed");
+
+        const iidMatch = data.paymentLink && data.paymentLink.match(/iid=(\d+)/);
+        const iid = iidMatch ? iidMatch[1] : null;
+
+        if (iid) {
+          showPopup("Redirecting to secure payment. Please wait.", "success");
+          window.location.href = `/user/payment.html?iid=${iid}`;
+        } else if (data.paymentLink) {
+          window.open(data.paymentLink, "_blank", "noopener,noreferrer");
+        } else {
+          showPopup("Payment link not available.", "error");
+        }
+      } catch (err) {
+        console.error("Payment Error:", err);
+        showPopup("Error connecting to payment server.", "error");
+      }
+    });
+  }
 
   // ==========================================================
   //                       CLOSE BUTTONS
@@ -344,5 +391,6 @@ document.getElementById("closePaypal").onclick = () => {
   window.onclick = (e) => {
     if (e.target === calcModal) calcModal.style.display = "none";
     if (e.target === depositModal) depositModal.style.display = "none";
+    if (paypalModal && e.target === paypalModal) paypalModal.style.display = "none";
   };
 });
