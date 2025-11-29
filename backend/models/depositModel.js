@@ -8,15 +8,18 @@ const depositSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     amount: {
       type: Number,
       required: true,
     },
+
     plan: {
       type: String,
       enum: ["Bronze", "Silver", "Gold", "Diamond", "Platinum"],
       required: true,
     },
+
     method: {
       type: String,
       enum: [
@@ -32,22 +35,44 @@ const depositSchema = new mongoose.Schema(
         "trx",
         "tron",
         "bch",
+        "paypal_manual",
       ],
-      default: "bank",
+      default: "crypto",
     },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected", "completed"],
       default: "pending",
     },
+
     type: {
       type: String,
       enum: ["deposit", "withdraw"],
       default: "deposit",
     },
+
     note: {
       type: String,
       default: "",
+    },
+
+    // 🌟 REQUIRED FOR NOWPAYMENTS
+    invoiceId: {
+      type: String,
+      default: null,
+    },
+ 
+    // Track if referral already paid
+    referralPaid: {
+      type: Boolean,
+      default: false,
+    },
+
+    // When user becomes eligible for next daily profit
+    profitEligibleAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

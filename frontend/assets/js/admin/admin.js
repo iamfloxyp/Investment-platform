@@ -202,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (res.ok) {
           localStorage.clear();
           alert("✅ Logged out successfully!");
-          window.location.href = "admin-login.html"; // ✅ redirect to admin login page
+          window.location.href = "/admin-login.html"; // ✅ redirect to admin login page
         } else {
           alert("⚠️ Logout failed. Please try again.");
         }

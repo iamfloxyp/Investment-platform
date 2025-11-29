@@ -37,6 +37,7 @@ import userRoutes from "./routes/userRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import testEmailRoute from "./routes/testEmail.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import nowpayRoutes from "./routes/nowpayRoutes.js";
 
 // ===== IMPORT MODELS =====
 import Deposit from "./models/depositModel.js";
@@ -92,6 +93,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api", testEmailRoute);
 app.use("/api/contact", contactRoutes);
+app.use("/api/nowpay", nowpayRoutes);
 
 // ===== TEST ROUTE =====
 app.get("/api/test", (req, res) => {

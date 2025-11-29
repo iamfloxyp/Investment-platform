@@ -77,6 +77,7 @@ export const addDepositForUser = async (req, res) => {
           note: `Top-up for existing ${plan} plan`,
           status: "pending",
           type: "deposit",
+          invoiceId: paymentResponse?.data?.invoice_id ,
         });
 
         await newDeposit.save();
@@ -97,6 +98,35 @@ export const addDepositForUser = async (req, res) => {
         return res.status(500).json({ msg: "Error connecting to payment server" });
       }
     }
+
+
+    /* ============================================================
+   🟨 HANDLE PAYPAL MANUAL PAYMENT (no API)
+============================================================ */
+if (method === "paypal_manual") {
+  const deposit = new Deposit({
+    user: userId,
+    amount,
+    method: "paypal_manual",
+    plan,
+    note: "User selected PayPal Friends and Family. Pending admin confirmation.",
+    status: "pending",
+    type: "deposit",
+  });
+
+  await deposit.save();
+
+  await Notification.create({
+    user: userId,
+    type: "deposit",
+    message: `🟡 Your PayPal deposit of $${amount} is awaiting admin confirmation.`,
+  });
+
+  return res.status(201).json({
+    msg: "PayPal deposit created successfully",
+    deposit,
+  });
+}
 
     /* ============================================================
        ✅ CREATE PAYMENT LINK FOR NEW PLAN

@@ -82,16 +82,7 @@
             <p>Account Balance</p>
           </div>
           <ul class="crypto-list">
-            <li data-coin="btc"><i class="fa-brands fa-bitcoin"></i> Bitcoin (BTC) <span>$0.00</span></li>
-            <li data-coin="eth"><i class="fa-brands fa-ethereum"></i> Ethereum (ETH) <span>$0.00</span></li>
-            <li data-coin="usdt"><i class="fa-solid fa-dollar-sign"></i> Tether (USDT) <span>$0.00</span></li>
-            <li data-coin="bnb"><i class="fa-solid fa-coins"></i> Binance Coin (BNB) <span>$0.00</span></li>
-            <li data-coin="tron"><i class="fa-solid fa-circle-nodes"></i> Tron (TRX) <span>$0.00</span></li>
-            <li data-coin="bch"><i class="fa-solid fa-money-bill-trend-up"></i> Bitcoin Cash (BCH) <span>$0.00</span></li>
-            <li data-coin="ltc"><i class="fa-solid fa-l"></i> Litecoin (LTC) <span>$0.00</span></li>
-            <li data-coin="xrp"><i class="fa-solid fa-x"></i> Ripple (XRP) <span>$0.00</span></li>
-            <li data-coin="doge"><i class="fa-solid fa-dog"></i> Dogecoin (DOGE) <span>$0.00</span></li>
-          </ul>
+            <!-- Crypto balances will be injected here -->
         </div>
       </div>
 
@@ -184,18 +175,9 @@
         <label for="depositAmount">Amount ($)</label>
         <input id="depositAmount" type="number" placeholder="Enter amount" />
         <label for="cryptoSelect">Choose Crypto</label>
-        <select id="cryptoSelect" required>
-          <option value="">-- Select --</option>
-          <option value="btc">Bitcoin (BTC)</option>
-          <option value="eth">Ethereum (ETH)</option>
-          <option value="usdt">Tether (USDT)</option>
-          <option value="bnb">Binance Coin (BNB)</option>
-          <option value="tron">Tron (TRX)</option>
-          <option value="bch">Bitcoin Cash (BCH)</option>
-          <option value="ltc">Litecoin (LTC)</option>
-          <option value="xrp">Ripple (XRP)</option>
-          <option value="doge">Dogecoin (DOGE)</option>
-        </select>
+       <select id="cryptoSelect" required>
+  <option value="">Loading coins...</option>
+</select>
         <button type="submit" class="btn-primary">Confirm Deposit</button>
       </form>
 
@@ -218,6 +200,38 @@
       <button id="depositOkBtn" type="button" class="btn-secondary">OK</button>
     </div>
   </div>
+  <!-- PayPal Modal -->
+<div id="paypalModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closePaypal">&times;</span>
+    <h2>Pay with PayPal</h2>
+
+    <p style="margin-bottom:10px;">
+      For faster processing, please send using 
+      <strong>PayPal Friends and Family</strong>.
+    </p>
+
+    <p style="margin-bottom:10px;">
+      Send your payment to:
+    </p>
+
+    <div style="background:#f4f4f4;padding:10px;border-radius:5px;word-break:break-all;">
+      <strong id="paypalEmail">payments@emuntra.com</strong>
+    </div>
+
+    <button id="copyPaypalBtn" class="btn-secondary" style="margin-top:10px;">
+      Copy PayPal Email
+    </button>
+
+    <p style="margin-top:15px;font-size:14px;color:#555;">
+      After sending, click the button below so we can verify your payment.
+    </p>
+
+    <button id="paypalSentBtn" class="btn-primary">
+      I have sent the money
+    </button>
+  </div>
+</div>
 
   <!-- FOOTER -->
   <footer class="site-footer">
