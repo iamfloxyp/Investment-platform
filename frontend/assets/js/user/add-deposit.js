@@ -24,19 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = window.API_BASE;
   let userId = null;
 
-  // Nice labels for common coins
-  const COIN_LABELS = {
-    btc: "Bitcoin (BTC)",
-    eth: "Ethereum (ETH)",
-    usdt: "Tether (USDT)",
-    bnb: "Binance Coin (BNB)",
-    tron: "Tron (TRX)",
-    bch: "Bitcoin Cash (BCH)",
-    ltc: "Litecoin (LTC)",
-    xrp: "Ripple (XRP)",
-    doge: "Dogecoin (DOGE)",
-  };
-
+  const NOWPAY_COINS = {
+  btc: "btc",
+  eth: "eth",
+  usdt: "usdttrc20",
+  bnb: "bnb",
+  trx: "trx",
+  ltc: "ltc",
+  xrp: "xrp",
+  doge: "doge",
+  bch: "bch",
+  sol: "sol"
+};
   // ==========================================================
   //                       POPUP UTILITY
   // ==========================================================
@@ -64,7 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadCryptoList() {
   if (!cryptoSelect) return;
 
-  // Initial loading placeholder
   cryptoSelect.innerHTML = `<option value="">Loading coins...</option>`;
 
   try {
@@ -73,13 +71,20 @@ async function loadCryptoList() {
 
     cryptoSelect.innerHTML = `<option value="">-- Select --</option>`;
 
-    if (data.success && Array.isArray(data.coins) && data.coins.length > 0) {
-      data.coins.forEach((coin) => {
-        const value = coin.toLowerCase();
-        const label = COIN_LABELS[value] || coin.toUpperCase();
+    if (data.success && Array.isArray(data.coins)) {
+      data.coins.forEach((symbol) => {
+        const coinKey = symbol.toLowerCase();
+
+        // Map to NowPayments acceptable format
+        const npCoin = NOWPAY_COINS[coinKey];
+        if (!npCoin) return; // skip unsupported coins
+
+        // Label formatting
+        const label =
+          COIN_LABELS[coinKey] || coinKey.toUpperCase();
 
         const opt = document.createElement("option");
-        opt.value = value;
+        opt.value = npCoin; // IMPORTANT
         opt.textContent = label;
         cryptoSelect.appendChild(opt);
       });
@@ -91,11 +96,11 @@ async function loadCryptoList() {
       <option value="">-- Select --</option>
       <option value="btc">Bitcoin (BTC)</option>
       <option value="eth">Ethereum (ETH)</option>
-      <option value="usdt">Tether (USDT)</option>
+      <option value="usdttrc20">Tether (USDT TRC20)</option>
     `;
   }
 
-  // Always add PayPal at the bottom
+  // Always add PayPal
   const paypal = document.createElement("option");
   paypal.value = "paypal";
   paypal.textContent = "PayPal (Friends and Family)";
