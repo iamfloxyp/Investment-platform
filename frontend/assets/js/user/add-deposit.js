@@ -58,49 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================
   //            DYNAMIC CRYPTO LIST FROM NOWPAYMENTS
   // ==========================================================
-  async function loadCryptoList() {
-    if (!cryptoSelect) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/nowpay/coins`);
-      const data = await res.json();
-
-      cryptoSelect.innerHTML = `<option value="">-- Select --</option>`;
-
-      if (data.success && Array.isArray(data.coins) && data.coins.length > 0) {
-        data.coins.forEach((coin) => {
-          const value = String(coin).toLowerCase();
-          const label = COIN_LABELS[value] || value.toUpperCase();
-
-          const opt = document.createElement("option");
-          opt.value = value;
-          opt.textContent = label;
-          cryptoSelect.appendChild(opt);
-        });
-
-        console.log("NowPayments coin list loaded:", data.coins);
-      } else {
-        throw new Error("Empty coin list");
-      }
-    } catch (error) {
-      console.error("Unable to fetch NowPayments coins, using backup list.", error);
-
-      cryptoSelect.innerHTML = `
-        <option value="">-- Select --</option>
-        <option value="btc">Bitcoin (BTC)</option>
-        <option value="eth">Ethereum (ETH)</option>
-        <option value="usdt">Tether (USDT)</option>
-      `;
-    }
-
-    // Always append PayPal as an extra option
-    const paypalOpt = document.createElement("option");
-    paypalOpt.value = "paypal";
-    paypalOpt.textContent = "PayPal (Friends and Family)";
-    cryptoSelect.appendChild(paypalOpt);
-  }
-
-  loadCryptoList();
 
   // ==========================================================
   //                  UPDATE DASHBOARD BALANCES
@@ -143,12 +100,10 @@ document.addEventListener("DOMContentLoaded", () => {
         li.dataset.coin = coin;
 
         const labelSpan = document.createElement("span");
-        labelSpan.textContent = niceLabel;
+        labelSpan.textContent = niceLabel + ":";
 
         const valueSpan = document.createElement("span");
-        valueSpan.textContent = `$${Number(amount).toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+        valueSpan.textContent = `$${Number(amount).toFixed(2)
         })}`;
 
         li.appendChild(labelSpan);
