@@ -28,13 +28,97 @@ document.addEventListener("DOMContentLoaded", () => {
   btc: "btc",
   eth: "eth",
   usdt: "usdttrc20",
+  usdc: "usdc",
   bnb: "bnb",
+  busd: "busd",
   trx: "trx",
-  ltc: "ltc",
+  sol: "sol",
   xrp: "xrp",
+  ltc: "ltc",
   doge: "doge",
   bch: "bch",
-  sol: "sol"
+  ada: "ada",
+  dot: "dot",
+  matic: "matic",
+  avax: "avax",
+  xlm: "xlm",
+  xmr: "xmr",
+  vet: "vet",
+  egld: "egld",
+  algo: "algo",
+  icp: "icp",
+  fil: "fil",
+  hbar: "hbar",
+  near: "near",
+  atom: "atom",
+  grt: "grt",
+  ftm: "ftm",
+  cro: "cro",
+  sand: "sand",
+  mana: "mana",
+  enj: "enj",
+  gala: "gala",
+  ape: "ape",
+  qnt: "qnt",
+  casper: "cspr",
+  zil: "zil",
+  dcr: "dcr",
+  ksm: "ksm",
+  luna: "luna",
+  dai: "dai",
+  shib: "shib",
+  floki: "floki",
+  pepe: "pepe",
+  inj: "inj",
+  rndr: "rndr",
+  imx: "imx",
+  sushiswap: "sushi",
+  comp: "comp",
+  link: "link",
+  uni: "uni",
+  aave: "aave",
+  snx: "snx",
+  oneinch: "1inch",
+  crv: "crv",
+  yfi: "yfi",
+  bal: "bal",
+  ldo: "ldo",
+  op: "op",
+  arb: "arb",
+  sei: "sei",
+  apt: "apt",
+  ton: "ton",
+  btt: "btt",
+  hot: "hot",
+  sc: "sc",
+  rvn: "rvn",
+  zen: "zen",
+  omg: "omg",
+  iost: "iost",
+  waves: "waves",
+  dash: "dash",
+  zec: "zec",
+  theta: "theta",
+  tfuel: "tfuel",
+  kusama: "ksm",
+  neo: "neo",
+  qtum: "qtum",
+  eos: "eos",
+  cro: "cro",
+  harmony: "one",
+  klay: "klay",
+  celo: "celo",
+  rose: "rose",
+  xdc: "xdc",
+  celo: "celo",
+  ftm: "ftm",
+  daieth: "daieth",
+  wbtc: "wbtc",
+  weth: "weth",
+  usdteth: "usdt",
+  usdtbsc: "usdtbsc",
+  usdtpolygon: "usdtsol",
+  usdtavax: "usdtavax",
 };
   // ==========================================================
   //                       POPUP UTILITY
@@ -55,49 +139,45 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================
-  //            DYNAMIC CRYPTO LIST FROM NOWPAYMENTS
+  //           CRYPTOLOADING AND SELECT OPTIONS
   // ==========================================================
-// ==========================================================
-//      LOAD FULL CRYPTO LIST (COINGECKO OR NOWPAYMENTS)
-// ==========================================================
 async function loadCryptoList() {
   if (!cryptoSelect) return;
 
-  cryptoSelect.innerHTML = `<option value="">Loading coins...</option>`;
+  cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
 
-  try {
-    const res = await fetch(`${API_BASE}/api/nowpay/coins`);
-    const data = await res.json();
+  // Loop all supported NowPayments coins
+  Object.entries(NOWPAY_COINS).forEach(([symbol, npValue]) => {
+    const label =
+      COIN_LABELS[npValue] ||
+      COIN_LABELS[symbol] ||
+      symbol.toUpperCase();
 
-    cryptoSelect.innerHTML = `
-      <option value="paypal">PayPal (Friends and Family)</option>
-      <option value="">-- Select Crypto --</option>
-    `;
+    const opt = document.createElement("option");
+    opt.value = npValue;
+    opt.textContent = label;
+    cryptoSelect.appendChild(opt);
+  });
 
-    if (data.success && Array.isArray(data.coins)) {
-      data.coins.forEach((symbol) => {
-        const coin = symbol.toLowerCase();
-        const label = COIN_LABELS[coin] || coin.toUpperCase();
-
-        const opt = document.createElement("option");
-        opt.value = coin;
-        opt.textContent = label;
-        cryptoSelect.appendChild(opt);
-      });
-    }
-  } catch (err) {
-    console.error("Failed to load dynamic coins:", err);
-
-    cryptoSelect.innerHTML = `
-      <option value="paypal">PayPal (Friends and Family)</option>
-      <option value="">-- Select Crypto --</option>
-      <option value="btc">Bitcoin (BTC)</option>
-      <option value="eth">Ethereum (ETH)</option>
-      <option value="usdt">Tether (USDT)</option>
-    `;
-  }
+  // Add PayPal at top
+  const paypal = document.createElement("option");
+  paypal.value = "paypal";
+  paypal.textContent = "PayPal (Friends and Family)";
+  cryptoSelect.prepend(paypal);
 }
 loadCryptoList();
+// ----------------------
+//   LABEL HELPER
+// ----------------------
+function getCoinLabel(symbol) {
+  symbol = symbol.toLowerCase();
+
+  return (
+    COIN_LABELS[symbol] ||
+    COIN_LABELS[NOWPAY_COINS[symbol]] ||
+    symbol.toUpperCase()
+  );
+}
   // ==========================================================
   //                  UPDATE DASHBOARD BALANCES
   // ==========================================================
