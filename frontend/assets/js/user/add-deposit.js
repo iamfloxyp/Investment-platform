@@ -58,7 +58,49 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================
   //            DYNAMIC CRYPTO LIST FROM NOWPAYMENTS
   // ==========================================================
+// ==========================================================
+//      LOAD FULL CRYPTO LIST (COINGECKO OR NOWPAYMENTS)
+// ==========================================================
+async function loadCryptoList() {
+  if (!cryptoSelect) return;
 
+  // Initial loading placeholder
+  cryptoSelect.innerHTML = `<option value="">Loading coins...</option>`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/nowpay/coins`);
+    const data = await res.json();
+
+    cryptoSelect.innerHTML = `<option value="">-- Select --</option>`;
+
+    if (data.success && Array.isArray(data.coins) && data.coins.length > 0) {
+      data.coins.forEach((coin) => {
+        const value = coin.toLowerCase();
+        const label = COIN_LABELS[value] || coin.toUpperCase();
+
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = label;
+        cryptoSelect.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.error("Crypto load error:", e);
+
+    cryptoSelect.innerHTML = `
+      <option value="">-- Select --</option>
+      <option value="btc">Bitcoin (BTC)</option>
+      <option value="eth">Ethereum (ETH)</option>
+      <option value="usdt">Tether (USDT)</option>
+    `;
+  }
+
+  // Always add PayPal at the bottom
+  const paypal = document.createElement("option");
+  paypal.value = "paypal";
+  paypal.textContent = "PayPal (Friends and Family)";
+  cryptoSelect.appendChild(paypal);
+}
   // ==========================================================
   //                  UPDATE DASHBOARD BALANCES
   // ==========================================================
