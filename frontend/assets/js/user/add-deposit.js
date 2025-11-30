@@ -182,57 +182,57 @@ function getCoinLabel(symbol) {
   //                  UPDATE DASHBOARD BALANCES
   // ==========================================================
   function updateBalances(user) {
-    try {
-      const totalBalance = Number(user.balance || 0);
+  try {
+    const totalBalance = Number(user.balance || 0);
 
-      const balanceEl = document.querySelector(".balance h3");
-      if (balanceEl) balanceEl.textContent = `$${totalBalance.toFixed(2)}`;
+    const balanceEl = document.querySelector(".balance h3");
+    if (balanceEl) balanceEl.textContent = `$${totalBalance.toFixed(2)}`;
 
-      const availableEl = document.getElementById("availableBalance");
-      if (availableEl) {
-        const balance = user.availableBalance ?? user.balance ?? 0;
-        availableEl.textContent = `$${Number(balance).toFixed(2)}`;
-      }
-
-      const cryptoList = document.querySelector(".crypto-list");
-      if (!cryptoList) return;
-      cryptoList.innerHTML = "";
-
-      const wallets = user.wallets || {};
-      const entries = Object.entries(wallets).filter(
-        ([, amount]) => Number(amount) > 0
-      );
-
-      if (!entries.length) {
-        const li = document.createElement("li");
-        li.className = "empty-balance";
-        li.textContent = "No crypto balance yet. Make a deposit to see it here.";
-        cryptoList.appendChild(li);
-        return;
-      }
-
-      entries.forEach(([coinKey, amount]) => {
-        const coin = String(coinKey).toLowerCase();
-        const niceLabel = COIN_LABELS[coin] || coin.toUpperCase();
-
-        const li = document.createElement("li");
-        li.dataset.coin = coin;
-
-        const labelSpan = document.createElement("span");
-        labelSpan.textContent = niceLabel + ":";
-
-        const valueSpan = document.createElement("span");
-        valueSpan.textContent = `$${Number(amount).toFixed(2)
-        })}`;
-
-        li.appendChild(labelSpan);
-        li.appendChild(valueSpan);
-        cryptoList.appendChild(li);
-      });
-    } catch (e) {
-      console.error("Error updating balances:", e);
+    const availableEl = document.getElementById("availableBalance");
+    if (availableEl) {
+      const balance = user.availableBalance ?? user.balance ?? 0;
+      availableEl.textContent = `$${Number(balance).toFixed(2)}`;
     }
+
+    const cryptoList = document.querySelector(".crypto-list");
+    if (!cryptoList) return;
+    cryptoList.innerHTML = "";
+
+    const wallets = user.wallets || {};
+    const entries = Object.entries(wallets).filter(
+      ([, amount]) => Number(amount) > 0
+    );
+
+    if (!entries.length) {
+      const li = document.createElement("li");
+      li.className = "empty-balance";
+      li.textContent =
+        "No crypto balance yet. Make a deposit to see it here.";
+      cryptoList.appendChild(li);
+      return;
+    }
+
+    entries.forEach(([coinKey, amount]) => {
+      const coin = String(coinKey).toLowerCase();
+      const niceLabel = getCoinLabel(coin);
+
+      const li = document.createElement("li");
+      li.dataset.coin = coin;
+
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = niceLabel + ":";
+
+      const valueSpan = document.createElement("span");
+      valueSpan.textContent = `$${Number(amount).toFixed(2)}`;
+
+      li.appendChild(labelSpan);
+      li.appendChild(valueSpan);
+      cryptoList.appendChild(li);
+    });
+  } catch (e) {
+    console.error("Error updating balances:", e);
   }
+}
 
   // ==========================================================
   //                        FETCH USER
