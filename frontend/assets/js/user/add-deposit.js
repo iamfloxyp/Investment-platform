@@ -101,6 +101,7 @@ async function loadCryptoList() {
   paypal.textContent = "PayPal (Friends and Family)";
   cryptoSelect.appendChild(paypal);
 }
+loadCryptoList();
   // ==========================================================
   //                  UPDATE DASHBOARD BALANCES
   // ==========================================================
