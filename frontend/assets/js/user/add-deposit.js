@@ -69,42 +69,33 @@ async function loadCryptoList() {
     const res = await fetch(`${API_BASE}/api/nowpay/coins`);
     const data = await res.json();
 
-    cryptoSelect.innerHTML = `<option value="">-- Select --</option>`;
+    cryptoSelect.innerHTML = `
+      <option value="paypal">PayPal (Friends and Family)</option>
+      <option value="">-- Select Crypto --</option>
+    `;
 
     if (data.success && Array.isArray(data.coins)) {
       data.coins.forEach((symbol) => {
-        const coinKey = symbol.toLowerCase();
-
-        // Map to NowPayments acceptable format
-        const npCoin = NOWPAY_COINS[coinKey];
-        if (!npCoin) return; // skip unsupported coins
-
-        // Label formatting
-        const label =
-          COIN_LABELS[coinKey] || coinKey.toUpperCase();
+        const coin = symbol.toLowerCase();
+        const label = COIN_LABELS[coin] || coin.toUpperCase();
 
         const opt = document.createElement("option");
-        opt.value = npCoin; // IMPORTANT
+        opt.value = coin;
         opt.textContent = label;
         cryptoSelect.appendChild(opt);
       });
     }
-  } catch (e) {
-    console.error("Crypto load error:", e);
+  } catch (err) {
+    console.error("Failed to load dynamic coins:", err);
 
     cryptoSelect.innerHTML = `
-      <option value="">-- Select --</option>
+      <option value="paypal">PayPal (Friends and Family)</option>
+      <option value="">-- Select Crypto --</option>
       <option value="btc">Bitcoin (BTC)</option>
       <option value="eth">Ethereum (ETH)</option>
-      <option value="usdttrc20">Tether (USDT TRC20)</option>
+      <option value="usdt">Tether (USDT)</option>
     `;
   }
-
-  // Always add PayPal
-  const paypal = document.createElement("option");
-  paypal.value = "paypal";
-  paypal.textContent = "PayPal (Friends and Family)";
-  cryptoSelect.appendChild(paypal);
 }
 loadCryptoList();
   // ==========================================================

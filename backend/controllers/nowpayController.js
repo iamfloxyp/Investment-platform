@@ -1,26 +1,24 @@
-// controllers/nowpayController.js
-
 import axios from "axios";
 
 export const getSupportedCoins = async (req, res) => {
   try {
-    const url = "https://api.coingecko.com/api/v3/coins/list";
+    const url = "https://min-api.cryptocompare.com/data/all/coinlist";
 
     const response = await axios.get(url);
 
-    // Filter out only popular coins and return IDs like btc, eth, usdt
-    const allowed = ["btc", "eth", "usdt", "bnb", "trx", "ltc", "xrp", "doge", "bch", "sol"];
+    const allCoins = response.data.Data || {};
 
-    const coins = response.data
-      .map((c) => c.symbol.toLowerCase())
-      .filter((symbol) => allowed.includes(symbol));
+    // Extract all symbols: BTC, ETH, XRP, etc.
+    const symbols = Object.keys(allCoins)
+      .map((key) => key.toLowerCase())
+      .filter((sym) => sym.length >= 2); // remove invalid entries
 
     return res.json({
       success: true,
-      coins,
+      coins: symbols,   // full unlimited list
     });
   } catch (err) {
-    console.error("CoinGecko API error:", err.message);
+    console.error("CryptoCompare API error:", err.message);
 
     return res.status(500).json({
       success: false,
