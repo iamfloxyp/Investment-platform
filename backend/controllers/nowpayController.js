@@ -2,33 +2,29 @@
 
 import axios from "axios";
 
-const NOWPAY_API_KEY = process.env.NOWPAYMENTS_API_KEY;
-
-// Pull full coin list from new NowPayments endpoint
 export const getSupportedCoins = async (req, res) => {
   try {
-    const url = "https://api.nowpayments.io/v1/merchant/coins";
+    const url = "https://api.coingecko.com/api/v3/coins/list";
 
-    const response = await axios.get(url, {
-      headers: {
-        "x-api-key": NOWPAY_API_KEY,
-        Accept: "application/json",
-      },
-    });
+    const response = await axios.get(url);
 
-    // Get only coin codes like btc, eth, sol
-    const coins = response.data.coins.map((c) => c.code);
+    // Filter out only popular coins and return IDs like btc, eth, usdt
+    const allowed = ["btc", "eth", "usdt", "bnb", "trx", "ltc", "xrp", "doge", "bch", "sol"];
+
+    const coins = response.data
+      .map((c) => c.symbol.toLowerCase())
+      .filter((symbol) => allowed.includes(symbol));
 
     return res.json({
       success: true,
       coins,
     });
   } catch (err) {
-    console.error("NowPayments API error:", err.response?.data || err.message);
+    console.error("CoinGecko API error:", err.message);
 
     return res.status(500).json({
       success: false,
-      message: "Unable to fetch coin list from NowPayments",
+      message: "Unable to load coins",
     });
   }
 };
