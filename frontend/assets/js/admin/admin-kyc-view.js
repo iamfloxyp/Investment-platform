@@ -1,53 +1,38 @@
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
-
-// Get URL param
 const params = new URLSearchParams(window.location.search);
-const kycId = params.get("id");
+const userId = params.get("id");
 
 async function loadKYCDetails() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/kyc/${kycId}`, {
+    const res = await fetch(`${API_BASE}/api/admin/kyc/${userId}`, {
       credentials: "include"
     });
 
     const data = await res.json();
-    const box = document.getElementById("kycContainer");
-
-    if (!res.ok) {
-      box.innerHTML = `<p style="color:red;">${data.message || "Failed to load KYC"}</p>`;
+    if (!data.success) {
+      document.getElementById("kycContainer").innerHTML =
+        `<p style="color:red;">${data.message}</p>`;
       return;
     }
 
+    const u = data.user;
+    const box = document.getElementById("kycContainer");
+
     box.innerHTML = `
-      <div class="kyc-field">
-        <label>Full Name:</label>
-        <div class="kyc-value">${data.fullName}</div>
-      </div>
-
-      <div class="kyc-field">
-        <label>Email:</label>
-        <div class="kyc-value">${data.email}</div>
-      </div>
-
-      <div class="kyc-field">
-        <label>SSN:</label>
-        <div class="kyc-value">${data.ssn}</div>
-      </div>
-
-      <div class="kyc-field">
-        <label>License Number:</label>
-        <div class="kyc-value">${data.licenseNumber}</div>
-      </div>
+      <div class="kyc-field"><label>Full Name:</label> <div>${u.firstName} ${u.lastName}</div></div>
+      <div class="kyc-field"><label>Email:</label> <div>${u.email}</div></div>
+      <div class="kyc-field"><label>SSN:</label> <div>${u.kyc.ssnText || "N/A"}</div></div>
+      <div class="kyc-field"><label>License Number:</label> <div>${u.kyc.driverLicenseNumber || "N/A"}</div></div>
 
       <div class="kyc-docs">
         <div class="doc-preview">
           <label>ID Front:</label>
-          <img src="${data.frontImage}" alt="Front ID">
+          <img src="${u.kyc.idFrontUrl}" />
         </div>
 
         <div class="doc-preview">
           <label>ID Back:</label>
-          <img src="${data.backImage}" alt="Back ID">
+          <img src="${u.kyc.idBackUrl}" />
         </div>
       </div>
 
@@ -63,34 +48,23 @@ async function loadKYCDetails() {
 }
 
 async function approveKYC() {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/kyc/${kycId}/approve`, {
-      method: "PATCH",
-      credentials: "include"
-    });
-    if (!res.ok) throw new Error();
+  await fetch(`${API_BASE}/api/admin/kyc/${userId}/approve`, {
+    method: "PATCH",
+    credentials: "include",
+  });
 
-    showPopup("KYC approved successfully", "success");
-    setTimeout(() => window.location.href = "/admin/admin-kyc.html", 1200);
-  } catch (err) {
-    showPopup("Failed to approve KYC.", "error");
-  }
+  showPopup("KYC approved.", "success");
+  setTimeout(() => (window.location.href = "/admin/adminKyc.html"), 1000);
 }
 
 async function rejectKYC() {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/kyc/${kycId}/reject`, {
-      method: "PATCH",
-      credentials: "include"
-    });
-    if (!res.ok) throw new Error();
+  await fetch(`${API_BASE}/api/admin/kyc/${userId}/reject`, {
+    method: "PATCH",
+    credentials: "include",
+  });
 
-    showPopup("KYC rejected", "success");
-    setTimeout(() => window.location.href = "/admin/admin-kyc.html", 1200);
-  } catch (err) {
-    showPopup("Failed to reject KYC.", "error");
-  }
+  showPopup("KYC rejected.", "success");
+  setTimeout(() => (window.location.href = "/admin/adminKyc.html"), 1000);
 }
 
-// load on start
 loadKYCDetails();
