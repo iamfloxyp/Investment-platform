@@ -10,6 +10,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import "./cronDailyProfit.js";
 import fileUpload from "express-fileupload";
+import cloudinary from "cloudinary";
 
 // ===== LOAD ENV =====
 if (process.env.NODE_ENV !== "production") {
@@ -32,6 +33,11 @@ cron.schedule(
 console.log(
   "✅ Daily profit scheduler initialized. Runs every day at 21:00 UTC"
 );
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // ===== IMPORT ROUTES =====
 import authRoutes from "./routes/authRoutes.js";

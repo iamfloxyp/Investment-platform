@@ -72,12 +72,10 @@ async function checkKYCStatus() {
 
     const data = await res.json();
 
-    // If user is not logged in or no data, stop
-    if (!data || !data.user) return;
+    if (!data) return;
 
-    const status = data.user.kycStatus;
+    const status = data.kycStatus;
 
-    // Show popup only if KYC is not approved
     if (status !== "verified") {
       const popup = document.getElementById("kycPopup");
       if (popup) popup.classList.remove("hidden");
