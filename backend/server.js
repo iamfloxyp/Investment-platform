@@ -66,8 +66,13 @@ app.use(
   fileUpload({
     useTempFiles: true,
     tempFileDir: "/tmp/",
+    createParentPath: true,
   })
 );
+
+app.use(express.json());
+app.use(cookieParser());
+
 
 // ===== ADVANCED CORS CONFIGURATION (FINAL, SECURE, RENDER ↔ VERCEL) =====
 const allowedOrigins = [
