@@ -1,36 +1,23 @@
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
-// Preview selected images
-function previewImage(input, previewEl) {
-  input.addEventListener("change", () => {
-    const file = input.files[0];
-    if (file) {
-      previewEl.src = URL.createObjectURL(file);
-      previewEl.style.display = "block";
-    }
-  });
-}
+document.getElementById("kycForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-// Enable previews
-previewImage(document.getElementById("frontImage"), document.getElementById("frontPreview"));
-previewImage(document.getElementById("backImage"), document.getElementById("backPreview"));
-
-document.getElementById("submitKYCBtn").addEventListener("click", async () => {
   const ssn = document.getElementById("ssn").value.trim();
-  const licenseNumber = document.getElementById("licenseNumber").value.trim();
-  const frontFile = document.getElementById("frontImage").files[0];
-  const backFile = document.getElementById("backImage").files[0];
+  const driverLicenseNumber = document.getElementById("driverLicenseNumber").value.trim();
+  const frontFile = document.getElementById("licenseFront").files[0];
+  const backFile = document.getElementById("licenseBack").files[0];
 
-  if (!ssn || !licenseNumber || !frontFile || !backFile) {
-    showPopup("Please fill all fields and upload both ID images.", "error");
+  if (!ssn || !driverLicenseNumber || !frontFile || !backFile) {
+    showPopup("All fields are required.", "error");
     return;
   }
 
   const form = new FormData();
   form.append("ssn", ssn);
-  form.append("licenseNumber", licenseNumber);
-  form.append("frontImage", frontFile);
-  form.append("backImage", backFile);
+  form.append("driverLicenseNumber", driverLicenseNumber);
+  form.append("licenseFront", frontFile);
+  form.append("licenseBack", backFile);
 
   try {
     const res = await fetch(`${API_BASE}/api/kyc/submit`, {
@@ -42,11 +29,11 @@ document.getElementById("submitKYCBtn").addEventListener("click", async () => {
     const data = await res.json();
 
     if (!res.ok) {
-      showPopup(data.message || "Verification failed.", "error");
+      showPopup(data.message || "Submission failed.", "error");
       return;
     }
 
-    showPopup("Verification submitted successfully. Awaiting admin approval.", "success");
+    showPopup("KYC submitted successfully.", "success");
 
     setTimeout(() => {
       window.location.href = "/user/dashboard.html";
@@ -54,6 +41,6 @@ document.getElementById("submitKYCBtn").addEventListener("click", async () => {
 
   } catch (err) {
     console.error("KYC submit error:", err);
-    showPopup("Something went wrong. Try again.", "error");
+    showPopup("Something went wrong.", "error");
   }
 });

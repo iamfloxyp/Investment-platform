@@ -91,7 +91,7 @@
   <!-- KYC Form -->
   <form id="kycForm" class="kyc-form">
 
-    <!-- Full Name -->
+    <!-- Full Name --> 
     <div class="kyc-field">
       <label>Full Name</label>
       <input type="text" id="kycFullName" placeholder="Enter your full name" required />
@@ -100,23 +100,23 @@
     <!-- SSN -->
     <div class="kyc-field">
       <label>SSN / National ID Number</label>
-      <input type="text" id="kycSSN" placeholder="Enter your SSN / ID number" required />
+      <input type="text" id="ssn" placeholder="Enter your SSN / ID number" required />
     </div>
 
     <!-- Driver License Front -->
     <div class="kyc-field">
       <label>Driver License Front</label>
-      <input type="file" id="kycDlFront" accept="image/*" required />
+      <input type="file" id="frontImage" accept="image/*" required />
     </div>
 
     <!-- Driver License Back -->
     <div class="kyc-field">
       <label>Driver License Back</label>
-      <input type="file" id="kycDlBack" accept="image/*" required />
+      <input type="file" id="backImage" accept="image/*" required />
     </div>
 
     <!-- Submit Button -->
-    <button type="submit" class="kyc-submit-btn">Submit Verification</button>
+    <button type="submit" class="kyc-submit-btn" id="submitKYCBtn">Submit Verification</button>
   </form>
 
 </div>
