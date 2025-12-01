@@ -370,8 +370,10 @@ async function loadCryptoBalances(userId) { // userId unused, kept for symmetry
     cryptoItems.forEach((item) => {
       const coin = item.getAttribute("data-coin");
       const balance = Number(wallets[coin] || 0);
-      const span = item.querySelector("span");
-      if (span) span.textContent = `$${balance.toFixed(2)}`;
+      const spans = item.querySelectorAll("span");
+if (spans.length === 2) {
+  spans[1].textContent = `$${balance.toFixed(2)}`;
+}
     });
   } catch (err) {
     console.error("loadCryptoBalances error:", err);
