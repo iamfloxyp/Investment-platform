@@ -1,5 +1,7 @@
+// dailyProfitJob.js
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+
 import User from "./models/userModel.js";
 import Deposit from "./models/depositModel.js";
 import Plan from "./models/planModel.js";
@@ -9,71 +11,107 @@ dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI;
 
-// ✅ Set how many hours must pass before deposit starts earning
+// How long a deposit must exist before it starts earning
 const PROFIT_DELAY_HOURS = 24;
 
-// ✅ Run daily profit with eligibility check
-export const runDailyProfit = async () => {
+/**
+ * Run daily profit for all users once per calendar day.
+ * Uses user.lastProfitDate to avoid double crediting.
+ */
+export async function runDailyProfit() {
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10); // "2025-10-29"
+
   try {
-    await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected for daily profit");
+    // Connect once if needed
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(MONGO_URI);
+      console.log("✅ MongoDB connected for daily profit");
+    }
 
-    // Load all plans once and map them for quick access
-    const plans = await Plan.find();
+    console.log(`🚀 Daily profit job started for ${todayKey}`);
+
+    // Load plans once, map by slug and by name, both in lowercase
+    const plans = await Plan.find({});
     const planMap = {};
-    plans.forEach((p) => (planMap[p.slug] = p));
+    plans.forEach((p) => {
+      if (p.slug) planMap[p.slug.toLowerCase()] = p;
+      if (p.name) planMap[p.name.toLowerCase()] = p;
+    });
 
-    // Get all active users
-    const users = await User.find();
-    const now = new Date();
+    const users = await User.find({});
+
+    const delayCutoff = new Date(
+      today.getTime() - PROFIT_DELAY_HOURS * 60 * 60 * 1000
+    );
 
     for (const user of users) {
-      // ✅ Find only deposits that have reached profit eligibility
-      const eligibleDeposits = await Deposit.find({
+      // Already credited today, skip
+      if (user.lastProfitDate === todayKey) continue;
+
+      // All approved or completed deposits for this user
+      const deposits = await Deposit.find({
         user: user._id,
         type: "deposit",
         status: { $in: ["approved", "completed"] },
-        // ✅ Only include deposits that have reached their profit eligibility time
-        profitEligibleAt: { $lte: new Date() },
+        $or: [
+          // Explicit eligibility time
+          { profitEligibleAt: { $lte: today } },
+          // Or no field, but deposit is older than delay cutoff
+          { profitEligibleAt: null, createdAt: { $lte: delayCutoff } },
+        ],
       });
 
-      // Skip users who have no eligible deposits
-      if (eligibleDeposits.length === 0) continue;
+      if (!deposits.length) continue;
 
       let totalProfit = 0;
 
-      for (const dep of eligibleDeposits) {
-        const slug = (dep.plan || "bronze").toLowerCase();
-        const plan = planMap[slug] || planMap["bronze"];
+      for (const dep of deposits) {
+        const key = (dep.plan || "").toLowerCase(); // "bronze", "silver", etc
+        const plan = planMap[key];
 
-        // ✅ Get plan’s daily percent rate dynamically
-        const percent = computePercentForDay(plan, now);
+        if (!plan) continue;
 
-        // ✅ Calculate profit and add up
-        const profit = dep.amount * percent;
-        totalProfit += profit;
+        const percent = computePercentForDay(plan, today);
+        if (!percent || percent <= 0) continue;
+
+        const profit = Number(dep.amount || 0) * percent;
+        if (profit > 0) {
+          totalProfit += profit;
+        }
       }
 
-      // ✅ Only update if there’s actual profit to apply
-      if (totalProfit > 0) {
-        user.earnedTotal = (user.earnedTotal || 0) + totalProfit;
-        user.dailyProfit = totalProfit;
-        user.lastProfitUpdate = now;
-        user.balance = (user.balance || 0) + totalProfit; // add profit to available balance
-        await user.save();
+      if (totalProfit <= 0) continue;
 
-        console.log(
-          `💰 ${user.email}: +$${totalProfit.toFixed(2)} profit added (${(
-            totalProfit / (user.balance - totalProfit)
-          ).toFixed(4)}%)`
-        );
-      }
+      // Update user financials
+      user.earnedTotal = (user.earnedTotal || 0) + totalProfit;
+      user.dailyProfit = totalProfit;
+      user.balance = (user.balance || 0) + totalProfit;
+      user.lastProfitDate = todayKey;
+
+      await user.save();
+
+      console.log(
+        `💰 ${user.email}: +$${totalProfit.toFixed(2)} profit added today`
+      );
     }
 
-    console.log("🎯 Daily profit job completed successfully");
-    process.exit(0);
+    console.log(`🎯 Daily profit job finished for ${todayKey}`);
   } catch (err) {
-    console.error("❌ Error running daily profit job:", err);
-    process.exit(1);
+    console.error("❌ Error in daily profit job", err);
   }
-};
+}
+
+// Allow running this file directly with "node dailyProfitJob.js"
+if (process.argv[1] && process.argv[1].endsWith("dailyProfitJob.js")) {
+  runDailyProfit()
+    .then(async () => {
+      await mongoose.connection.close();
+      process.exit(0);
+    })
+    .catch(async (err) => {
+      console.error(err);
+      await mongoose.connection.close();
+      process.exit(1);
+    });
+}

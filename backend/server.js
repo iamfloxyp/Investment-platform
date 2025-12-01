@@ -8,6 +8,7 @@ import cron from "node-cron";
 import { runDailyProfit } from "./dailyProfitJob.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import "./cronDailyProfit.js";
 
 // ===== LOAD ENV =====
 if (process.env.NODE_ENV !== "production") {
@@ -15,15 +16,21 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // ===== DAILY PROFIT SCHEDULER =====
-cron.schedule("0 2 * * *", async () => {
-  try {
-    console.log("⏰ Running scheduled daily profit job (2 AM UTC / 9 PM US Time)...");
+cron.schedule(
+  "0 21 * * *",            // 21:00 UTC every day
+  async () => {
+    console.log("⏰ Running scheduled daily profit job");
     await runDailyProfit();
-  } catch (error) {
-    console.error("❌ Error running daily profit schedule:", error.message);
+  },
+  {
+    scheduled: true,
+    timezone: "Etc/UTC",
   }
-});
-console.log("✅ Daily profit scheduler initialized (runs 2 AM UTC / 9 PM US Time).");
+);
+
+console.log(
+  "✅ Daily profit scheduler initialized. Runs every day at 21:00 UTC"
+);
 
 // ===== IMPORT ROUTES =====
 import authRoutes from "./routes/authRoutes.js";
