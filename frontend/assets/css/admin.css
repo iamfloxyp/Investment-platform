@@ -1083,3 +1083,167 @@ td button {
   color: #c0392b;
   font-weight: 600;
 }
+
+.content-wrapper {
+  padding: 25px;
+}
+
+.page-header h2 {
+  font-size: 26px;
+  margin: 0;
+  color: #102630;
+}
+
+.sub-text {
+  margin-top: 5px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.kyc-table-container {
+  margin-top: 25px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+
+.kyc-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kyc-table th {
+  background: #102630;
+  color: white;
+  padding: 12px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.kyc-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.kyc-table tr:hover {
+  background: #f5f8fa;
+}
+
+.status-pending {
+  color: #856404;
+  background: #fff3cd;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.status-approved {
+  color: #155724;
+  background: #d4edda;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.status-rejected {
+  color: #721c24;
+  background: #f8d7da;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.view-btn {
+  background: #102630;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+}
+
+.view-btn:hover {
+  background: #0b1c24;
+}
+
+.kyc-view-box {
+  margin-top: 25px;
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.kyc-field {
+  margin-bottom: 18px;
+}
+
+.kyc-field label {
+  font-weight: 600;
+  color: #102630;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.kyc-value {
+  font-size: 15px;
+  color: #555;
+  padding: 8px 12px;
+  background: #f7f9fb;
+  border-radius: 6px;
+}
+
+.kyc-docs {
+  margin-top: 25px;
+}
+
+.doc-preview {
+  margin-bottom: 20px;
+}
+
+.doc-preview label {
+  font-weight: 600;
+  color: #102630;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.doc-preview img {
+  width: 350px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.kyc-actions {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+}
+
+.btn-approve {
+  background: #198754;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-reject {
+  background: #dc3545;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-approve:hover {
+  background: #146c43;
+}
+
+.btn-reject:hover {
+  background: #b02a37;
+}

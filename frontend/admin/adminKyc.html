@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2><i class="fa-solid fa-shield-halved"></i> ADMIN</h2>
+    <div class="close-btn" id="closeSidebar">
+        <i class="fa-solid fa-xmark"></i>
+    </div>
+    <ul>
+      <li><a href="admin.html" class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="users.html"><i class="fa-solid fa-users"></i> Users Management</a></li>
+      <li><a href="transactions.html"><i class="fa-solid fa-credit-card"></i> Transactions</a></li>
+      <li><a href="admin-bonus.html"><i class="fa-solid fa-money-bill-transfer"></i> Admin Bonus</a></li>
+      <li><a href="adminKyc.html"><i class="fa-solid fa-id-card"></i> KYC Submissions</a></li>
+      <li><a href="admin-kyc-view.html"><i class="fa-solid fa-file-signature"></i> KYC Review</a></li>
+      <li><a href="admin-settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+    
+    </ul>
+  </aside>
+
+  <main class="content-wrapper">
+  <div class="page-header">
+    <h2>KYC Verification Requests</h2>
+    <p class="sub-text">All users who submitted identity verification will appear here.</p>
+  </div>
+
+  <div class="kyc-table-container">
+    <table class="kyc-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>SSN</th>
+          <th>License Number</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="kycTableBody">
+        <!-- Filled dynamically with JS -->
+      </tbody>
+    </table>
+  </div>
+</main>
+
+  <!-- JS -->
+   
+   <script src="../assets/js/admin/config.js"></script>
+  <script src="../assets/js//admin/admin.js"></script>
+  <script src="../assets/js/admin/admin-auth-v3.js?v=999"></script>
+  <script src="../assets/js/admin/admin-kyc.js"></script>
+  
+ 
+</body>
+</html>

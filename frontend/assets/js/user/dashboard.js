@@ -63,6 +63,32 @@ function showToast(msg, type = "error") {
 
 /** ---------- ON LOAD ---------- **/
 document.addEventListener("DOMContentLoaded", initDashboard);
+async function checkKYCStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/api/kyc/me`, {
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    // If no KYC submitted or not approved
+    if (!data || data.status !== "approved") {
+      document.getElementById("kycPopup").classList.remove("hidden");
+    }
+
+  } catch (err) {
+    console.log("KYC check failed:", err);
+  }
+}
+checkKYCStatus();
+
+const startBtn = document.getElementById("startKYCBtn");
+
+if (startBtn) {
+  startBtn.addEventListener("click", () => {
+    window.location.href = "/user/kyc.html";
+  });
+}
 
 async function initDashboard() {
   const API_BASE = window.API_BASE;

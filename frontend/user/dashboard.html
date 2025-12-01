@@ -64,6 +64,7 @@
           <div class="dropdown" id="dropdownMenu">
             <a href="dashboard.html">Dashboard</a>
             <a href="https://emuntra.com#contact">Support</a>
+            <a href="kyc.html">KYC Verification</a>
             <a href="login.html">Logout</a>
           </div>
         </div>
@@ -268,7 +269,38 @@
       </div>
     </div>
   </footer>
+<!-- KYC POPUP -->
+<div id="kycPopup" class="kyc-modal hidden">
+  <div class="kyc-content">
+    <h2>Verification Required</h2>
+    <p>Your account is not verified. Verification is required to unlock deposits and withdrawals.</p>
+    <button id="startKYCBtn">Start Verification</button>
+  </div>
+</div>
 
+<style>
+  .kyc-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .kyc-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90 percent;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   

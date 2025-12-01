@@ -9,6 +9,7 @@ import { runDailyProfit } from "./dailyProfitJob.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import "./cronDailyProfit.js";
+import fileUpload from "express-fileupload";
 
 // ===== LOAD ENV =====
 if (process.env.NODE_ENV !== "production") {
@@ -45,6 +46,9 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import testEmailRoute from "./routes/testEmail.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import nowpayRoutes from "./routes/nowpayRoutes.js";
+import kycRoutes from "./routes/kycRoutes.js";
+import adminKycRoutes from "./routes/adminKycRoutes.js";
+
 
 // ===== IMPORT MODELS =====
 import Deposit from "./models/depositModel.js";
@@ -52,6 +56,12 @@ import Withdrawal from "./models/withdrawModel.js";
 
 // ===== INITIALIZE APP =====
 const app = express();
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
 
 // ===== ADVANCED CORS CONFIGURATION (FINAL, SECURE, RENDER ↔ VERCEL) =====
 const allowedOrigins = [
@@ -101,6 +111,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api", testEmailRoute);
 app.use("/api/contact", contactRoutes);
 app.use("/api/nowpay", nowpayRoutes);
+app.use("/api/kyc", kycRoutes);
+app.use("/api/admin/kyc", adminKycRoutes);
 
 // ===== TEST ROUTE =====
 app.get("/api/test", (req, res) => {

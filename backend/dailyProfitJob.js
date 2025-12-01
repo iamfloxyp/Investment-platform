@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import User from "./models/userModel.js";
 import Deposit from "./models/depositModel.js";
 import Plan from "./models/planModel.js";
+import Notification from "./models/notificationModel.js";
+import { sendEmail } from "./utils/sendEmail.js";
 import { computePercentForDay } from "./utils/planPercent.js";
 
 dotenv.config();
@@ -90,6 +92,23 @@ export async function runDailyProfit() {
       user.lastProfitDate = todayKey;
 
       await user.save();
+      // Send dashboard notification
+await Notification.create({
+  user: user._id,
+  message: "Your daily earnings for today have been added successfully.",
+});
+
+// Send email notification
+await sendEmail({
+  to: user.email,
+  subject: "Daily Earnings Added",
+  html: `
+    <p>Hello ${user.firstName},</p>
+    <p>Your daily earnings have been successfully added to your account.</p>
+    <p>You may log in to view the updated balance.</p>
+    <p>Thank you for choosing Emuntra.</p>
+  `
+});
 
       console.log(
         `💰 ${user.email}: +$${totalProfit.toFixed(2)} profit added today`

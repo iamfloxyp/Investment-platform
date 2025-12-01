@@ -16,6 +16,25 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     isVerified: { type: Boolean, default: false },
+    // KYC status and message
+kycStatus: {
+  type: String,
+  enum: ["not_submitted", "pending", "verified", "rejected"],
+  default: "not_submitted",
+},
+kycMessage: {
+  type: String,
+  default: "",
+},
+
+// KYC data: images and SSN code
+kyc: {
+  idFrontUrl: { type: String, default: "" },   // License or ID front
+  idBackUrl: { type: String, default: "" },    // License or ID back
+  ssnImageUrl: { type: String, default: "" },  // SSN supporting doc upload
+  ssnText: { type: String, default: "" },      // The actual SSN typed by user
+  selfieUrl: { type: String, default: "" },    // Selfie holding the ID
+},
 
     // ✅ Referral system fields
   referralCode: { type: String, unique: true },

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard</title>
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  integrity="sha512-HdM6Vxg7Gk3MxN9T8wZVwJkz5V4GxQ7S8uCB5uTh6S9b5Gq6Q7RHpe+G4vP0fY2jv8JmjDlF3Hy8tZgY5L+fPw=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+</head>
+<body>
+  
+  <!-- NAVIGATION BAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <!-- Logo -->
+      <div class="logo">
+        <a href="dashboard.html"><img src="../assets/images/Emuntra3.png" alt=""></a>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="nav-links" id="navLinks">
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="add-deposit.html">Add Deposit</a>
+        <a href="withdraw.html">Withdraw</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="portfolio.html">Portfolio</a>
+        <a href="history.html">History</a>
+        <a href="referrals.html">Referrals</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+
+      <!-- Right Side: Notifications + User -->
+      <div class="nav-right">
+
+        <!-- Notifications -->
+        <div class="notifications">
+          <button id="bellBtn" class="bell-btn">
+            🔔
+            <span id="notifBadge" class="notif-badge">3</span>
+          </button>
+
+          <!-- Dropdown -->
+          <div class="notif-dropdown" id="notifDropdown">
+            <h4>Notifications</h4>
+            <ul id="notifList"></ul>
+            <div class="notif-footer">
+              <a href="notifications.html">See all notifications</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Dropdown -->
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">Tata ▾</button>
+          <div class="dropdown" id="dropdownMenu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="https://emuntra.com#contact">Support</a>
+            <a href="kyc.html">KYC Verification</a>
+            <a href="login.html">Logout</a>
+          </div>
+        </div>
+
+        <!-- Mobile Toggle -->
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+  <div id="loadingScreen"></div>
+<div class="kyc-wrapper">
+
+  <!-- Title -->
+  <h2 class="kyc-title">Identity Verification (KYC)</h2>
+  <p class="kyc-subtitle">
+    Complete your verification to unlock deposits and withdrawals.
+  </p>
+
+  <!-- Status Box -->
+  <div id="kycStatusBox" class="kyc-status pending">
+    <strong>Status:</strong> <span id="kycStatusText">Not Submitted</span>
+  </div>
+
+  <!-- KYC Form -->
+  <form id="kycForm" class="kyc-form">
+
+    <!-- Full Name -->
+    <div class="kyc-field">
+      <label>Full Name</label>
+      <input type="text" id="kycFullName" placeholder="Enter your full name" required />
+    </div>
+
+    <!-- SSN -->
+    <div class="kyc-field">
+      <label>SSN / National ID Number</label>
+      <input type="text" id="kycSSN" placeholder="Enter your SSN / ID number" required />
+    </div>
+
+    <!-- Driver License Front -->
+    <div class="kyc-field">
+      <label>Driver License Front</label>
+      <input type="file" id="kycDlFront" accept="image/*" required />
+    </div>
+
+    <!-- Driver License Back -->
+    <div class="kyc-field">
+      <label>Driver License Back</label>
+      <input type="file" id="kycDlBack" accept="image/*" required />
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="kyc-submit-btn">Submit Verification</button>
+  </form>
+
+</div>
+  
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="dashboard.html" class="f-logo">
+          <img src="../assets/images/Emuntra3.png" alt="Emutra2" />
+        </a>
+        <p class="f-tag">Smart investing for a brighter future.</p>
+      </div> 
+
+      <div class="f-col">
+        <h4>Quick Links</h4>
+        <ul class="f-links">
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="deposits.html">My Deposits</a></li>
+          <li><a href="withdraw.html">Withdraw</a></li>
+          <li><a href="settings.html">Settings</a></li>
+        </ul>
+      </div>
+
+      <div class="f-col">
+        <h4>Legal</h4>
+        <ul class="f-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+
+      <div class="f-col">
+        <h4>Contact</h4>
+        <ul class="f-links f-contact">
+          <li><a href="mailto:support@Emuntra.com">support@Emuntra.com</a></li>
+          <li><a href="tel:+15551234567">+1 (555) 123-4567</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="subfooter">
+      <div class="container subfooter-row">
+        <p>©️ <span id="year"></span> Emuntra. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+    
+
+  
+  <script src="../assets/js/user/config.js"></script>
+  <script src="../assets/js/user/dashboard.js" defer></script>
+  <script src="../assets/js/user/kyc.js" defer></script>
+  <script>
+function showPopup(message, type = "success") {
+  const popup = document.createElement("div");
+  popup.textContent = message;
+  popup.style.position = "fixed";
+  popup.style.bottom = "25px";
+  popup.style.right = "25px";
+  popup.style.padding = "10px 15px";
+  popup.style.background = type === "error" ? "#c0392b" : "#102630";
+  popup.style.color = "#fff";
+  popup.style.borderRadius = "5px";
+  popup.style.zIndex = "9999";
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 3000);
+}
+</script>
+</body>
+</html>

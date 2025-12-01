@@ -1710,3 +1710,80 @@ calcForm button,
   border-style: solid;
   border-color: #102630 transparent transparent transparent;
 }
+
+.kyc-wrapper {
+  max-width: 650px;
+  margin: 40px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.08);
+}
+
+.kyc-title {
+  font-size: 26px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.kyc-subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+.kyc-status {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.kyc-status.pending {
+  background: #fff4d3;
+  color: #b88a00;
+}
+
+.kyc-status.approved {
+  background: #d4ffe4;
+  color: #0f8e41;
+}
+
+.kyc-status.rejected {
+  background: #ffe0e0;
+  color: #c80000;
+}
+
+.kyc-field {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kyc-field label {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.kyc-field input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.kyc-submit-btn {
+  width: 100%;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 6px;
+  margin-top: 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.kyc-submit-btn:hover {
+  background: #0b5ed7;
+}
