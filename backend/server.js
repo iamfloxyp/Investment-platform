@@ -7,39 +7,48 @@ import cors from "cors";
 import cron from "node-cron";
 import { runDailyProfit } from "./dailyProfitJob.js";
 import path from "path";
+import multer from "multer";
 import { fileURLToPath } from "url";
 import "./cronDailyProfit.js";
 import fileUpload from "express-fileupload";
-import cloudinary from "cloudinary";
 
-// Load env
-if (process.env.NODE_ENV !== "production") dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
-// Cloudinary config
-//CONFIGURE CLOUDINARY
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
-  api_key: process.env.CLOUDINARY_API_KEY?.trim(),
-  api_secret: process.env.CLOUDINARY_API_SECRET?.trim(),
-});
+// DAILY PROFIT
+cron.schedule(
+  "0 21 * * *",
+  async () => {
+    console.log("Running scheduled daily profit job");
+    await runDailyProfit();
+  },
+  {
+    scheduled: true,
+    timezone: "Etc/UTC",
+  }
+);
+
+console.log("Daily profit scheduler initialized");
 
 // Initialize app
 const app = express();
 
-// ❗ MUST COME FIRST FOR KYC IMAGE UPLOADS
+// ENABLE express-fileupload FOR KYC FILE UPLOAD
 app.use(
   fileUpload({
     useTempFiles: true,
-    tempFileDir: "/tmp/",
-    createParentPath: true
+    tempFileDir: "./tmp/",
+    createParentPath: true,
   })
 );
 
-// ❗ MUST COME AFTER fileUpload
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS
+// ALLOW BACKEND TO SERVE LOCAL UPLOADED FILES
+app.use("/uploads", express.static("uploads"));
+
 const allowedOrigins = [
   "https://app.emuntra.com",
   "https://investment-platform-eta.vercel.app",
@@ -48,7 +57,7 @@ const allowedOrigins = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
   "http://localhost:4000",
-  "http://127.0.0.1:4000"
+  "http://127.0.0.1:4000",
 ];
 
 app.use((req, res, next) => {
@@ -56,15 +65,41 @@ app.use((req, res, next) => {
   if (allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
   }
+
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, Accept"
+  );
 
   if (req.method === "OPTIONS") return res.status(204).send();
   next();
 });
 
-// Routes
+// ==== FILE UPLOAD STORAGE (NO CLOUDINARY) ====
+
+// MOVE THIS UP, USE ONLY ONCE
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Folder where KYC files will be saved
+const kycStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "uploads", "kyc"));
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  },
+});
+
+
+
+// ROUTES (unchanged)
 import authRoutes from "./routes/authRoutes.js";
 import depositRoutes from "./routes/depositRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
@@ -95,14 +130,16 @@ app.use("/api/nowpay", nowpayRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/admin/kyc", adminKycRoutes);
 
-// Serve frontend
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// DB connect
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
+// DATABASE AND LISTEN
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(async () => {
     console.log("MongoDB connected");
 
     const PORT = process.env.PORT || 4000;
