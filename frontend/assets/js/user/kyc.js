@@ -4,26 +4,26 @@ document.getElementById("kycForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const ssn = document.getElementById("ssn").value.trim();
-  const driverLicenseNumber = document.getElementById("driverLicenseNumber").value.trim();
-  const frontFile = document.getElementById("licenseFront").files[0];
-  const backFile = document.getElementById("licenseBack").files[0];
+  const licenseNumber = document.getElementById("licenseNumber").value.trim();
+  const frontFile = document.getElementById("frontImage").files[0];
+  const backFile = document.getElementById("backImage").files[0];
 
-  if (!ssn || !driverLicenseNumber || !frontFile || !backFile) {
-    showPopup("All fields are required.", "error");
+  if (!ssn || !licenseNumber || !frontFile || !backFile) {
+    showPopup("Please fill all fields.", "error");
     return;
   }
 
-  const form = new FormData();
-  form.append("ssn", ssn);
-  form.append("driverLicenseNumber", driverLicenseNumber);
-  form.append("licenseFront", frontFile);
-  form.append("licenseBack", backFile);
+  const formData = new FormData();
+  formData.append("ssn", ssn);
+  formData.append("driverLicenseNumber", licenseNumber);
+  formData.append("licenseFront", frontFile);
+  formData.append("licenseBack", backFile);
 
   try {
     const res = await fetch(`${API_BASE}/api/kyc/submit`, {
       method: "POST",
       credentials: "include",
-      body: form
+      body: formData,
     });
 
     const data = await res.json();
@@ -36,11 +36,11 @@ document.getElementById("kycForm").addEventListener("submit", async (e) => {
     showPopup("KYC submitted successfully.", "success");
 
     setTimeout(() => {
-      window.location.href = "/user/dashboard.html";
+      window.location.href = "dashboard.html";
     }, 1500);
 
-  } catch (err) {
-    console.error("KYC submit error:", err);
+  } catch (error) {
+    console.error(error);
     showPopup("Something went wrong.", "error");
   }
 });

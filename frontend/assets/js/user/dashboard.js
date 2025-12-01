@@ -63,25 +63,34 @@ function showToast(msg, type = "error") {
 
 /** ---------- ON LOAD ---------- **/
 document.addEventListener("DOMContentLoaded", initDashboard);
+// CHECK USER KYC STATUS
 async function checkKYCStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/kyc/me`, {
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
       credentials: "include"
     });
 
     const data = await res.json();
 
-    // If no KYC submitted or not approved
-    if (!data || data.status !== "approved") {
-      document.getElementById("kycPopup").classList.remove("hidden");
+    // If user is not logged in or no data, stop
+    if (!data || !data.user) return;
+
+    const status = data.user.kycStatus;
+
+    // Show popup only if KYC is not approved
+    if (status !== "verified") {
+      const popup = document.getElementById("kycPopup");
+      if (popup) popup.classList.remove("hidden");
     }
 
   } catch (err) {
     console.log("KYC check failed:", err);
   }
 }
+
 checkKYCStatus();
 
+// START KYC BUTTON
 const startBtn = document.getElementById("startKYCBtn");
 
 if (startBtn) {
