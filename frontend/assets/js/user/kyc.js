@@ -13,12 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const ssn = document.getElementById("ssn").value.trim();
-    const licenseNumber = document.getElementById("licenseNumber") ? document.getElementById("licenseNumber").value.trim() : "";
+    const licenseNumber = document.getElementById("licenseNumber").value.trim();
     const frontFile = document.getElementById("frontImage").files[0];
     const backFile = document.getElementById("backImage").files[0];
 
-    if (!ssn || !frontFile || !backFile) {
-      showPopup("Please fill in all required fields.", "error");
+    if (!ssn || !licenseNumber || !frontFile || !backFile) {
+      showPopup("Please fill in all fields.", "error");
       return;
     }
 
