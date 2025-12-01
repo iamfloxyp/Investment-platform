@@ -1,46 +1,56 @@
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
-document.getElementById("kycForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
 
-  const ssn = document.getElementById("ssn").value.trim();
-  const licenseNumber = document.getElementById("licenseNumber").value.trim();
-  const frontFile = document.getElementById("frontImage").files[0];
-  const backFile = document.getElementById("backImage").files[0];
+  const form = document.getElementById("kycForm");
 
-  if (!ssn || !licenseNumber || !frontFile || !backFile) {
-    showPopup("Please fill all fields.", "error");
+  if (!form) {
+    console.error("KYC form not found");
     return;
   }
 
-  const formData = new FormData();
-  formData.append("ssn", ssn);
-  formData.append("driverLicenseNumber", licenseNumber);
-  formData.append("licenseFront", frontFile);
-  formData.append("licenseBack", backFile);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  try {
-    const res = await fetch(`${API_BASE}/api/kyc/submit`, {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
+    const ssn = document.getElementById("ssn").value.trim();
+    const licenseNumber = document.getElementById("licenseNumber") ? document.getElementById("licenseNumber").value.trim() : "";
+    const frontFile = document.getElementById("frontImage").files[0];
+    const backFile = document.getElementById("backImage").files[0];
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      showPopup(data.message || "Submission failed.", "error");
+    if (!ssn || !frontFile || !backFile) {
+      showPopup("Please fill in all required fields.", "error");
       return;
     }
 
-    showPopup("KYC submitted successfully.", "success");
+    const formData = new FormData();
+    formData.append("ssn", ssn);
+    formData.append("driverLicenseNumber", licenseNumber);
+    formData.append("licenseFront", frontFile);
+    formData.append("licenseBack", backFile);
 
-    setTimeout(() => {
-      window.location.href = "dashboard.html";
-    }, 1500);
+    try {
+      const res = await fetch(`${API_BASE}/api/kyc/submit`, {
+        method: "POST",
+        credentials: "include",
+        body: formData
+      });
 
-  } catch (error) {
-    console.error(error);
-    showPopup("Something went wrong.", "error");
-  }
+      const data = await res.json();
+
+      if (!res.ok) {
+        showPopup(data.message || "Submission failed.", "error");
+        return;
+      }
+
+      showPopup("KYC submitted successfully.", "success");
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1500);
+
+    } catch (err) {
+      console.error("KYC error:", err);
+      showPopup("Something went wrong.", "error");
+    }
+  });
 });
