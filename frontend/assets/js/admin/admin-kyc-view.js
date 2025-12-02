@@ -36,12 +36,12 @@ async function loadKYCDetails() {
       <div class="kyc-docs">
         <div class="doc-preview">
           <label>ID Front:</label>
-          <img src="${u.kyc?.idFrontUrl || ""}" />
+         <img src="${window.API_BASE}/${u.kyc?.idFrontUrl}">
         </div>
 
         <div class="doc-preview">
           <label>ID Back:</label>
-          <img src="${u.kyc?.idBackUrl || ""}" />
+          <img src="${window.API_BASE}/${u.kyc?.idBackUrl || ""}" />
         </div>
       </div>
 
