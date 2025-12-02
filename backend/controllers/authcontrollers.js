@@ -318,7 +318,7 @@ export const getMe = async (req, res) => {
       return res.status(401).json({ message: "Not authorized" });
 
     const user = await User.findById(req.user._id).select(
-      "firstName lastName email role balance wallets walletAddresses referralCode referredBy earnedTotal dailyProfit"
+      "firstName lastName email role balance wallets walletAddresses referralCode referredBy earnedTotal dailyProfit kycStatus kycMessage kyc"
     );
     if (!user) return res.status(404).json({ message: "User not found" });
 
