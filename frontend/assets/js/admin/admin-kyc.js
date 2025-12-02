@@ -1,9 +1,8 @@
 // admin-kyc.js
 
-
 async function loadKYCList() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/kyc-requests`, {
+    const res = await fetch(`${API_BASE}/api/admin/all`, {
       credentials: "include"
     });
 
@@ -23,11 +22,13 @@ async function loadKYCList() {
         <td>${index + 1}</td>
         <td>${user.firstName} ${user.lastName}</td>
         <td>${user.email}</td>
-        <td>${user.kyc?.ssnText || "N/A"}</td>
-        <td>${user.kyc?.driverLicenseNumber || "N/A"}</td>
+        <td>${user.kyc.ssnText || "N/A"}</td>
+        <td>${user.kyc.driverLicenseNumber || "N/A"}</td>
         <td><span class="status-${user.kycStatus}">${user.kycStatus}</span></td>
         <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-        <td><button class="view-btn" onclick="viewKYC('${user._id}')">View</button></td>
+        <td>
+          <button class="view-btn" onclick="viewKYC('${user._id}')">View</button>
+        </td>
       `;
 
       tableBody.appendChild(tr);
