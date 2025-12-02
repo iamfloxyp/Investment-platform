@@ -1,3 +1,4 @@
+// controllers/kycController.js
 import User from "../models/userModel.js";
 import path from "path";
 
@@ -11,24 +12,37 @@ export const submitKYC = async (req, res) => {
     const { ssn, driverLicenseNumber } = req.body;
 
     if (!ssn || !driverLicenseNumber) {
-      return res.status(400).json({ message: "SSN and license number required" });
+      return res
+        .status(400)
+        .json({ message: "SSN and driver license number are required" });
     }
 
-    if (!req.files || !req.files["licenseFront"] || !req.files["licenseBack"]) {
-      return res.status(400).json({ message: "Upload both front and back images" });
+    // HERE IS THE REAL FIX
+    if (!req.files || !req.files.frontImage || !req.files.backImage) {
+      return res.status(400).json({
+        message: "Please upload front and back images"
+      });
     }
 
-    // File paths saved by multer
-    const frontImage = req.files["licenseFront"][0].filename;
-    const backImage = req.files["licenseBack"][0].filename;
+    let frontFile = req.files.frontImage;
+    let backFile = req.files.backImage;
 
-    const updated = await User.findByIdAndUpdate(
+    if (Array.isArray(frontFile)) frontFile = frontFile[0];
+    if (Array.isArray(backFile)) backFile = backFile[0];
+
+    const frontPath = path.join("uploads", "kyc", frontFile.name);
+    const backPath = path.join("uploads", "kyc", backFile.name);
+
+    await frontFile.mv(frontPath);
+    await backFile.mv(backPath);
+
+    const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
         kycStatus: "pending",
-        kycMessage: "Your KYC has been submitted and is under review.",
-        "kyc.idFrontUrl": `/uploads/kyc/${frontImage}`,
-        "kyc.idBackUrl": `/uploads/kyc/${backImage}`,
+        kycMessage: "Your KYC has been submitted",
+        "kyc.idFrontUrl": frontPath,
+        "kyc.idBackUrl": backPath,
         "kyc.ssnText": ssn,
         "kyc.driverLicenseNumber": driverLicenseNumber
       },
@@ -37,12 +51,13 @@ export const submitKYC = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "KYC submitted successfully.",
-      user: updated,
+      message: "KYC submitted successfully",
+      user: updatedUser
     });
-
   } catch (err) {
     console.error("KYC submit error:", err);
-    return res.status(500).json({ message: "Server error submitting KYC" });
+    return res.status(500).json({
+      message: "Submission failed"
+    });
   }
 };
