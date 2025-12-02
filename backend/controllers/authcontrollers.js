@@ -314,29 +314,16 @@ export const adminLogin = async (req, res) => {
 // ---------- GET ME ----------
 export const getMe = async (req, res) => {
   try {
-    if (!req.user || !req.user._id)
+    const userId = req.user?._id || req.user?.id;
+    if (!userId)
       return res.status(401).json({ message: "Not authorized" });
 
-    const user = await User.findById(req.user._id).select(
+    // Fetch fresh user from database every time
+    const user = await User.findById(userId).select(
       "firstName lastName email role balance wallets walletAddresses referralCode referredBy earnedTotal dailyProfit kycStatus kycMessage kyc"
     );
+
     if (!user) return res.status(404).json({ message: "User not found" });
-
-    // Ensure referralCode & wallets exist
-    if (!user.referralCode) {
-      const prefix = (user.firstName || "USR").slice(0, 3).toUpperCase();
-      const code = prefix + Math.floor(1000 + Math.random() * 9000);
-      user.referralCode = code;
-      await user.save();
-    }
-    if (!user.wallets) {
-      user.wallets = { btc: 0, eth: 0, usdt: 0, bnb: 0, tron: 0 };
-      await user.save();
-    }
-
-    const earnedTotal = Number(user.earnedTotal) || 0;
-    const dailyProfit = Number(user.dailyProfit) || 0;
-    const availableBalance = (user.balance || 0) + earnedTotal;
 
     res.json({
       id: user._id,
@@ -348,20 +335,18 @@ export const getMe = async (req, res) => {
       kycMessage: user.kycMessage,
       kyc: user.kyc,
       balance: user.balance || 0,
-      availableBalance,
+      earnedTotal: Number(user.earnedTotal) || 0,
+      dailyProfit: Number(user.dailyProfit) || 0,
       wallets: user.wallets,
-      walletAddresses: user.walletAddresses || {},
-      referralCode: user.referralCode || null,
-      referredBy: user.referredBy || null,
-      earnedTotal,
-      dailyProfit,
+      walletAddresses: user.walletAddresses,
+      referralCode: user.referralCode,
+      referredBy: user.referredBy
     });
   } catch (err) {
-    console.error("❌ getMe error:", err);
+    console.error("getMe error:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};
-
+};f
 // ---------- LOGOUT ALL ----------
 export const logoutAll = (_req, res) => {
   clearAllAuthCookies(res);
