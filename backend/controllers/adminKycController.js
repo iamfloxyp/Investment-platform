@@ -9,7 +9,7 @@ export const getAllKycRequests = async (req, res) => {
   try {
     const users = await User.find({ kycStatus: "pending" })
       .select(
-        "firstName lastName email kycStatus createdAt kyc.idFrontUrl kyc.idBackUrl kyc.ssnText kyc.ssnImageUrl"
+        "firstName lastName email kycStatus createdAt kyc.idFrontUrl kyc.idBackUrl kyc.ssnText kyc.ssnImageUrl kyc.driverLicenseNumber"
       );
 
     res.json({ success: true, users });

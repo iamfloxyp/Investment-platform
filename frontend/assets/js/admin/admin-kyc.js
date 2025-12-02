@@ -1,8 +1,9 @@
+// admin-kyc.js
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
 async function loadKYCList() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/kyc`, {
+    const res = await fetch(`${API_BASE}/api/admin/all`, {
       credentials: "include"
     });
 
