@@ -1,8 +1,15 @@
-// frontend/assets/js/user/kyc.js
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
 document.addEventListener("DOMContentLoaded", () => {
-  async function loadKYCStatus() {
+  loadKYCStatus(); // <-- RUN THIS DIRECTLY
+
+  const form = document.getElementById("kycForm");
+  if (!form) return;
+
+  form.addEventListener("submit", submitKYCForm);
+});
+
+async function loadKYCStatus() {
   try {
     const res = await fetch(`${API_BASE}/api/auth/me`, {
       credentials: "include"
@@ -10,88 +17,67 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = await res.json();
 
     const statusBox = document.getElementById("kycStatusBox");
-    if (!statusBox) return;
+    const statusText = document.getElementById("kycStatusText");
+
+    if (!statusBox || !statusText) return;
 
     if (data.kycStatus === "pending") {
-      statusBox.textContent = "Status: Pending";
+      statusText.textContent = "Pending";
       statusBox.style.background = "#fff3cd";
     } else if (data.kycStatus === "verified") {
-      statusBox.textContent = "Status: Verified";
+      statusText.textContent = "Verified";
       statusBox.style.background = "#d4edda";
     } else if (data.kycStatus === "rejected") {
-      statusBox.textContent = "Status: Rejected";
+      statusText.textContent = "Rejected";
       statusBox.style.background = "#f8d7da";
     } else {
-      statusBox.textContent = "Status: Not Submitted";
+      statusText.textContent = "Not Submitted";
       statusBox.style.background = "#ffe8e8";
     }
-
   } catch (err) {
     console.error("Failed to load KYC:", err);
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadKYCStatus();
-});
-  const form = document.getElementById("kycForm");
-  if (!form) {
-    console.error("KYC form not found");
+async function submitKYCForm(e) {
+  e.preventDefault();
+
+  const ssn = document.getElementById("ssn").value.trim();
+  const licenseNumber = document.getElementById("licenseNumber").value.trim();
+  const frontFile = document.getElementById("frontImage").files[0];
+  const backFile = document.getElementById("backImage").files[0];
+
+  if (!ssn || !licenseNumber || !frontFile || !backFile) {
+    showPopup("Please fill in all fields and upload both images.", "error");
     return;
   }
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  const formData = new FormData();
+  formData.append("ssn", ssn);
+  formData.append("driverLicenseNumber", licenseNumber);
+  formData.append("frontImage", frontFile);
+  formData.append("backImage", backFile);
 
-    const ssnInput = document.getElementById("ssn");
-    const licenseNumberInput = document.getElementById("licenseNumber");
-    const frontInput = document.getElementById("frontImage");
-    const backInput = document.getElementById("backImage");
+  try {
+    const res = await fetch(`${API_BASE}/api/kyc/submit`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
 
-    const ssn = ssnInput ? ssnInput.value.trim() : "";
-    const licenseNumber = licenseNumberInput ? licenseNumberInput.value.trim() : "";
-    const frontFile = frontInput && frontInput.files ? frontInput.files[0] : null;
-    const backFile = backInput && backInput.files ? backInput.files[0] : null;
-
-    if (!ssn || !licenseNumber || !frontFile || !backFile) {
-      showPopup("Please fill in all fields and select both images.", "error");
+    const data = await res.json();
+    if (!res.ok) {
+      showPopup(data.message || "Submission failed", "error");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("ssn", ssn);
-    formData.append("driverLicenseNumber", licenseNumber);
-    formData.append("frontImage", frontFile);
-    formData.append("backImage", backFile);
+    showPopup("KYC submitted successfully", "success");
 
-    try {
-      const res = await fetch(`${API_BASE}/api/kyc/submit`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-
-      let data = {};
-      try {
-        data = await res.json();
-      } catch (_) {
-        data = {};
-      }
-
-      if (!res.ok) {
-        const msg = data.message || "Submission failed.";
-        showPopup(msg, "error");
-        return;
-      }
-
-      showPopup(data.message || "KYC submitted successfully.", "success");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (err) {
-      console.error("KYC error:", err);
-      showPopup("Network or server error submitting KYC.", "error");
-    }
-  });
-});
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    showPopup("Network error submitting KYC", "error");
+  }
+}
