@@ -180,7 +180,7 @@ function showPopup(message, type = "success") {
   const popup = document.createElement("div");
   popup.textContent = message;
   popup.style.position = "fixed";
-  popup.style.bottom = "25px";
+  popup.style.top = "25px";
   popup.style.right = "25px";
   popup.style.padding = "10px 15px";
   popup.style.background = type === "error" ? "#c0392b" : "#102630";

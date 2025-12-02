@@ -2,6 +2,38 @@
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
 document.addEventListener("DOMContentLoaded", () => {
+  async function loadKYCStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      credentials: "include"
+    });
+    const data = await res.json();
+
+    const statusBox = document.getElementById("kycStatusBox");
+    if (!statusBox) return;
+
+    if (data.kycStatus === "pending") {
+      statusBox.textContent = "Status: Pending";
+      statusBox.style.background = "#fff3cd";
+    } else if (data.kycStatus === "verified") {
+      statusBox.textContent = "Status: Verified";
+      statusBox.style.background = "#d4edda";
+    } else if (data.kycStatus === "rejected") {
+      statusBox.textContent = "Status: Rejected";
+      statusBox.style.background = "#f8d7da";
+    } else {
+      statusBox.textContent = "Status: Not Submitted";
+      statusBox.style.background = "#ffe8e8";
+    }
+
+  } catch (err) {
+    console.error("Failed to load KYC:", err);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadKYCStatus();
+});
   const form = document.getElementById("kycForm");
   if (!form) {
     console.error("KYC form not found");

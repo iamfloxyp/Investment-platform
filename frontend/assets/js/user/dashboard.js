@@ -76,10 +76,13 @@ async function checkKYCStatus() {
 
     const status = data.kycStatus;
 
-    if (status !== "verified") {
-      const popup = document.getElementById("kycPopup");
-      if (popup) popup.classList.remove("hidden");
-    }
+   if (status === "not_submitted" || status === "rejected") {
+  const popup = document.getElementById("kycPopup");
+  if (popup) popup.classList.remove("hidden");
+} else {
+  const popup = document.getElementById("kycPopup");
+  if (popup) popup.classList.add("hidden");
+}
 
   } catch (err) {
     console.log("KYC check failed:", err);
