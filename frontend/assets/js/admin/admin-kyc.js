@@ -1,7 +1,7 @@
 async function loadKYCList() {
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/kyc-requests`, {
-      credentials: "include"
+    const res = await fetch(`${window.API_BASE}/api/admin/kyc`, {
+      credentials: "include",
     });
 
     const data = await res.json();
@@ -24,7 +24,9 @@ async function loadKYCList() {
         <td>${user.kyc?.driverLicenseNumber || "N/A"}</td>
         <td><span class="status-${user.kycStatus}">${user.kycStatus}</span></td>
         <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-        <td><button class="view-btn" onclick="viewKYC('${user._id}')">View</button></td>
+        <td>
+          <button class="view-btn" onclick="viewKYC('${user._id}')">View</button>
+        </td>
       `;
 
       tableBody.appendChild(tr);
