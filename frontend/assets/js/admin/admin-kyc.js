@@ -1,5 +1,4 @@
 // admin-kyc.js
-const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
 async function loadKYCList() {
   try {

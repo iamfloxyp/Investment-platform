@@ -1,5 +1,4 @@
 // admin-kyc-view.js
-const API_BASE = window.API_BASE || "https://api.emuntra.com";
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
 
