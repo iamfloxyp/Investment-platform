@@ -33,7 +33,7 @@ kyc: {
   idBackUrl: { type: String, default: "" },    // License or ID back
   ssnImageUrl: { type: String, default: "" },  // SSN supporting doc upload
   ssnText: { type: String, default: "" },      // The actual SSN typed by user
-  selfieUrl: { type: String, default: "" },    // Selfie holding the ID
+  driverLicenseNumber: { type: String, default: "" },    // Driver license number
 },
 
     // ✅ Referral system fields
