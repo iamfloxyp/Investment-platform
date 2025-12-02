@@ -1,4 +1,4 @@
-i// routes/adminKycRoutes.js
+// routes/adminKycRoutes.js
 import express from "express";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import {
