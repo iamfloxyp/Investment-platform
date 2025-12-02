@@ -129,7 +129,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/nowpay", nowpayRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/admin/kyc", adminKycRoutes);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
