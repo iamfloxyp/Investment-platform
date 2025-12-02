@@ -1,82 +1,38 @@
 // models/depositModel.js
 import mongoose from "mongoose";
 
-const depositSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+const depositSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-    amount: {
-      type: Number,
-      required: true,
-    },
+  amount: { type: Number, required: true },
 
-    plan: {
-      type: String,
-      enum: ["Bronze", "Silver", "Gold", "Diamond", "Platinum"],
-      required: true,
-    },
-
-    method: {
-      type: String,
-      enum: [
-        "bank",
-        "crypto",
-        "btc",
-        "eth",
-        "usdt",
-        "ltc",
-        "xrp",
-        "bnb",
-        "doge",
-        "trx",
-        "tron",
-        "bch",
-        "paypal_manual",
-      ],
-      default: "crypto",
-    },
-
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected", "completed"],
-      default: "pending",
-    },
-
-    type: {
-      type: String,
-      enum: ["deposit", "withdraw"],
-      default: "deposit",
-    },
-
-    note: {
-      type: String,
-      default: "",
-    },
-
-    // 🌟 REQUIRED FOR NOWPAYMENTS
-    invoiceId: {
-      type: String,
-      default: null,
-    },
- 
-    // Track if referral already paid
-    referralPaid: {
-      type: Boolean,
-      default: false,
-    },
-
-    // When user becomes eligible for next daily profit
-    profitEligibleAt: {
-      type: Date,
-      default: null,
-    },
+  plan: {
+    type: String,
+    enum: ["Bronze", "Silver", "Gold", "Diamond", "Platinum"],
+    required: true,
   },
-  { timestamps: true }
-);
 
-const Deposit = mongoose.model("Deposit", depositSchema);
-export default Deposit;
+  method: { type: String, default: "crypto" },
+
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected", "completed"],
+    default: "pending",
+  },
+
+  type: { type: String, enum: ["deposit", "withdraw"], default: "deposit" },
+
+  note: { type: String, default: "" },
+
+  // IMPORTANT FOR BLOCKBEE
+  paymentAddress: { type: String, default: null },
+  txid: { type: String, default: null },
+  paidAmount: { type: Number, default: 0 },
+  coin: { type: String, default: null },
+
+  referralPaid: { type: Boolean, default: false },
+
+  profitEligibleAt: { type: Date, default: null },
+}, { timestamps: true });
+
+export default mongoose.model("Deposit", depositSchema);

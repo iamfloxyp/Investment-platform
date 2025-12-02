@@ -1,3 +1,4 @@
+// routes/blockbeeWebhook.js
 import express from "express";
 import Deposit from "../models/depositModel.js";
 import User from "../models/userModel.js";
@@ -5,71 +6,48 @@ import Notification from "../models/notificationModel.js";
 
 const router = express.Router();
 
-/*
-  BLOCKBEE WEBHOOK FORMAT:
-  {
-    "address": "yourWalletAddress",
-    "txid": "transaction_hash",
-    "value_coin": "0.00024",
-    "value_fiat": "25.00",
-    "coin": "btc",
-    "status": "confirmed"
-  }
-*/
-
-router.post("/callback", async (req, res) => {
+router.post("/:depositId", async (req, res) => {
   try {
+    const depositId = req.params.depositId;
     const data = req.body;
-    console.log("🔔 BlockBee Callback:", data);
 
-    const {
-      address,
-      txid,
-      value_coin,
-      value_fiat,
-      coin,
-      status
-    } = data;
+    console.log("🔔 BlockBee Webhook Received:", data);
 
-    // We only process confirmed payments
-    if (status !== "confirmed") {
-      return res.json({ ok: true });
-    }
-
-    // Find deposit that matches address
-    const deposit = await Deposit.findOne({
-      paymentAddress: address,
-      status: "pending"
-    });
+    const deposit = await Deposit.findById(depositId);
 
     if (!deposit) {
-      console.log("⚠ No matching deposit found for address:", address);
+      console.log("Deposit not found");
       return res.json({ ok: true });
     }
 
-    // Update deposit
+    if (deposit.status !== "pending") {
+      return res.json({ ok: true });
+    }
+
+    if (data.status !== "confirmed") {
+      return res.json({ ok: true });
+    }
+
     deposit.status = "approved";
-    deposit.txid = txid;
-    deposit.paidAmount = value_fiat;
+    deposit.txid = data.txid;
+    deposit.paidAmount = Number(data.value_fiat || 0);
     await deposit.save();
 
-    // Update user balance
     const user = await User.findById(deposit.user);
-    user.balance += Number(value_fiat);
-    user.activeDeposit += Number(value_fiat);
+
+    user.balance += deposit.paidAmount;
+    user.activeDeposit += deposit.paidAmount;
     await user.save();
 
-    // Create notification
     await Notification.create({
       user: user._id,
-      message: `Your deposit of $${value_fiat} in ${coin.toUpperCase()} has been confirmed.`
+      message: `Your ${deposit.coin.toUpperCase()} deposit of $${deposit.paidAmount} is confirmed`,
     });
 
-    console.log(`✅ Deposit approved for ${user.email}`);
-
     return res.json({ success: true });
+
   } catch (err) {
-    console.error("❌ BlockBee webhook error:", err);
+    console.error("Webhook Error:", err.message);
     return res.status(500).json({ error: "Server error" });
   }
 });

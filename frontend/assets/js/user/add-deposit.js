@@ -1,12 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ======= DOM ELEMENTS =======
-  const calcModal = document.getElementById("calcModal");
   const depositModal = document.getElementById("depositModal");
-
-  const calcPlan = document.getElementById("calcPlan");
-  const calcAmount = document.getElementById("calcAmount");
-  const calcResult = document.getElementById("calcResult");
-
   const depositPlan = document.getElementById("depositPlan");
   const depositAmount = document.getElementById("depositAmount");
 
@@ -14,434 +7,211 @@ document.addEventListener("DOMContentLoaded", () => {
   const addressSection = document.getElementById("cryptoAddressSection");
   const addressBox = document.getElementById("cryptoAddress");
 
-  // PayPal modal elements
+  // PayPal modal
   const paypalModal = document.getElementById("paypalModal");
-  const paypalEmailEl = document.getElementById("paypalEmail");
-  const copyPaypalBtn = document.getElementById("copyPaypalBtn");
   const paypalSentBtn = document.getElementById("paypalSentBtn");
   const closePaypalBtn = document.getElementById("closePaypal");
 
   const API_BASE = window.API_BASE;
   let userId = null;
 
-  // Labels we can still use for display
-  const COIN_LABELS = {
-    btc: "Bitcoin (BTC)",
-    eth: "Ethereum (ETH)",
-    usdt: "Tether USDT",
-    usdttrc20: "Tether USDT TRC20",
-    usdc: "USD Coin (USDC)",
-    bnb: "Binance Coin (BNB)",
-    trx: "Tron (TRX)",
-    sol: "Solana (SOL)",
-    xrp: "Ripple (XRP)",
-    ltc: "Litecoin (LTC)",
-    doge: "Dogecoin (DOGE)",
-    bch: "Bitcoin Cash (BCH)",
-    ada: "Cardano (ADA)",
-    dot: "Polkadot (DOT)",
-    matic: "Polygon (MATIC)",
-    avax: "Avalanche (AVAX)",
-    xlm: "Stellar (XLM)",
-    xmr: "Monero (XMR)",
-    vet: "VeChain (VET)",
-    egld: "Elrond (EGLD)",
-    algo: "Algorand (ALGO)",
-    icp: "Internet Computer (ICP)",
-    fil: "Filecoin (FIL)",
-    hbar: "Hedera (HBAR)",
-    near: "NEAR Protocol (NEAR)",
-    atom: "Cosmos (ATOM)",
-    grt: "The Graph (GRT)",
-    ftm: "Fantom (FTM)",
-    cro: "Cronos (CRO)",
-    sand: "The Sandbox (SAND)",
-    mana: "Decentraland (MANA)",
-    enj: "Enjin Coin (ENJ)",
-    gala: "Gala (GALA)",
-    ape: "ApeCoin (APE)",
-    qnt: "Quant (QNT)",
-    cspr: "Casper (CSPR)",
-    zil: "Zilliqa (ZIL)",
-    dcr: "Decred (DCR)",
-    ksm: "Kusama (KSM)",
-    dai: "DAI",
-    shib: "Shiba Inu (SHIB)",
-    floki: "Floki Inu (FLOKI)",
-    pepe: "Pepe (PEPE)",
-    inj: "Injective (INJ)",
-    rndr: "Render Token (RNDR)",
-    imx: "Immutable X (IMX)",
-    sushi: "SushiSwap (SUSHI)",
-    comp: "Compound (COMP)",
-    link: "ChainLink (LINK)",
-    uni: "Uniswap (UNI)",
-    aave: "AAVE (AAVE)",
-    snx: "Synthetix (SNX)",
-    "1inch": "1inch (1INCH)",
-    crv: "Curve DAO (CRV)",
-    yfi: "Yearn Finance (YFI)",
-    bal: "Balancer (BAL)",
-    ldo: "Lido DAO (LDO)",
-    op: "Optimism (OP)",
-    arb: "Arbitrum (ARB)",
-    sei: "Sei (SEI)",
-    apt: "Aptos (APT)",
-    ton: "TON (TON)",
-    btt: "BitTorrent Token (BTT)",
-    hot: "Holo (HOT)",
-    sc: "Siacoin (SC)",
-    rvn: "Ravencoin (RVN)",
-    zen: "Horizen (ZEN)",
-    omg: "OMG Network (OMG)",
-    iost: "IOST (IOST)",
-    waves: "Waves (WAVES)",
-    dash: "Dash (DASH)",
-    zec: "Zcash (ZEC)",
-    theta: "Theta (THETA)",
-    tfuel: "Theta Fuel (TFUEL)",
-    neo: "Neo (NEO)",
-    qtum: "QTUM (QTUM)",
-    eos: "EOS (EOS)",
-    one: "Harmony One (ONE)",
-    klay: "Klaytn (KLAY)",
-    celo: "Celo (CELO)",
-    rose: "Oasis Network (ROSE)",
-    xdc: "XDC Network (XDC)",
-    wbtc: "Wrapped Bitcoin (WBTC)",
-    weth: "Wrapped Ethereum (WETH)"
-  };
-
-  // ==========================================================
-  //                       POPUP UTILITY
-  // ==========================================================
-  function showPopup(message, type = "success") {
-    const popup = document.createElement("div");
-    popup.textContent = message;
-    popup.style.position = "fixed";
-    popup.style.bottom = "25px";
-    popup.style.right = "25px";
-    popup.style.padding = "10px 15px";
-    popup.style.background = type === "error" ? "#c0392b" : "#102630";
-    popup.style.color = "#fff";
-    popup.style.borderRadius = "5px";
-    popup.style.zIndex = "9999";
-    document.body.appendChild(popup);
-    setTimeout(() => popup.remove(), 3000);
+  // =====================================================
+  //                 POPUP MESSAGE
+  // =====================================================
+  function showPopup(msg, type = "success") {
+    const pop = document.createElement("div");
+    pop.textContent = msg;
+    pop.style.position = "fixed";
+    pop.style.bottom = "20px";
+    pop.style.right = "20px";
+    pop.style.padding = "12px 18px";
+    pop.style.background = type === "error" ? "#c0392b" : "#102630";
+    pop.style.color = "#fff";
+    pop.style.borderRadius = "6px";
+    pop.style.zIndex = "10000";
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 3000);
   }
 
-  // ==========================================================
-  //           CRYPTO LOADING AND SELECT OPTIONS
-  //             BLOCKBEE DYNAMIC COIN LIST
-  // ==========================================================
-  async function loadCryptoList() {
-    if (!cryptoSelect) return;
-
-    cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/blockbee/coins`, {
-        credentials: "include"
-      });
-
-      const data = await res.json();
-
-      let coins = [];
-
-      // Expecting something like { success: true, coins: [{ code, name }, ...] }
-      if (Array.isArray(data.coins)) {
-        coins = data.coins;
-      } else if (data && typeof data === "object") {
-        // Or backup if backend returns a map { btc: { name: "Bitcoin" }, ... }
-        coins = Object.entries(data).map(([code, obj]) => ({
-          code,
-          name: obj.name || code.toUpperCase()
-        }));
-      }
-
-      coins.forEach((coin) => {
-        const symbol = String(coin.code || coin.symbol || "").toLowerCase();
-        if (!symbol) return;
-
-        const label =
-          coin.name ||
-          COIN_LABELS[symbol] ||
-          `${symbol.toUpperCase()}`;
-
-        const opt = document.createElement("option");
-        opt.value = symbol;            // value is the coin code we send to backend
-        opt.textContent = label;
-        cryptoSelect.appendChild(opt);
-      });
-    } catch (err) {
-      console.error("Error loading BlockBee coins, using fallback list", err);
-
-      // Fallback coins if API fails
-      const fallbackCoins = ["btc", "eth", "usdt", "ltc", "trx", "bch"];
-      fallbackCoins.forEach((symbol) => {
-        const label = COIN_LABELS[symbol] || symbol.toUpperCase();
-        const opt = document.createElement("option");
-        opt.value = symbol;
-        opt.textContent = label;
-        cryptoSelect.appendChild(opt);
-      });
-    }
-
-    // Add PayPal at the top
-    const paypal = document.createElement("option");
-    paypal.value = "paypal";
-    paypal.textContent = "PayPal (Friends and Family)";
-    cryptoSelect.prepend(paypal);
-  }
-
-  loadCryptoList();
-
-  // ----------------------
-  //   LABEL HELPER
-  // ----------------------
-  function getCoinLabel(symbol) {
-    symbol = symbol.toLowerCase();
-    return COIN_LABELS[symbol] || symbol.toUpperCase();
-  }
-
-  // ==========================================================
-  //                  UPDATE DASHBOARD BALANCES
-  // ==========================================================
-  function updateBalances(user) {
-    try {
-      const totalBalance = Number(user.balance || 0);
-
-      const balanceEl = document.querySelector(".balance h3");
-      if (balanceEl) balanceEl.textContent = `$${totalBalance.toFixed(2)}`;
-
-      const availableEl = document.getElementById("availableBalance");
-      if (availableEl) {
-        const balance = user.availableBalance ?? user.balance ?? 0;
-        availableEl.textContent = `$${Number(balance).toFixed(2)}`;
-      }
-
-      const cryptoList = document.querySelector(".crypto-list");
-      if (!cryptoList) return;
-      cryptoList.innerHTML = "";
-
-      const wallets = user.wallets || {};
-      const entries = Object.entries(wallets).filter(
-        ([, amount]) => Number(amount) > 0
-      );
-
-      if (!entries.length) {
-        const li = document.createElement("li");
-        li.className = "empty-balance";
-        li.textContent =
-          "No crypto balance yet. Make a deposit to see it here.";
-        cryptoList.appendChild(li);
-        return;
-      }
-
-      entries.forEach(([coinKey, amount]) => {
-        const coin = String(coinKey).toLowerCase();
-        const niceLabel = getCoinLabel(coin);
-
-        const li = document.createElement("li");
-        li.dataset.coin = coin;
-
-        const labelSpan = document.createElement("span");
-        labelSpan.textContent = niceLabel + ":";
-
-        const valueSpan = document.createElement("span");
-        valueSpan.textContent = `$${Number(amount).toFixed(2)}`;
-
-        li.appendChild(labelSpan);
-        li.appendChild(valueSpan);
-        cryptoList.appendChild(li);
-      });
-    } catch (e) {
-      console.error("Error updating balances:", e);
-    }
-  }
-
-  // ==========================================================
-  //                        FETCH USER
-  // ==========================================================
+  // =====================================================
+  //                LOAD USER DETAILS
+  // =====================================================
   (async function fetchUser() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("User not authenticated");
+
+      if (!res.ok) throw new Error("Not authenticated");
 
       const user = await res.json();
       userId = user._id || user.id;
-
-      updateBalances(user);
     } catch (err) {
-      console.error("Auth Error:", err);
-      alert("Session expired. Please log in again.");
+      alert("Session expired. Login again.");
       window.location.href = "./login.html";
     }
   })();
 
-  // ==========================================================
-  //                     CALCULATOR MODAL
-  // ==========================================================
-  document.querySelectorAll(".calc-link").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const card = e.target.closest(".plan-card");
-      if (!card) return;
+  // =====================================================
+  //          LOAD COINS FROM BLOCKBEE (DYNAMIC)
+  // =====================================================
+  async function loadCryptoList() {
+    cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
 
-      calcPlan.value = card.dataset.name;
-      calcAmount.value = card.dataset.min;
-      calcResult.innerHTML = "";
-      calcModal.style.display = "flex";
-    });
-  });
+    try {
+      const res = await fetch(`${API_BASE}/api/blockbee/coins`, {
+        credentials: "include",
+      });
 
-  // ==========================================================
-  //                      DEPOSIT MODAL
-  // ==========================================================
+      if (!res.ok) throw new Error("Failed");
+
+      const data = await res.json();
+
+      if (!Array.isArray(data.coins)) throw new Error("Invalid format");
+
+      data.coins.forEach((coin) => {
+        const opt = document.createElement("option");
+        opt.value = coin.code.toLowerCase();
+        opt.textContent = coin.name;
+        cryptoSelect.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Coin load error:", err);
+
+      // fallback
+      const fallback = [
+        { code: "btc", name: "Bitcoin (BTC)" },
+        { code: "eth", name: "Ethereum (ETH)" },
+        { code: "usdt", name: "Tether USDT" },
+        { code: "ltc", name: "Litecoin (LTC)" },
+        { code: "trx", name: "Tron (TRX)" },
+        { code: "bch", name: "Bitcoin Cash (BCH)" }
+      ];
+
+      fallback.forEach((coin) => {
+        const opt = document.createElement("option");
+        opt.value = coin.code;
+        opt.textContent = coin.name;
+        cryptoSelect.appendChild(opt);
+      });
+    }
+
+    // Add PayPal
+    const paypalOpt = document.createElement("option");
+    paypalOpt.value = "paypal";
+    paypalOpt.textContent = "PayPal (Friends and Family)";
+    cryptoSelect.prepend(paypalOpt);
+  }
+
+  loadCryptoList();
+
+  // =====================================================
+  //            OPEN DEPOSIT MODAL
+  // =====================================================
   document.querySelectorAll(".btn-plan").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const card = e.target.closest(".plan-card");
-      if (!card) return;
-
       depositPlan.value = card.dataset.name;
       depositAmount.value = card.dataset.min;
+
       depositModal.style.display = "flex";
 
-      if (addressBox && addressSection) {
-        addressBox.textContent = "";
-        addressSection.style.display = "none";
-      }
-
-      // Reset dropdown each time
-      if (cryptoSelect) cryptoSelect.value = "";
+      addressSection.style.display = "none";
+      cryptoSelect.value = "";
     });
   });
 
-  // ==========================================================
-  //                      PAYPAL HANDLERS
-  // ==========================================================
-  if (copyPaypalBtn && paypalEmailEl) {
-    copyPaypalBtn.onclick = () => {
-      const email = paypalEmailEl.textContent.trim();
-      navigator.clipboard
-        .writeText(email)
-        .then(() => showPopup("PayPal email copied"))
-        .catch(() => showPopup("Unable to copy email", "error"));
-    };
-  }
-
-  if (closePaypalBtn && paypalModal) {
+  // =====================================================
+  //                HANDLE PAYPAL PAYMENT
+  // =====================================================
+  if (closePaypalBtn) {
     closePaypalBtn.onclick = () => {
       paypalModal.style.display = "none";
     };
   }
 
-  // ==========================================================
-  //               CREATE DEPOSIT AND REDIRECT
-  // ==========================================================
-  if (cryptoSelect) {
-    cryptoSelect.addEventListener("change", async () => {
-      const method = cryptoSelect.value;
-      const amount = parseFloat(depositAmount.value || 0);
-      const planName = depositPlan.value;
+  // =====================================================
+  //          WHEN USER SELECTS A CRYPTO COIN
+  // =====================================================
+  cryptoSelect.addEventListener("change", async () => {
+    const coin = cryptoSelect.value;
+    const amount = parseFloat(depositAmount.value);
+    const plan = depositPlan.value;
 
-      if (!method) return;
+    if (!coin) return;
 
-      if (!amount || amount < 50) {
-        showPopup("Please enter a valid amount.", "error");
-        return;
-      }
+    // If PayPal
+    if (coin === "paypal") {
+      paypalModal.style.display = "flex";
 
-      // ---------- PayPal path ----------
-      if (method === "paypal") {
-        if (!paypalModal) {
-          showPopup("PayPal modal not found in DOM.", "error");
-          return;
+      paypalSentBtn.onclick = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/deposits/paypal`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              userId,
+              amount,
+              plan,
+              note: "User selected PayPal manual payment.",
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.msg);
+
+          showPopup("PayPal deposit submitted for approval");
+          paypalModal.style.display = "none";
+          depositModal.style.display = "none";
+        } catch {
+          showPopup("Error sending PayPal request", "error");
         }
+      };
 
-        paypalModal.style.display = "flex";
+      return;
+    }
 
-        if (paypalSentBtn) {
-          paypalSentBtn.onclick = async () => {
-            try {
-              const resUser = await fetch(`${API_BASE}/api/auth/me`, {
-                credentials: "include",
-              });
-              const user = await resUser.json();
-              const uid = user._id || user.id;
+    // ====== CRYPTO PATH (BLOCKBEE) =======
+    try {
+      const res = await fetch(`${API_BASE}/api/deposits`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          userId,
+          amount,
+          plan,
+          method: coin,
+        }),
+      });
 
-              const res = await fetch(`${API_BASE}/api/deposits/paypal`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  userId: uid,
-                  amount,
-                  plan: planName,
-                  note: "User selected PayPal Friends and Family. Pending admin verification.",
-                }),
-              });
+      const data = await res.json();
+      console.log("Deposit result:", data);
 
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.msg || "PayPal deposit failed");
+      if (!res.ok) throw new Error(data.msg || "Deposit failed");
 
-              showPopup("Your PayPal deposit request has been created.", "success");
-              paypalModal.style.display = "none";
-              depositModal.style.display = "none";
-            } catch (e) {
-              console.error(e);
-              showPopup("Error creating PayPal deposit.", "error");
-            }
-          };
-        }
+      // EXPECTING: { address: "...", depositId: "..." }
+      if (!data.address) throw new Error("No payment address received");
 
-        return;
-      }
+      addressBox.textContent = data.address;
+      addressSection.style.display = "block";
 
-      // ---------- Crypto path ----------
-      try {
-        const resUser = await fetch(`${API_BASE}/api/auth/me`, {
-          credentials: "include",
-        });
-        const user = await resUser.json();
-        const uid = user._id || user.id;
+      showPopup("Crypto payment address generated");
+    } catch (err) {
+      console.error(err);
+      showPopup("Error connecting to payment server", "error");
+    }
+  });
 
-        const res = await fetch(`${API_BASE}/api/deposits`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            userId: uid,
-            amount,
-            plan: planName,
-            method, // coin code selected from BlockBee list
-          }),
-        });
+  // Close deposit modal
+  document.getElementById("closeDeposit").onclick = () => {
+    depositModal.style.display = "none";
+  };
+  document.getElementById("depositOkBtn").onclick = () => {
+    depositModal.style.display = "none";
+  };
 
-        const data = await res.json();
-        console.log("Deposit response:", data);
-
-        if (!res.ok) throw new Error(data.msg || "Deposit failed");
-
-        const iidMatch = data.paymentLink && data.paymentLink.match(/iid=(\d+)/);
-        const iid = iidMatch ? iidMatch[1] : null;
-
-        if (iid) {
-          showPopup("Redirecting to secure payment. Please wait.", "success");
-          window.location.href = `/user/payment.html?iid=${iid}`;
-        } else if (data.paymentLink) {
-          window.open(data.paymentLink, "_blank", "noopener,noreferrer");
-        } else {
-          showPopup("Payment link not available.", "error");
-        }
-      } catch (err) {
-        console.error("Payment Error:", err);
-        showPopup("Error connecting to payment server.", "error");
-      }
-    });
-  }
 
   // ==========================================================
   //                       CLOSE BUTTONS
