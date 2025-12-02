@@ -1,4 +1,5 @@
 // admin-kyc-view.js
+
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
 
