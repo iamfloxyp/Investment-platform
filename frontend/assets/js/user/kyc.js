@@ -1,11 +1,9 @@
 const API_BASE = window.API_BASE || "https://api.emuntra.com";
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadKYCStatus(); // <-- RUN THIS DIRECTLY
-
+  loadKYCStatus();
   const form = document.getElementById("kycForm");
   if (!form) return;
-
   form.addEventListener("submit", submitKYCForm);
 });
 
@@ -18,25 +16,44 @@ async function loadKYCStatus() {
 
     const statusBox = document.getElementById("kycStatusBox");
     const statusText = document.getElementById("kycStatusText");
+    const form = document.getElementById("kycForm");
 
-    if (!statusBox || !statusText) return;
+    if (!statusBox || !statusText || !form) return;
 
+    // APPLY STATUS COLORS
     if (data.kycStatus === "pending") {
       statusText.textContent = "Pending";
       statusBox.style.background = "#fff3cd";
+
+      disableKYCForm(form);   // 🔒 Disable KYC form
+
     } else if (data.kycStatus === "verified") {
       statusText.textContent = "Verified";
       statusBox.style.background = "#d4edda";
+
+      disableKYCForm(form);   // 🔒 Disable KYC form
+
     } else if (data.kycStatus === "rejected") {
       statusText.textContent = "Rejected";
       statusBox.style.background = "#f8d7da";
+
+      // ❗ Rejected users can upload again – DO NOT DISABLE FORM
+
     } else {
       statusText.textContent = "Not Submitted";
       statusBox.style.background = "#ffe8e8";
     }
+
   } catch (err) {
     console.error("Failed to load KYC:", err);
   }
+}
+
+// 🔒 FUNCTION TO DISABLE KYC FORM COMPLETELY
+function disableKYCForm(form) {
+  const inputs = form.querySelectorAll("input, button, select, textarea");
+  inputs.forEach((el) => (el.disabled = true));
+  form.style.opacity = "0.6";
 }
 
 async function submitKYCForm(e) {
@@ -76,6 +93,7 @@ async function submitKYCForm(e) {
     setTimeout(() => {
       window.location.reload();
     }, 1500);
+
   } catch (err) {
     console.error(err);
     showPopup("Network error submitting KYC", "error");
