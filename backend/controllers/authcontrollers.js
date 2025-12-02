@@ -346,7 +346,7 @@ export const getMe = async (req, res) => {
     console.error("getMe error:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-};f
+};
 // ---------- LOGOUT ALL ----------
 export const logoutAll = (_req, res) => {
   clearAllAuthCookies(res);
