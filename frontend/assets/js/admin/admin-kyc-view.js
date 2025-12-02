@@ -50,6 +50,16 @@ async function loadKYCDetails() {
         <button class="btn-reject" onclick="rejectKYC()">Reject</button>
       </div>
     `;
+    // After box.innerHTML = `...`;
+
+const approveBtn = box.querySelector(".btn-approve");
+
+// If this user is already verified, disable the Approve button
+if (u.kycStatus === "verified" && approveBtn) {
+  approveBtn.disabled = true;
+  approveBtn.style.opacity = "0.5";
+  approveBtn.textContent = "Already verified";
+}
   } catch (err) {
     console.error(err);
     showPopup("Could not load KYC details.", "error");

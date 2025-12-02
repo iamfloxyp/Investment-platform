@@ -37,10 +37,7 @@ async function loadKYCList() {
     showPopup("Failed to load KYC data.", "error");
   }
 
-  if (u.kycStatus === "verified") {
-  document.querySelector(".btn-approve").disabled = true;
-  document.querySelector(".btn-approve").style.opacity = "0.5";
-}
+ 
 }
 
 function viewKYC(id) {
