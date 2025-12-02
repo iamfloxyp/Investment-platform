@@ -7,7 +7,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 // ================================
 export const getAllKycRequests = async (req, res) => {
   try {
-    const users = await User.find({ kycStatus: "pending" })
+    const users = await User.find({ kycStatus: { $in: ["pending", "verified", "rejected"] } })
       .select(
         "firstName lastName email kycStatus createdAt kyc.idFrontUrl kyc.idBackUrl kyc.ssnText kyc.ssnImageUrl kyc.driverLicenseNumber"
       );
