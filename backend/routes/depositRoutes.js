@@ -7,7 +7,6 @@ import {
   getUserDeposits,
   deleteDeposit,
 } from "../controllers/depositController.js";
-import { handleNowPaymentsIPN } from "../controllers/nowPaymentsWebhook.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -31,6 +30,6 @@ router.get("/user/:userId", protect, getUserDeposits);
    ✅ NOWPAYMENTS WEBHOOK ROUTE (AUTO PAYMENT UPDATES)
 ============================================================ */
 // ⚠️ Changed path name slightly to avoid conflict with paymentRoutes.js
-router.post("/webhook/ipn", express.json(), handleNowPaymentsIPN);
+// router.post("/webhook/ipn", express.json(), handleNowPaymentsIPN);
 
 export default router;

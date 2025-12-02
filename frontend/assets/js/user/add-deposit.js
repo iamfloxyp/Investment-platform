@@ -23,176 +23,95 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const API_BASE = window.API_BASE;
   let userId = null;
-const COIN_LABELS = {
-  btc: "Bitcoin (BTC)",
-  eth: "Ethereum (ETH)",
-  usdttrc20: "Tether USDT TRC20",
-  usdc: "USD Coin (USDC)",
-  bnb: "Binance Coin (BNB)",
-  trx: "Tron (TRX)",
-  sol: "Solana (SOL)",
-  xrp: "Ripple (XRP)",
-  ltc: "Litecoin (LTC)",
-  doge: "Dogecoin (DOGE)",
-  bch: "Bitcoin Cash (BCH)",
-  ada: "Cardano (ADA)",
-  dot: "Polkadot (DOT)",
-  matic: "Polygon (MATIC)",
-  avax: "Avalanche (AVAX)",
-  xlm: "Stellar (XLM)",
-  xmr: "Monero (XMR)",
-  vet: "VeChain (VET)",
-  egld: "Elrond (EGLD)",
-  algo: "Algorand (ALGO)",
-  icp: "Internet Computer (ICP)",
-  fil: "Filecoin (FIL)",
-  hbar: "Hedera (HBAR)",
-  near: "NEAR Protocol (NEAR)",
-  atom: "Cosmos (ATOM)",
-  grt: "The Graph (GRT)",
-  ftm: "Fantom (FTM)",
-  cro: "Cronos (CRO)",
-  sand: "The Sandbox (SAND)",
-  mana: "Decentraland (MANA)",
-  enj: "Enjin Coin (ENJ)",
-  gala: "Gala (GALA)",
-  ape: "ApeCoin (APE)",
-  qnt: "Quant (QNT)",
-  cspr: "Casper (CSPR)",
-  zil: "Zilliqa (ZIL)",
-  dcr: "Decred (DCR)",
-  ksm: "Kusama (KSM)",
-  dai: "DAI",
-  shib: "Shiba Inu (SHIB)",
-  floki: "Floki Inu (FLOKI)",
-  pepe: "Pepe (PEPE)",
-  inj: "Injective (INJ)",
-  rndr: "Render Token (RNDR)",
-  imx: "Immutable X (IMX)",
-  sushi: "SushiSwap (SUSHI)",
-  comp: "Compound (COMP)",
-  link: "ChainLink (LINK)",
-  uni: "Uniswap (UNI)",
-  aave: "AAVE (AAVE)",
-  snx: "Synthetix (SNX)",
-  "1inch": "1inch (1INCH)",
-  crv: "Curve DAO (CRV)",
-  yfi: "Yearn Finance (YFI)",
-  bal: "Balancer (BAL)",
-  ldo: "Lido DAO (LDO)",
-  op: "Optimism (OP)",
-  arb: "Arbitrum (ARB)",
-  sei: "Sei (SEI)",
-  apt: "Aptos (APT)",
-  ton: "TON (TON)",
-  btt: "BitTorrent Token (BTT)",
-  hot: "Holo (HOT)",
-  sc: "Siacoin (SC)",
-  rvn: "Ravencoin (RVN)",
-  zen: "Horizen (ZEN)",
-  omg: "OMG Network (OMG)",
-  iost: "IOST (IOST)",
-  waves: "Waves (WAVES)",
-  dash: "Dash (DASH)",
-  zec: "Zcash (ZEC)",
-  theta: "Theta (THETA)",
-  tfuel: "Theta Fuel (TFUEL)",
-  neo: "Neo (NEO)",
-  qtum: "QTUM (QTUM)",
-  eos: "EOS (EOS)",
-  one: "Harmony One (ONE)",
-  klay: "Klaytn (KLAY)",
-  celo: "Celo (CELO)",
-  rose: "Oasis Network (ROSE)",
-  xdc: "XDC Network (XDC)",
-  wbtc: "Wrapped Bitcoin (WBTC)",
-  weth: "Wrapped Ethereum (WETH)"
-};
-  const NOWPAY_COINS = {
-  btc: "btc",
-  eth: "eth",
-  usdt: "usdttrc20",
-  usdc: "usdc",
-  bnb: "bnb",
-  trx: "trx",
-  sol: "sol",
-  xrp: "xrp",
-  ltc: "ltc",
-  doge: "doge",
-  bch: "bch",
-  ada: "ada",
-  dot: "dot",
-  matic: "matic",
-  avax: "avax",
-  xlm: "xlm",
-  xmr: "xmr",
-  vet: "vet",
-  egld: "egld",
-  algo: "algo",
-  icp: "icp",
-  fil: "fil",
-  hbar: "hbar",
-  near: "near",
-  atom: "atom",
-  grt: "grt",
-  ftm: "ftm",
-  cro: "cro",
-  sand: "sand",
-  mana: "mana",
-  enj: "enj",
-  gala: "gala",
-  ape: "ape",
-  qnt: "qnt",
-  cspr: "cspr",
-  zil: "zil",
-  dcr: "dcr",
-  ksm: "ksm",
-  dai: "dai",
-  shib: "shib",
-  floki: "floki",
-  pepe: "pepe",
-  inj: "inj",
-  rndr: "rndr",
-  imx: "imx",
-  sushi: "sushi",
-  comp: "comp",
-  link: "link",
-  uni: "uni",
-  aave: "aave",
-  snx: "snx",
-  oneinch: "1inch",
-  crv: "crv",
-  yfi: "yfi",
-  bal: "bal",
-  ldo: "ldo",
-  op: "op",
-  arb: "arb",
-  sei: "sei",
-  apt: "apt",
-  ton: "ton",
-  btt: "btt",
-  hot: "hot",
-  sc: "sc",
-  rvn: "rvn",
-  zen: "zen",
-  omg: "omg",
-  iost: "iost",
-  waves: "waves",
-  dash: "dash",
-  zec: "zec",
-  theta: "theta",
-  tfuel: "tfuel",
-  neo: "neo",
-  qtum: "qtum",
-  eos: "eos",
-  one: "one",
-  klay: "klay",
-  celo: "celo",
-  rose: "rose",
-  xdc: "xdc",
-  wbtc: "wbtc",
-  weth: "weth"
-};
+
+  // Labels we can still use for display
+  const COIN_LABELS = {
+    btc: "Bitcoin (BTC)",
+    eth: "Ethereum (ETH)",
+    usdt: "Tether USDT",
+    usdttrc20: "Tether USDT TRC20",
+    usdc: "USD Coin (USDC)",
+    bnb: "Binance Coin (BNB)",
+    trx: "Tron (TRX)",
+    sol: "Solana (SOL)",
+    xrp: "Ripple (XRP)",
+    ltc: "Litecoin (LTC)",
+    doge: "Dogecoin (DOGE)",
+    bch: "Bitcoin Cash (BCH)",
+    ada: "Cardano (ADA)",
+    dot: "Polkadot (DOT)",
+    matic: "Polygon (MATIC)",
+    avax: "Avalanche (AVAX)",
+    xlm: "Stellar (XLM)",
+    xmr: "Monero (XMR)",
+    vet: "VeChain (VET)",
+    egld: "Elrond (EGLD)",
+    algo: "Algorand (ALGO)",
+    icp: "Internet Computer (ICP)",
+    fil: "Filecoin (FIL)",
+    hbar: "Hedera (HBAR)",
+    near: "NEAR Protocol (NEAR)",
+    atom: "Cosmos (ATOM)",
+    grt: "The Graph (GRT)",
+    ftm: "Fantom (FTM)",
+    cro: "Cronos (CRO)",
+    sand: "The Sandbox (SAND)",
+    mana: "Decentraland (MANA)",
+    enj: "Enjin Coin (ENJ)",
+    gala: "Gala (GALA)",
+    ape: "ApeCoin (APE)",
+    qnt: "Quant (QNT)",
+    cspr: "Casper (CSPR)",
+    zil: "Zilliqa (ZIL)",
+    dcr: "Decred (DCR)",
+    ksm: "Kusama (KSM)",
+    dai: "DAI",
+    shib: "Shiba Inu (SHIB)",
+    floki: "Floki Inu (FLOKI)",
+    pepe: "Pepe (PEPE)",
+    inj: "Injective (INJ)",
+    rndr: "Render Token (RNDR)",
+    imx: "Immutable X (IMX)",
+    sushi: "SushiSwap (SUSHI)",
+    comp: "Compound (COMP)",
+    link: "ChainLink (LINK)",
+    uni: "Uniswap (UNI)",
+    aave: "AAVE (AAVE)",
+    snx: "Synthetix (SNX)",
+    "1inch": "1inch (1INCH)",
+    crv: "Curve DAO (CRV)",
+    yfi: "Yearn Finance (YFI)",
+    bal: "Balancer (BAL)",
+    ldo: "Lido DAO (LDO)",
+    op: "Optimism (OP)",
+    arb: "Arbitrum (ARB)",
+    sei: "Sei (SEI)",
+    apt: "Aptos (APT)",
+    ton: "TON (TON)",
+    btt: "BitTorrent Token (BTT)",
+    hot: "Holo (HOT)",
+    sc: "Siacoin (SC)",
+    rvn: "Ravencoin (RVN)",
+    zen: "Horizen (ZEN)",
+    omg: "OMG Network (OMG)",
+    iost: "IOST (IOST)",
+    waves: "Waves (WAVES)",
+    dash: "Dash (DASH)",
+    zec: "Zcash (ZEC)",
+    theta: "Theta (THETA)",
+    tfuel: "Theta Fuel (TFUEL)",
+    neo: "Neo (NEO)",
+    qtum: "QTUM (QTUM)",
+    eos: "EOS (EOS)",
+    one: "Harmony One (ONE)",
+    klay: "Klaytn (KLAY)",
+    celo: "Celo (CELO)",
+    rose: "Oasis Network (ROSE)",
+    xdc: "XDC Network (XDC)",
+    wbtc: "Wrapped Bitcoin (WBTC)",
+    weth: "Wrapped Ethereum (WETH)"
+  };
+
   // ==========================================================
   //                       POPUP UTILITY
   // ==========================================================
@@ -212,98 +131,134 @@ const COIN_LABELS = {
   }
 
   // ==========================================================
-  //           CRYPTOLOADING AND SELECT OPTIONS
+  //           CRYPTO LOADING AND SELECT OPTIONS
+  //             BLOCKBEE DYNAMIC COIN LIST
   // ==========================================================
-async function loadCryptoList() {
-  if (!cryptoSelect) return;
+  async function loadCryptoList() {
+    if (!cryptoSelect) return;
 
-  cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
+    cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
 
-  Object.entries(NOWPAY_COINS).forEach(([symbol, npValue]) => {
-    const label =
-      COIN_LABELS[npValue] ||
-      COIN_LABELS[symbol] ||
-      symbol.toUpperCase();
+    try {
+      const res = await fetch(`${API_BASE}/api/blockbee/coins`, {
+        credentials: "include"
+      });
 
-    const opt = document.createElement("option");
-    opt.value = npValue;
-    opt.textContent = label;
-    cryptoSelect.appendChild(opt);
-  });
+      const data = await res.json();
 
-  const paypal = document.createElement("option");
-  paypal.value = "paypal";
-  paypal.textContent = "PayPal (Friends and Family)";
-  cryptoSelect.prepend(paypal);
-}
-loadCryptoList();
-// ----------------------
-//   LABEL HELPER
-// ----------------------
-function getCoinLabel(symbol) {
-  symbol = symbol.toLowerCase();
+      let coins = [];
 
-  return (
-    COIN_LABELS[symbol] ||
-    COIN_LABELS[NOWPAY_COINS[symbol]] ||
-    symbol.toUpperCase()
-  );
-}
+      // Expecting something like { success: true, coins: [{ code, name }, ...] }
+      if (Array.isArray(data.coins)) {
+        coins = data.coins;
+      } else if (data && typeof data === "object") {
+        // Or backup if backend returns a map { btc: { name: "Bitcoin" }, ... }
+        coins = Object.entries(data).map(([code, obj]) => ({
+          code,
+          name: obj.name || code.toUpperCase()
+        }));
+      }
+
+      coins.forEach((coin) => {
+        const symbol = String(coin.code || coin.symbol || "").toLowerCase();
+        if (!symbol) return;
+
+        const label =
+          coin.name ||
+          COIN_LABELS[symbol] ||
+          `${symbol.toUpperCase()}`;
+
+        const opt = document.createElement("option");
+        opt.value = symbol;            // value is the coin code we send to backend
+        opt.textContent = label;
+        cryptoSelect.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Error loading BlockBee coins, using fallback list", err);
+
+      // Fallback coins if API fails
+      const fallbackCoins = ["btc", "eth", "usdt", "ltc", "trx", "bch"];
+      fallbackCoins.forEach((symbol) => {
+        const label = COIN_LABELS[symbol] || symbol.toUpperCase();
+        const opt = document.createElement("option");
+        opt.value = symbol;
+        opt.textContent = label;
+        cryptoSelect.appendChild(opt);
+      });
+    }
+
+    // Add PayPal at the top
+    const paypal = document.createElement("option");
+    paypal.value = "paypal";
+    paypal.textContent = "PayPal (Friends and Family)";
+    cryptoSelect.prepend(paypal);
+  }
+
+  loadCryptoList();
+
+  // ----------------------
+  //   LABEL HELPER
+  // ----------------------
+  function getCoinLabel(symbol) {
+    symbol = symbol.toLowerCase();
+    return COIN_LABELS[symbol] || symbol.toUpperCase();
+  }
+
   // ==========================================================
   //                  UPDATE DASHBOARD BALANCES
   // ==========================================================
   function updateBalances(user) {
-  try {
-    const totalBalance = Number(user.balance || 0);
+    try {
+      const totalBalance = Number(user.balance || 0);
 
-    const balanceEl = document.querySelector(".balance h3");
-    if (balanceEl) balanceEl.textContent = `$${totalBalance.toFixed(2)}`;
+      const balanceEl = document.querySelector(".balance h3");
+      if (balanceEl) balanceEl.textContent = `$${totalBalance.toFixed(2)}`;
 
-    const availableEl = document.getElementById("availableBalance");
-    if (availableEl) {
-      const balance = user.availableBalance ?? user.balance ?? 0;
-      availableEl.textContent = `$${Number(balance).toFixed(2)}`;
+      const availableEl = document.getElementById("availableBalance");
+      if (availableEl) {
+        const balance = user.availableBalance ?? user.balance ?? 0;
+        availableEl.textContent = `$${Number(balance).toFixed(2)}`;
+      }
+
+      const cryptoList = document.querySelector(".crypto-list");
+      if (!cryptoList) return;
+      cryptoList.innerHTML = "";
+
+      const wallets = user.wallets || {};
+      const entries = Object.entries(wallets).filter(
+        ([, amount]) => Number(amount) > 0
+      );
+
+      if (!entries.length) {
+        const li = document.createElement("li");
+        li.className = "empty-balance";
+        li.textContent =
+          "No crypto balance yet. Make a deposit to see it here.";
+        cryptoList.appendChild(li);
+        return;
+      }
+
+      entries.forEach(([coinKey, amount]) => {
+        const coin = String(coinKey).toLowerCase();
+        const niceLabel = getCoinLabel(coin);
+
+        const li = document.createElement("li");
+        li.dataset.coin = coin;
+
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = niceLabel + ":";
+
+        const valueSpan = document.createElement("span");
+        valueSpan.textContent = `$${Number(amount).toFixed(2)}`;
+
+        li.appendChild(labelSpan);
+        li.appendChild(valueSpan);
+        cryptoList.appendChild(li);
+      });
+    } catch (e) {
+      console.error("Error updating balances:", e);
     }
-
-    const cryptoList = document.querySelector(".crypto-list");
-    if (!cryptoList) return;
-    cryptoList.innerHTML = "";
-
-    const wallets = user.wallets || {};
-    const entries = Object.entries(wallets).filter(
-      ([, amount]) => Number(amount) > 0
-    );
-
-    if (!entries.length) {
-      const li = document.createElement("li");
-      li.className = "empty-balance";
-      li.textContent =
-        "No crypto balance yet. Make a deposit to see it here.";
-      cryptoList.appendChild(li);
-      return;
-    }
-
-    entries.forEach(([coinKey, amount]) => {
-      const coin = String(coinKey).toLowerCase();
-      const niceLabel = getCoinLabel(coin);
-
-      const li = document.createElement("li");
-      li.dataset.coin = coin;
-
-      const labelSpan = document.createElement("span");
-      labelSpan.textContent = niceLabel + ":";
-
-      const valueSpan = document.createElement("span");
-      valueSpan.textContent = `$${Number(amount).toFixed(2)}`;
-
-      li.appendChild(labelSpan);
-      li.appendChild(valueSpan);
-      cryptoList.appendChild(li);
-    });
-  } catch (e) {
-    console.error("Error updating balances:", e);
   }
-}
 
   // ==========================================================
   //                        FETCH USER
@@ -417,7 +372,6 @@ function getCoinLabel(symbol) {
               const user = await resUser.json();
               const uid = user._id || user.id;
 
-              // TODO: adjust this endpoint to match your backend
               const res = await fetch(`${API_BASE}/api/deposits/paypal`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -446,7 +400,7 @@ function getCoinLabel(symbol) {
         return;
       }
 
-      // ---------- Crypto path via NowPayments ----------
+      // ---------- Crypto path ----------
       try {
         const resUser = await fetch(`${API_BASE}/api/auth/me`, {
           credentials: "include",
@@ -462,7 +416,7 @@ function getCoinLabel(symbol) {
             userId: uid,
             amount,
             plan: planName,
-            method, // crypto coin
+            method, // coin code selected from BlockBee list
           }),
         });
 

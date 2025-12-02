@@ -95,13 +95,13 @@ import externalRoutes from "./routes/externalRoutes.js";
 import withdrawRoutes from "./routes/withdrawRoutes.js";
 import referralRoutes from "./routes/referralRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
+
 import testEmailRoute from "./routes/testEmail.js";
 import contactRoutes from "./routes/contactRoutes.js";
-import nowpayRoutes from "./routes/nowpayRoutes.js";
 import kycRoutes from "./routes/kycRoutes.js";
 import adminKycRoutes from "./routes/adminKycRoutes.js";
 import cronRoutes from "./routes/cronRoutes.js";
+import blockbeeRoutes from "./routes/blockbeeRoutes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositRoutes);
@@ -111,14 +111,13 @@ app.use("/api/external", externalRoutes);
 app.use("/api/withdrawals", withdrawRoutes);
 app.use("/api/referrals", referralRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/payments", paymentRoutes);
 app.use("/api", testEmailRoute);
 app.use("/api/contact", contactRoutes);
-app.use("/api/nowpay", nowpayRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/admin/kyc", adminKycRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/cron", cronRoutes);
+app.use("/api/blockbee", blockbeeRoutes);
 
 // SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
