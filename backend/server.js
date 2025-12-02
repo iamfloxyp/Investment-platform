@@ -12,24 +12,11 @@ import { fileURLToPath } from "url";
 import "./cronDailyProfit.js";
 import fileUpload from "express-fileupload";
 
+
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
-// DAILY PROFIT
-cron.schedule(
-  "0 21 * * *",
-  async () => {
-    console.log("Running scheduled daily profit job");
-    await runDailyProfit();
-  },
-  {
-    scheduled: true,
-    timezone: "Etc/UTC",
-  }
-);
-
-console.log("Daily profit scheduler initialized");
 
 // Initialize app
 const app = express();
@@ -114,6 +101,7 @@ import contactRoutes from "./routes/contactRoutes.js";
 import nowpayRoutes from "./routes/nowpayRoutes.js";
 import kycRoutes from "./routes/kycRoutes.js";
 import adminKycRoutes from "./routes/adminKycRoutes.js";
+import cronRoutes from "./routes/cronRoutes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositRoutes);
@@ -130,6 +118,7 @@ app.use("/api/nowpay", nowpayRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/admin/kyc", adminKycRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/cron", cronRoutes);
 
 // SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
