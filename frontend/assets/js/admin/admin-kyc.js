@@ -3,7 +3,7 @@
 
 async function loadKYCList() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/kyc`, {
+    const res = await fetch(`${API_BASE}/api/admin/kyc-requests`, {
       credentials: "include"
     });
 
