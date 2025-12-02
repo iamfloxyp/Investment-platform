@@ -14,19 +14,11 @@ router.post("/:depositId", async (req, res) => {
     console.log("🔔 BlockBee Webhook Received:", data);
 
     const deposit = await Deposit.findById(depositId);
+    if (!deposit) return res.json({ ok: true });
 
-    if (!deposit) {
-      console.log("Deposit not found");
-      return res.json({ ok: true });
-    }
+    if (deposit.status !== "pending") return res.json({ ok: true });
 
-    if (deposit.status !== "pending") {
-      return res.json({ ok: true });
-    }
-
-    if (data.status !== "confirmed") {
-      return res.json({ ok: true });
-    }
+    if (data.status !== "confirmed") return res.json({ ok: true });
 
     deposit.status = "approved";
     deposit.txid = data.txid;
@@ -34,14 +26,13 @@ router.post("/:depositId", async (req, res) => {
     await deposit.save();
 
     const user = await User.findById(deposit.user);
-
     user.balance += deposit.paidAmount;
     user.activeDeposit += deposit.paidAmount;
     await user.save();
 
     await Notification.create({
       user: user._id,
-      message: `Your ${deposit.coin.toUpperCase()} deposit of $${deposit.paidAmount} is confirmed`,
+      message: `Your ${deposit.coin.toUpperCase()} deposit of $${deposit.paidAmount} is confirmed`
     });
 
     return res.json({ success: true });

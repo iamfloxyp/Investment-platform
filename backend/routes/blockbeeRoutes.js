@@ -6,6 +6,29 @@ import User from "../models/userModel.js";
 
 const router = express.Router();
 
+// ----------------------------------------------
+// GET DYNAMIC COIN LIST FROM BLOCKBEE
+// ----------------------------------------------
+router.get("/coins", async (req, res) => {
+  try {
+    const apiRes = await axios.get(
+      `https://api.blockbee.io/coins?apikey=${process.env.BLOCKBEE_API_KEY}`
+    );
+
+    return res.json({
+      success: true,
+      coins: apiRes.data.coins || []
+    });
+
+  } catch (err) {
+    console.error("Coin list error:", err.message);
+    return res.status(500).json({ msg: "Failed to load coins" });
+  }
+});
+
+// ----------------------------------------------
+// CREATE PAYMENT ADDRESS
+// ----------------------------------------------
 router.post("/create", async (req, res) => {
   try {
     const { userId, amount, plan, coin } = req.body;
@@ -17,7 +40,7 @@ router.post("/create", async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    // CREATE DEPOSIT RECORD FIRST
+    // Create deposit
     const deposit = await Deposit.create({
       user: userId,
       amount,
@@ -25,21 +48,19 @@ router.post("/create", async (req, res) => {
       method: coin.toLowerCase(),
       status: "pending",
       type: "deposit",
-      coin: coin.toLowerCase(),
+      coin: coin.toLowerCase()
     });
 
-    // BlockBee Forwarding Request
+    // BlockBee generate address
     const forwardRes = await axios.get(
-      `https://api.blockbee.io/forward/${coin}?apikey=${process.env.BLOCKBEE_API_KEY}&callback_url=${process.env.BACKEND_URL}/api/blockbee/webhook/${deposit._id}`
+      `https://api.blockbee.io/forward/${coin}?apikey=${process.env.BLOCKBEE_API_KEY}`
     );
 
     const address = forwardRes.data.address;
-
     if (!address) {
-      return res.status(500).json({ msg: "Could not generate payment address" });
+      return res.status(500).json({ msg: "Failed to generate address" });
     }
 
-    // SAVE ADDRESS
     deposit.paymentAddress = address;
     await deposit.save();
 
@@ -48,7 +69,7 @@ router.post("/create", async (req, res) => {
       depositId: deposit._id,
       address,
       coin,
-      amount,
+      amount
     });
 
   } catch (err) {
