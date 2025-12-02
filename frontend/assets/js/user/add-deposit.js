@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ====== CRYPTO PATH (BLOCKBEE) =======
     try {
-      const res = await fetch(`${API_BASE}/api/deposits`, {
+      const res = await fetch(`${API_BASE}/api/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
