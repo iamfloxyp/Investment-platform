@@ -29,8 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData();
     formData.append("ssn", ssn);
     formData.append("driverLicenseNumber", licenseNumber);
-    formData.append("licenseFront", frontFile);
-    formData.append("licenseBack", backFile);
+    formData.append("frontImage", frontFile);
+    formData.append("backImage", backFile);
 
     try {
       const res = await fetch(`${API_BASE}/api/kyc/submit`, {
