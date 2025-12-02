@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showPopup(data.message || "KYC submitted successfully.", "success");
 
       setTimeout(() => {
-        window.location.href = "dashboard.html";
+        window.location.reload();
       }, 1500);
     } catch (err) {
       console.error("KYC error:", err);
