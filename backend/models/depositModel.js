@@ -8,7 +8,7 @@ const depositSchema = new mongoose.Schema({
 
   plan: {
     type: String,
-    enum: ["Bronze", "Silver", "Gold", "Diamond", "Platinum"],
+    enum: ["Bronze Plan", "Silver Plan", "Gold Plan", "Diamond Plan", "Platinum Plan"],
     required: true,
   },
 
