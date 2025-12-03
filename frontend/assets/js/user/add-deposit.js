@@ -454,7 +454,7 @@ function getCoinLabel(symbol) {
         const user = await resUser.json();
         const uid = user._id || user.id;
 
-        const res = await fetch(`${API_BASE}/api/deposits`, {
+        const res = await fetch(`${API_BASE}/api/create`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
