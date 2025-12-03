@@ -108,7 +108,6 @@ console.log("Payload:", payload);
       console.error("NOWPayments error:", err?.response?.data || err.message);
       return res.status(500).json({
         msg: "Error connecting to payment server",
-        
       });
     }
 
