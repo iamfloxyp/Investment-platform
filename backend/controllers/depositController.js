@@ -98,36 +98,40 @@ export const addDepositForUser = async (req, res) => {
 
     try {
       invoiceResponse = await axios.post(
-        "https://api.nowpayments.io/v1/invoice",
-        payload,
-        {
-          headers: {
-            "x-api-key": process.env.NOWPAYMENTS_API_KEY,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    } catch (err) {
-      console.log("NOWPAYMENTS ERROR:", err.response?.data || err.message);
-      return res.status(500).json({
-        msg: "Error connecting to payment server",
-      });
-    }
+      "https://api.nowpayments.io/v1/invoice",
+      payload,
+      {
+        headers: {
+          "x-api-key": process.env.NOWPAYMENTS_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (err) {
+    console.log("NOWPAYMENTS ERROR:", err.response?.data || err.message);
+    return res.status(500).json({
+      msg: "Error connecting to payment server",
+      error: err.response?.data || err.message,
+    });
+  }
 
-    const invoiceData = invoiceResponse.data;
+  const invoiceData = invoiceResponse.data;
+  console.log("NOWPAYMENTS invoiceData:", invoiceData);
 
-    const paymentUrl = invoiceData.payment_url || "";
-    const invoiceId = invoiceData.payment_id || "";
+  // notice the field names here
+  const paymentUrl =
+    invoiceData.invoice_url || invoiceData.payment_url || "";
+  const invoiceId = invoiceData.id || invoiceData.payment_id || "";
 
-    if (!paymentUrl) {
-      return res.status(500).json({
-        msg: "Could not generate payment link",
-      });
-    }
+  if (!paymentUrl) {
+    return res.status(500).json({
+      msg: "Could not generate payment link",
+      raw: invoiceData,
+    });
+  }
 
-    deposit.invoiceId = invoiceId;
-    await deposit.save();
-
+  deposit.invoiceId = invoiceId;
+  await deposit.save();
     await Notification.create({
       user: userId,
       type: "deposit",
