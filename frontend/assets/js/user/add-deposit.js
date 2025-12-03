@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
 
     try {
-      const res = await fetch(`${API_BASE}/api/blockbee/coins`, {
+      const res = await fetch(`${API_BASE}/api/coins`, {
         credentials: "include",
       });
 

@@ -19,6 +19,7 @@ router.get("/coins", async (req, res) => {
       success: true,
       coins: apiRes.data.coins || []
     });
+    console.log("BlockBee coins raw:", apiRes.data);
 
   } catch (err) {
     console.error("Coin list error:", err.message);
