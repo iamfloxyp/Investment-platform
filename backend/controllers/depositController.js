@@ -91,7 +91,7 @@ export const addDepositForUser = async (req, res) => {
 
     try {
       invoiceResponse = await axios.post(
-        "https://api.nowpayments.io/v1/payment",
+        "https://api.nowpayments.io/v1/invoice",
         payload,
         {
           headers: {
