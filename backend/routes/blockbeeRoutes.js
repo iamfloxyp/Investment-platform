@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/create", async (req, res) => {
   try {
+    console.log("BLOCKBEE KEY LOADED:", process.env.BLOCKBEE_API_KEY)
     const { userId, amount, plan, coin } = req.body;
 
     if (!userId || !amount || !plan || !coin) {
