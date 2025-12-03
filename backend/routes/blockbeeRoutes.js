@@ -13,38 +13,41 @@ router.post("/create", async (req, res) => {
       return res.status(400).json({ msg: "Missing required fields" });
     }
 
-    // Load user
+    // Validate user
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    // Create deposit (pending)
-    const deposit = new Deposit({
+    // Create pending deposit
+    const deposit = await Deposit.create({
       user: userId,
       amount,
       plan,
       method: coin.toLowerCase(),
       status: "pending",
       type: "deposit",
+      coin: coin.toLowerCase(),
     });
 
-    await deposit.save();
+    // CORRECT BLOCKBEE URL
+    const url = `https://api.blockbee.io/forward/${coin}/generate`;
 
-    // Call BlockBee API
-    const url = `https://api.blockbee.io/forward/${coin}/generate?apikey=${process.env.BLOCKBEE_API_KEY}`;
-
+    // CORRECT REQUEST BODY
     const forwardRes = await axios.post(url, {
+      api_key: process.env.BLOCKBEE_API_KEY,
       callback_url: `${process.env.BACKEND_URL}/api/blockbee/webhook/${deposit._id}`,
     });
 
-    const paymentAddress = forwardRes.data.address_in;
+    // CORRECT RESPONSE FIELD
+    const paymentAddress =
+      forwardRes.data.destination ||
+      forwardRes.data.address ||
+      forwardRes.data.address_in;
 
     if (!paymentAddress) {
       return res.status(500).json({ msg: "Could not generate address" });
     }
 
-    // Save inside deposit
     deposit.paymentAddress = paymentAddress;
-    deposit.coin = coin.toLowerCase();
     await deposit.save();
 
     return res.json({
