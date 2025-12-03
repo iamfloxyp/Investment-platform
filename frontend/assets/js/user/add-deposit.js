@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const addressSection = document.getElementById("cryptoAddressSection");
   const addressBox = document.getElementById("cryptoAddress");
 
-  // PayPal modal
   const paypalModal = document.getElementById("paypalModal");
   const paypalSentBtn = document.getElementById("paypalSentBtn");
   const closePaypalBtn = document.getElementById("closePaypal");
@@ -15,9 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = window.API_BASE;
   let userId = null;
 
-  // =====================================================
-  //                 POPUP MESSAGE
-  // =====================================================
   function showPopup(msg, type = "success") {
     const pop = document.createElement("div");
     pop.textContent = msg;
@@ -33,9 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => pop.remove(), 3000);
   }
 
-  // =====================================================
-  //                LOAD USER DETAILS
-  // =====================================================
+  // Load logged in user
   (async function fetchUser() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, {
@@ -53,47 +47,42 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 
   // =====================================================
-  //          LOAD COINS FROM BLOCKBEE (DYNAMIC)
+  // LOAD CRYPTO COINS FROM NOWPAYMENTS
   // =====================================================
   async function loadCryptoList() {
-    cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
+    cryptoSelect.innerHTML = `<option value="">-- Select Method --</option>`;
 
     try {
-      const res = await fetch(`${API_BASE}/api/blockbee/coins`, {
+      const res = await fetch(`${API_BASE}/api/nowpayments/coins`, {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed");
-
       const data = await res.json();
 
-      if (!Array.isArray(data.coins)) throw new Error("Invalid format");
+      const coinNames = {
+        btc: "Bitcoin (BTC)",
+        eth: "Ethereum (ETH)",
+        usdttrc20: "Tether USDT TRC20",
+        usdc: "USD Coin (USDC)",
+        trx: "Tron (TRX)",
+        bnb: "Binance Coin (BNB)",
+        xrp: "Ripple (XRP)",
+        sol: "Solana (SOL)",
+        ltc: "Litecoin (LTC)",
+        doge: "Dogecoin (DOGE)",
+        bch: "Bitcoin Cash (BCH)",
+        ada: "Cardano (ADA)",
+      };
 
-      data.coins.forEach((coin) => {
+      data.coins.forEach((code) => {
         const opt = document.createElement("option");
-        opt.value = coin.code.toLowerCase();
-        opt.textContent = coin.name;
+        opt.value = code;
+        opt.textContent = coinNames[code] || code.toUpperCase();
         cryptoSelect.appendChild(opt);
       });
     } catch (err) {
       console.error("Coin load error:", err);
-
-      // fallback
-      const fallback = [
-        { code: "btc", name: "Bitcoin (BTC)" },
-        { code: "eth", name: "Ethereum (ETH)" },
-        { code: "usdt", name: "Tether USDT" },
-        { code: "ltc", name: "Litecoin (LTC)" },
-        { code: "trx", name: "Tron (TRX)" },
-        { code: "bch", name: "Bitcoin Cash (BCH)" }
-      ];
-
-      fallback.forEach((coin) => {
-        const opt = document.createElement("option");
-        opt.value = coin.code;
-        opt.textContent = coin.name;
-        cryptoSelect.appendChild(opt);
-      });
+      showPopup("Error loading coins", "error");
     }
 
     // Add PayPal
@@ -106,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadCryptoList();
 
   // =====================================================
-  //            OPEN DEPOSIT MODAL
+  // OPEN DEPOSIT MODAL
   // =====================================================
   document.querySelectorAll(".btn-plan").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -122,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =====================================================
-  //                HANDLE PAYPAL PAYMENT
+  // HANDLE PAYPAL PAYMENT
   // =====================================================
   if (closePaypalBtn) {
     closePaypalBtn.onclick = () => {
@@ -131,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =====================================================
-  //          WHEN USER SELECTS A CRYPTO COIN
+  // HANDLE CRYPTO SELECTION
   // =====================================================
   cryptoSelect.addEventListener("change", async () => {
     const coin = cryptoSelect.value;
@@ -140,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!coin) return;
 
-    // If PayPal
+    // PayPal Path
     if (coin === "paypal") {
       paypalModal.style.display = "flex";
 
@@ -172,9 +161,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ====== CRYPTO PATH (BLOCKBEE) =======
+    // =========================================
+    //   CRYPTO PAYMENT USING NOWPAYMENTS
+    // =========================================
     try {
-      const res = await fetch(`${API_BASE}/api/blockbee/create`, {
+      const res = await fetch(`${API_BASE}/api/nowpayments/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -182,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
           userId,
           amount,
           plan,
-         coin,
+          method: coin,
         }),
       });
 
@@ -191,13 +182,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!res.ok) throw new Error(data.msg || "Deposit failed");
 
-      // EXPECTING: { address: "...", depositId: "..." }
-      if (!data.address) throw new Error("No payment address received");
+      if (!data.paymentLink) throw new Error("No payment link received");
 
-      addressBox.textContent = data.address;
-      addressSection.style.display = "block";
+      showPopup("Redirecting to secure payment page");
+      window.location.href = data.paymentLink;
 
-      showPopup("Crypto payment address generated");
     } catch (err) {
       console.error(err);
       showPopup("Error connecting to payment server", "error");
@@ -212,51 +201,13 @@ document.addEventListener("DOMContentLoaded", () => {
     depositModal.style.display = "none";
   };
 
-
-  // ==========================================================
-  //                       CLOSE BUTTONS
-  // ==========================================================
   document.getElementById("closeCalc").onclick = () => {
     calcModal.style.display = "none";
-  };
-  document.getElementById("closeDeposit").onclick = () => {
-    depositModal.style.display = "none";
   };
   document.getElementById("calcOkBtn").onclick = () => {
     calcModal.style.display = "none";
   };
-  document.getElementById("depositOkBtn").onclick = () => {
-    depositModal.style.display = "none";
-  };
 
-  // ==========================================================
-  //                 CALCULATOR SUBMIT HANDLER
-  // ==========================================================
-  document.getElementById("calcForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const card = document.querySelector(
-      `[data-name="${calcPlan.value}"]`
-    );
-    if (!card) return;
-
-    const rate = parseFloat(card.dataset.rate);
-    const amount = parseFloat(calcAmount.value);
-
-    if (!rate || !amount) {
-      calcResult.innerHTML = "<p>Please enter a valid amount.</p>";
-      return;
-    }
-
-    const profit = (rate / 100) * amount;
-    calcResult.innerHTML = `
-      <p>For <strong>${calcPlan.value}</strong>, if you invest <strong>$${amount}</strong>,</p>
-      <p>You will earn <strong>$${profit.toFixed(2)}</strong> daily.</p>
-    `;
-  });
-
-  // ==========================================================
-  //                CLICK OUTSIDE TO CLOSE MODALS
-  // ==========================================================
   window.onclick = (e) => {
     if (e.target === calcModal) calcModal.style.display = "none";
     if (e.target === depositModal) depositModal.style.display = "none";

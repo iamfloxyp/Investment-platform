@@ -95,7 +95,7 @@ import externalRoutes from "./routes/externalRoutes.js";
 import withdrawRoutes from "./routes/withdrawRoutes.js";
 import referralRoutes from "./routes/referralRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-
+import nowpayRoutes from "./routes/nowpayRoutes.js";
 import testEmailRoute from "./routes/testEmail.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import kycRoutes from "./routes/kycRoutes.js";
@@ -120,6 +120,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/cron", cronRoutes);
 app.use("/api/blockbee", blockbeeRoutes);
 app.use("/api/blockbee/webhook", blockbeeWebhook);
+app.use("/api/nowpayments", nowpayRoutes);
 
 // SERVE FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
