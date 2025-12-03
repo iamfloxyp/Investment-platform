@@ -33,7 +33,7 @@ router.post("/create", async (req, res) => {
     const url = `https://api.blockbee.io/forward/${coin}/generate?apikey=${process.env.BLOCKBEE_API_KEY}`;
 
     const forwardRes = await axios.post(url, {
-      callback_url: `${process.env.BACKEND_URL}/api/blockbee/webhook`,
+      callback_url: `${process.env.BACKEND_URL}/api/blockbee/webhook/${deposit._id}`,
     });
 
     const paymentAddress = forwardRes.data.address_in;
