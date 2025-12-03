@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ======= DOM ELEMENTS =======
+  /* ==========================================================
+     DOM ELEMENTS
+  ========================================================== */
   const calcModal = document.getElementById("calcModal");
   const depositModal = document.getElementById("depositModal");
 
@@ -14,48 +16,52 @@ document.addEventListener("DOMContentLoaded", () => {
   const addressSection = document.getElementById("cryptoAddressSection");
   const addressBox = document.getElementById("cryptoAddress");
 
-  // PayPal modal elements
+  // PayPal modal
   const paypalModal = document.getElementById("paypalModal");
   const paypalEmailEl = document.getElementById("paypalEmail");
-  const copyPaypalBtn = document.getElementById("copyPaypalBtn");
   const paypalSentBtn = document.getElementById("paypalSentBtn");
+  const copyPaypalBtn = document.getElementById("copyPaypalBtn");
   const closePaypalBtn = document.getElementById("closePaypal");
 
   const API_BASE = window.API_BASE;
   let userId = null;
-// FRONTEND COINS – MUST MATCH BACKEND
-const NOWPAY_COINS = {
-  btc: "btc",
-  eth: "eth",
-  usdttrc20: "usdttrc20",
-  usdc: "usdc",
-  trx: "trx",
-  bnb: "bnb",
-  xrp: "xrp",
-  sol: "sol",
-  ltc: "ltc",
-  doge: "doge",
-  bch: "bch",
-  ada: "ada"
-};
 
-const COIN_LABELS = {
-  btc: "Bitcoin (BTC)",
-  eth: "Ethereum (ETH)",
-  usdttrc20: "Tether USDT (TRC20)",
-  usdc: "USD Coin (USDC)",
-  trx: "Tron (TRX)",
-  bnb: "Binance Coin (BNB)",
-  xrp: "Ripple (XRP)",
-  sol: "Solana (SOL)",
-  ltc: "Litecoin (LTC)",
-  doge: "Dogecoin (DOGE)",
-  bch: "Bitcoin Cash (BCH)",
-  ada: "Cardano (ADA)"
-};
-  // ==========================================================
-  //                       POPUP UTILITY
-  // ==========================================================
+  /* ==========================================================
+     SUPPORTED COINS – MATCHING BACKEND
+  ========================================================== */
+  const NOWPAY_COINS = {
+    btc: "btc",
+    eth: "eth",
+    usdttrc20: "usdttrc20",
+    usdc: "usdc",
+    trx: "trx",
+    bnb: "bnb",
+    xrp: "xrp",
+    sol: "sol",
+    ltc: "ltc",
+    doge: "doge",
+    bch: "bch",
+    ada: "ada",
+  };
+
+  const COIN_LABELS = {
+    btc: "Bitcoin (BTC)",
+    eth: "Ethereum (ETH)",
+    usdttrc20: "Tether USDT (TRC20)",
+    usdc: "USD Coin (USDC)",
+    trx: "Tron (TRX)",
+    bnb: "Binance Coin (BNB)",
+    xrp: "Ripple (XRP)",
+    sol: "Solana (SOL)",
+    ltc: "Litecoin (LTC)",
+    doge: "Dogecoin (DOGE)",
+    bch: "Bitcoin Cash (BCH)",
+    ada: "Cardano (ADA)",
+  };
+
+  /* ==========================================================
+     POPUP UTILITY
+  ========================================================== */
   function showPopup(message, type = "success") {
     const popup = document.createElement("div");
     popup.textContent = message;
@@ -71,103 +77,32 @@ const COIN_LABELS = {
     setTimeout(() => popup.remove(), 3000);
   }
 
-  // ==========================================================
-  //           CRYPTOLOADING AND SELECT OPTIONS
-  // ==========================================================
-async function loadCryptoList() {
-  if (!cryptoSelect) return;
+  /* ==========================================================
+     CRYPTO DROPDOWN
+  ========================================================== */
+  function loadCryptoList() {
+    if (!cryptoSelect) return;
 
-  cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
+    cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
 
-  Object.entries(NOWPAY_COINS).forEach(([symbol, npValue]) => {
-    const label =
-      COIN_LABELS[npValue] ||
-      COIN_LABELS[symbol] ||
-      symbol.toUpperCase();
-
-    const opt = document.createElement("option");
-    opt.value = npValue;
-    opt.textContent = label;
-    cryptoSelect.appendChild(opt);
-  });
-
-  const paypal = document.createElement("option");
-  paypal.value = "paypal";
-  paypal.textContent = "PayPal (Friends and Family)";
-  cryptoSelect.prepend(paypal);
-}
-loadCryptoList();
-// ----------------------
-//   LABEL HELPER
-// ----------------------
-function getCoinLabel(symbol) {
-  symbol = symbol.toLowerCase();
-
-  return (
-    COIN_LABELS[symbol] ||
-    COIN_LABELS[NOWPAY_COINS[symbol]] ||
-    symbol.toUpperCase()
-  );
-}
-  // ==========================================================
-  //                  UPDATE DASHBOARD BALANCES
-  // ==========================================================
-  function updateBalances(user) {
-  try {
-    const totalBalance = Number(user.balance || 0);
-
-    const balanceEl = document.querySelector(".balance h3");
-    if (balanceEl) balanceEl.textContent = `$${totalBalance.toFixed(2)}`;
-
-    const availableEl = document.getElementById("availableBalance");
-    if (availableEl) {
-      const balance = user.availableBalance ?? user.balance ?? 0;
-      availableEl.textContent = `$${Number(balance).toFixed(2)}`;
-    }
-
-    const cryptoList = document.querySelector(".crypto-list");
-    if (!cryptoList) return;
-    cryptoList.innerHTML = "";
-
-    const wallets = user.wallets || {};
-    const entries = Object.entries(wallets).filter(
-      ([, amount]) => Number(amount) > 0
-    );
-
-    if (!entries.length) {
-      const li = document.createElement("li");
-      li.className = "empty-balance";
-      li.textContent =
-        "No crypto balance yet. Make a deposit to see it here.";
-      cryptoList.appendChild(li);
-      return;
-    }
-
-    entries.forEach(([coinKey, amount]) => {
-      const coin = String(coinKey).toLowerCase();
-      const niceLabel = getCoinLabel(coin);
-
-      const li = document.createElement("li");
-      li.dataset.coin = coin;
-
-      const labelSpan = document.createElement("span");
-      labelSpan.textContent = niceLabel + ":";
-
-      const valueSpan = document.createElement("span");
-      valueSpan.textContent = `$${Number(amount).toFixed(2)}`;
-
-      li.appendChild(labelSpan);
-      li.appendChild(valueSpan);
-      cryptoList.appendChild(li);
+    Object.entries(NOWPAY_COINS).forEach(([symbol, npCode]) => {
+      const opt = document.createElement("option");
+      opt.value = npCode;
+      opt.textContent = COIN_LABELS[npCode] || symbol.toUpperCase();
+      cryptoSelect.appendChild(opt);
     });
-  } catch (e) {
-    console.error("Error updating balances:", e);
-  }
-}
 
-  // ==========================================================
-  //                        FETCH USER
-  // ==========================================================
+    // PayPal option
+    const paypalOpt = document.createElement("option");
+    paypalOpt.value = "paypal";
+    paypalOpt.textContent = "PayPal (Friends and Family)";
+    cryptoSelect.prepend(paypalOpt);
+  }
+  loadCryptoList();
+
+  /* ==========================================================
+     FETCH USER
+  ========================================================== */
   (async function fetchUser() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/me`, {
@@ -178,7 +113,14 @@ function getCoinLabel(symbol) {
       const user = await res.json();
       userId = user._id || user.id;
 
-      updateBalances(user);
+      // Update balance display
+      const balanceEl = document.querySelector(".balance h3");
+      if (balanceEl) balanceEl.textContent = `$${(user.balance || 0).toFixed(2)}`;
+
+      const available = document.getElementById("availableBalance");
+      if (available) {
+        available.textContent = `$${(user.availableBalance ?? user.balance ?? 0).toFixed(2)}`;
+      }
     } catch (err) {
       console.error("Auth Error:", err);
       alert("Session expired. Please log in again.");
@@ -186,25 +128,9 @@ function getCoinLabel(symbol) {
     }
   })();
 
-  // ==========================================================
-  //                     CALCULATOR MODAL
-  // ==========================================================
-  document.querySelectorAll(".calc-link").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      const card = e.target.closest(".plan-card");
-      if (!card) return;
-
-      calcPlan.value = card.dataset.name;
-      calcAmount.value = card.dataset.min;
-      calcResult.innerHTML = "";
-      calcModal.style.display = "flex";
-    });
-  });
-
-  // ==========================================================
-  //                      DEPOSIT MODAL
-  // ==========================================================
+  /* ==========================================================
+     DEPOSIT MODAL
+  ========================================================== */
   document.querySelectorAll(".btn-plan").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const card = e.target.closest(".plan-card");
@@ -219,110 +145,88 @@ function getCoinLabel(symbol) {
         addressSection.style.display = "none";
       }
 
-      // Reset dropdown each time
       if (cryptoSelect) cryptoSelect.value = "";
     });
   });
 
-  // ==========================================================
-  //                      PAYPAL HANDLERS
-  // ==========================================================
-  if (copyPaypalBtn && paypalEmailEl) {
+  /* ==========================================================
+     PAYPAL OPTION
+  ========================================================== */
+  if (copyPaypalBtn) {
     copyPaypalBtn.onclick = () => {
-      const email = paypalEmailEl.textContent.trim();
-      navigator.clipboard
-        .writeText(email)
-        .then(() => showPopup("PayPal email copied"))
-        .catch(() => showPopup("Unable to copy email", "error"));
+      navigator.clipboard.writeText(paypalEmailEl.textContent.trim());
+      showPopup("PayPal email copied");
     };
   }
 
-  if (closePaypalBtn && paypalModal) {
+  if (closePaypalBtn) {
     closePaypalBtn.onclick = () => {
       paypalModal.style.display = "none";
     };
   }
 
-  // ==========================================================
-  //               CREATE DEPOSIT AND REDIRECT
-  // ==========================================================
+  /* ==========================================================
+     CREATE DEPOSIT (CRYPTO + PAYPAL)
+  ========================================================== */
   if (cryptoSelect) {
     cryptoSelect.addEventListener("change", async () => {
       const method = cryptoSelect.value;
-      const amount = parseFloat(depositAmount.value || 0);
+      const amount = Number(depositAmount.value || 0);
       const planName = depositPlan.value;
 
       if (!method) return;
-
       if (!amount || amount < 50) {
         showPopup("Please enter a valid amount.", "error");
         return;
       }
 
-      // ---------- PayPal path ----------
+      /* ---------------------------
+         PAYPAL HANDLER
+      --------------------------- */
       if (method === "paypal") {
-        if (!paypalModal) {
-          showPopup("PayPal modal not found in DOM.", "error");
-          return;
-        }
-
         paypalModal.style.display = "flex";
 
-        if (paypalSentBtn) {
-          paypalSentBtn.onclick = async () => {
-            try {
-              const resUser = await fetch(`${API_BASE}/api/auth/me`, {
-                credentials: "include",
-              });
-              const user = await resUser.json();
-              const uid = user._id || user.id;
+        paypalSentBtn.onclick = async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/deposits/paypal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({
+                userId,
+                amount,
+                plan: planName,
+                note: "User selected PayPal FNF. Pending admin approval.",
+              }),
+            });
 
-              // TODO: adjust this endpoint to match your backend
-              const res = await fetch(`${API_BASE}/api/deposits/paypal`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  userId: uid,
-                  amount,
-                  plan: planName,
-                  note: "User selected PayPal Friends and Family. Pending admin verification.",
-                }),
-              });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.msg);
 
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.msg || "PayPal deposit failed");
-
-              showPopup("Your PayPal deposit request has been created.", "success");
-              paypalModal.style.display = "none";
-              depositModal.style.display = "none";
-            } catch (e) {
-              console.error(e);
-              showPopup("Error creating PayPal deposit.", "error");
-            }
-          };
-        }
-
+            showPopup("Your PayPal deposit request has been created.");
+            paypalModal.style.display = "none";
+            depositModal.style.display = "none";
+          } catch (err) {
+            console.error(err);
+            showPopup("Error creating PayPal deposit.", "error");
+          }
+        };
         return;
       }
 
-      // ---------- Crypto path via NowPayments ----------
+      /* ---------------------------
+         CRYPTO HANDLER (NOWPAYMENTS)
+      --------------------------- */
       try {
-        const resUser = await fetch(`${API_BASE}/api/auth/me`, {
-          credentials: "include",
-        });
-        const user = await resUser.json();
-        const uid = user._id || user.id;
-
         const res = await fetch(`${API_BASE}/api/nowpayments/create`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            userId: uid,
+            userId,
             amount,
             plan: planName,
-            method, // crypto coin
+            method,
           }),
         });
 
@@ -331,11 +235,19 @@ function getCoinLabel(symbol) {
 
         if (!res.ok) throw new Error(data.msg || "Deposit failed");
 
-        const iidMatch = data.paymentLink && data.paymentLink.match(/iid=(\d+)/);
-        const iid = iidMatch ? iidMatch[1] : null;
+        let iid = null;
+
+        if (data.paymentLink) {
+          const regex1 = /iid=(\d+)/;
+          const regex2 = /invoice_id=(\d+)/;
+
+          iid = data.paymentLink.match(regex1)?.[1] ||
+                data.paymentLink.match(regex2)?.[1] ||
+                null;
+        }
 
         if (iid) {
-          showPopup("Redirecting to secure payment. Please wait.", "success");
+          showPopup("Redirecting to secure payment.", "success");
           window.location.href = `/user/payment.html?iid=${iid}`;
         } else if (data.paymentLink) {
           window.open(data.paymentLink, "_blank", "noopener,noreferrer");
@@ -349,34 +261,25 @@ function getCoinLabel(symbol) {
     });
   }
 
-  // ==========================================================
-  //                       CLOSE BUTTONS
-  // ==========================================================
-  document.getElementById("closeCalc").onclick = () => {
-    calcModal.style.display = "none";
-  };
-  document.getElementById("closeDeposit").onclick = () => {
-    depositModal.style.display = "none";
-  };
-  document.getElementById("calcOkBtn").onclick = () => {
-    calcModal.style.display = "none";
-  };
-  document.getElementById("depositOkBtn").onclick = () => {
-    depositModal.style.display = "none";
-  };
+  /* ==========================================================
+     CLOSE MODALS
+  ========================================================== */
+  document.getElementById("closeCalc").onclick = () => (calcModal.style.display = "none");
+  document.getElementById("closeDeposit").onclick = () => (depositModal.style.display = "none");
+  document.getElementById("calcOkBtn").onclick = () => (calcModal.style.display = "none");
+  document.getElementById("depositOkBtn").onclick = () => (depositModal.style.display = "none");
 
-  // ==========================================================
-  //                 CALCULATOR SUBMIT HANDLER
-  // ==========================================================
+  /* ==========================================================
+     CALCULATOR LOGIC
+  ========================================================== */
   document.getElementById("calcForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const card = document.querySelector(
-      `[data-name="${calcPlan.value}"]`
-    );
+
+    const card = document.querySelector(`[data-name="${calcPlan.value}"]`);
     if (!card) return;
 
-    const rate = parseFloat(card.dataset.rate);
-    const amount = parseFloat(calcAmount.value);
+    const rate = Number(card.dataset.rate);
+    const amount = Number(calcAmount.value);
 
     if (!rate || !amount) {
       calcResult.innerHTML = "<p>Please enter a valid amount.</p>";
@@ -390,12 +293,12 @@ function getCoinLabel(symbol) {
     `;
   });
 
-  // ==========================================================
-  //                CLICK OUTSIDE TO CLOSE MODALS
-  // ==========================================================
+  /* ==========================================================
+     CLICK OUTSIDE TO CLOSE
+  ========================================================== */
   window.onclick = (e) => {
     if (e.target === calcModal) calcModal.style.display = "none";
     if (e.target === depositModal) depositModal.style.display = "none";
-    if (paypalModal && e.target === paypalModal) paypalModal.style.display = "none";
+    if (e.target === paypalModal) paypalModal.style.display = "none";
   };
 });
