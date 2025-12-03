@@ -101,9 +101,6 @@ import contactRoutes from "./routes/contactRoutes.js";
 import kycRoutes from "./routes/kycRoutes.js";
 import adminKycRoutes from "./routes/adminKycRoutes.js";
 import cronRoutes from "./routes/cronRoutes.js";
-import blockbeeRoutes from "./routes/blockbeeRoutes.js";
-import blockbeeWebhook from "./routes/blockbeeWebhook.js";
-
 app.use("/api/auth", authRoutes);
 app.use("/api/deposits", depositRoutes);
 app.use("/api/notifications", notificationRoutes);
@@ -118,8 +115,7 @@ app.use("/api/kyc", kycRoutes);
 app.use("/api/admin/kyc", adminKycRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/cron", cronRoutes);
-app.use("/api/blockbee", blockbeeRoutes);
-app.use("/api/blockbee/webhook", blockbeeWebhook);
+
 app.use("/api/nowpayments", nowpayRoutes);
 
 // SERVE FRONTEND
