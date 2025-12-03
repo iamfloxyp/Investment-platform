@@ -9,6 +9,8 @@ import { sendEmail } from "../utils/sendEmail.js";
 /* ============================================================
    CREATE DEPOSIT (USER + ADMIN)
 ============================================================ */
+console.log(">>> addDepositForUser triggered");
+console.log("BODY:", req.body);
 export const addDepositForUser = async (req, res) => {
   try {
     let { userId, amount, method, plan, note, status } = req.body;
@@ -88,6 +90,8 @@ export const addDepositForUser = async (req, res) => {
     };
 
     let invoiceResponse;
+    console.log(">>> Creating NOWPayments invoice...");
+console.log("Payload:", payload);
 
     try {
       invoiceResponse = await axios.post(
@@ -104,6 +108,7 @@ export const addDepositForUser = async (req, res) => {
       console.error("NOWPayments error:", err?.response?.data || err.message);
       return res.status(500).json({
         msg: "Error connecting to payment server",
+        
       });
     }
 
