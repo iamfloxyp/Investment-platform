@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cryptoSelect.innerHTML = `<option value="">-- Select Crypto --</option>`;
 
     try {
-      const res = await fetch(`${API_BASE}/api/coins`, {
+      const res = await fetch(`${API_BASE}/api/blockbee/coins`, {
         credentials: "include",
       });
 
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ====== CRYPTO PATH (BLOCKBEE) =======
     try {
-      const res = await fetch(`${API_BASE}/api/create`, {
+      const res = await fetch(`${API_BASE}/api/blockbee/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
