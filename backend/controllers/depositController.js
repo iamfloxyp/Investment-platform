@@ -9,9 +9,11 @@ import { sendEmail } from "../utils/sendEmail.js";
 /* ============================================================
    CREATE DEPOSIT (USER + ADMIN)
 ============================================================ */
-console.log(">>> addDepositForUser triggered");
-console.log("BODY:", req.body);
+
 export const addDepositForUser = async (req, res) => {
+  console.log(">>> addDepositForUser triggered");
+  console.log("REQ BODY:", req.body);
+
   try {
     let { userId, amount, method, plan, note, status } = req.body;
 
@@ -89,9 +91,10 @@ export const addDepositForUser = async (req, res) => {
       ipn_callback_url: `${process.env.BACKEND_URL}/api/nowpayments/webhook`,
     };
 
+    console.log(">>> Preparing NOWPayments request...");
+    console.log("Payload:", payload);
+
     let invoiceResponse;
-    console.log(">>> Creating NOWPayments invoice...");
-console.log("Payload:", payload);
 
     try {
       invoiceResponse = await axios.post(
@@ -105,7 +108,7 @@ console.log("Payload:", payload);
         }
       );
     } catch (err) {
-      console.error("NOWPayments error:", err?.response?.data || err.message);
+      console.log("NOWPAYMENTS ERROR:", err.response?.data || err.message);
       return res.status(500).json({
         msg: "Error connecting to payment server",
       });
@@ -137,13 +140,12 @@ console.log("Payload:", payload);
       paymentLink: paymentUrl,
     });
   } catch (err) {
-    console.error("addDepositForUser error:", err.message);
+    console.log("addDepositForUser ERROR:", err.message);
     return res.status(500).json({
       msg: "Server error creating deposit",
     });
   }
 };
-
 /* ============================================================
    GET ALL DEPOSITS (ADMIN)
 ============================================================ */
