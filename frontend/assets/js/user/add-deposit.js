@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
           userId,
           amount,
           plan,
-          method: coin,
+         coin,
         }),
       });
 
